@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône animée du splash système : le disque fait un tour en 1000 ms
+     (durée = windowSplashScreenAnimationDuration). -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_splash_vinyl">
+    <target android:name="disc">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:animation">
+            <objectAnimator
+                android:propertyName="rotation"
+                android:valueFrom="0" android:valueTo="360"
+                android:duration="1000"
+                android:interpolator="@android:interpolator/accelerate_decelerate"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

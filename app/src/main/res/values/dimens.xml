@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Espacement : échelle 4dp -->
+    <dimen name="vot_space_xs">4dp</dimen>
+    <dimen name="vot_space_sm">8dp</dimen>
+    <dimen name="vot_space_md">14dp</dimen>
+    <dimen name="vot_space_lg">20dp</dimen>
+    <dimen name="vot_space_xl">30dp</dimen>
+
+    <!-- Gouttières écran : la grille de collection déborde à droite (le vinyle sort de la pochette) -->
+    <dimen name="vot_screen_padding_start">20dp</dimen>
+    <dimen name="vot_screen_padding_end">30dp</dimen>
+    <dimen name="vot_grid_gutter_h">26dp</dimen>
+    <dimen name="vot_grid_gutter_v">14dp</dimen>
+
+    <!-- Rayons -->
+    <dimen name="vot_radius_sleeve">2dp</dimen>
+    <dimen name="vot_radius_chip">8dp</dimen>
+    <dimen name="vot_radius_card">12dp</dimen>
+    <dimen name="vot_radius_sheet">18dp</dimen>
+    <dimen name="vot_radius_pill">999dp</dimen>
+
+    <!-- Composants -->
+    <dimen name="vot_hero_height">384dp</dimen>
+    <dimen name="vot_dock_height">64dp</dimen>
+    <dimen name="vot_dock_margin">14dp</dimen>
+    <dimen name="vot_touch_min">48dp</dimen>
+    <dimen name="vot_mini_disc">44dp</dimen>
+
+    <!-- Le disque dépasse de 18% de la largeur de la pochette, à droite -->
+    <item name="vot_disc_overhang_ratio" format="float" type="dimen">0.18</item>
+</resources>

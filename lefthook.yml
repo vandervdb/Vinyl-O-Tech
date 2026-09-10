@@ -1,0 +1,38 @@
+colors: true
+
+# Projet Android pur : un seul arbre, donc pas de filtrage par chemin — tout ce
+# qui est commité relève de Gradle. Les globs par extension suffisent.
+#
+# À savoir : Spotless BLOQUE le commit. ktlint a `ignoreFailures` sur la tâche
+# Gradle `ktlintCheck`, mais scripts/spotless-pre-commit.sh tourne avec `set -e`,
+# donc une règle non auto-corrigeable (standard:filename, property-naming,
+# no-empty-file) interrompt le commit. Et il analyse TOUT le projet, pas
+# seulement l'index : un .kt vide laissé n'importe où bloque n'importe quel commit.
+
+pre-commit:
+    parallel: true
+
+    commands:
+        spotless:
+            glob: "*.{kt,kts}"
+            run: ./scripts/spotless-pre-commit.sh
+
+        ktlint:
+            glob: "*.kt"
+            run: echo "\033[0;34m🔍 Running Ktlint format...\033[0m" && ./gradlew ktlintFormat -x ktlintCheck -x spotlessKotlin -x spotlessKotlinGradle || { echo "\033[0;31m❌ Ktlint FAILED!\033[0m" >&2; exit 1; }
+
+pre-push:
+    parallel: false
+
+    commands:
+        android_lint:
+            run: echo "\033[0;34m🔍 Running Android Lint...\033[0m" && ./gradlew lint || { echo "\033[0;31m❌ Android Lint FAILED!\033[0m" >&2; exit 1; }
+
+        android_tests:
+            run: echo "\033[0;35m🧪 Running Android tests...\033[0m" && ./gradlew test || { echo "\033[0;31m❌ Android tests FAILED!\033[0m" >&2; exit 1; }
+
+        catalog:
+            run: echo "\033[0;34m🔍 Checking the Version Catalog...\033[0m" && ./gradlew checkCatalogConsistency checkVersionHardcodedUsages || { echo "\033[0;31m❌ Version Catalog FAILED!\033[0m" >&2; exit 1; }
+
+        android_build:
+            run: echo "\033[0;33m🔨 Building the app...\033[0m" && ./gradlew assembleDebug || { echo "\033[0;31m❌ Build FAILED!\033[0m" >&2; exit 1; }

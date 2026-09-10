@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dock flottant du mini-player -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/vot_surface_high"/>
+    <corners android:radius="@dimen/vot_radius_card"/>
+    <stroke android:width="1dp" android:color="@color/vot_outline"/>
+</shape>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!-- Brand -->
+    <color name="vot_accent">#FF7C5CFF</color>
+    <color name="vot_accent_dim">#FF5B47A8</color>
+    <color name="vot_accent_soft">#FFC7B4FF</color>
+    <color name="vot_on_accent">#FF0C0A10</color>
+
+    <!-- Surfaces -->
+    <color name="vot_bg">#FF0C0A10</color>
+    <color name="vot_bg_deep">#FF08070B</color>
+    <color name="vot_surface">#FF100E16</color>
+    <color name="vot_surface_high">#FF16131E</color>
+    <color name="vot_scrim">#D90C0A10</color>
+
+    <!-- Text -->
+    <color name="vot_text_primary">#FFF2EFF7</color>
+    <color name="vot_text_on_media">#FFFFFFFF</color>
+    <color name="vot_text_secondary">#FF9A93A8</color>
+    <color name="vot_text_tertiary">#FF6B6479</color>
+    <color name="vot_text_muted">#FFA29BB0</color>
+    <color name="vot_text_on_gradient">#FFCFC8DC</color>
+
+    <!-- Lines -->
+    <color name="vot_outline">#12FFFFFF</color>
+    <color name="vot_outline_strong">#29FFFFFF</color>
+    <color name="vot_outline_accent">#737C5CFF</color>
+
+    <!-- Hero gradient (155deg : 0% / 42% / 100%) -->
+    <color name="vot_grad_start">#FF4B2AA8</color>
+    <color name="vot_grad_mid">#FF7C5CFF</color>
+    <color name="vot_grad_end">#FF201636</color>
+
+    <!-- Vinyl greys : rainures du disque, du centre vers le bord -->
+    <color name="vot_vinyl_hole">#FF0C0A10</color>
+    <color name="vot_vinyl_deep">#FF0F0E14</color>
+    <color name="vot_vinyl_base">#FF121117</color>
+    <color name="vot_vinyl_mid">#FF16151B</color>
+    <color name="vot_vinyl_groove">#FF2A2833</color>
+    <color name="vot_vinyl_groove_hi">#FF302E39</color>
+    <color name="vot_vinyl_rim">#FF4A4753</color>
+
+    <!-- Platine -->
+    <color name="vot_arm_metal">#FFE6E2F0</color>
+    <color name="vot_arm_metal_dim">#FF8B8798</color>
+    <color name="vot_arm_shadow">#FF2C2A34</color>
+</resources>

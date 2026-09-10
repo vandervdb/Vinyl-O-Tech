@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/vot_text_on_media"/>
+            <corners android:radius="@dimen/vot_radius_chip"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#570C0A10"/>
+            <stroke android:width="1dp" android:color="@color/vot_outline_strong"/>
+            <corners android:radius="@dimen/vot_radius_chip"/>
+        </shape>
+    </item>
+</selector>

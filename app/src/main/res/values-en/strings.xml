@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Android Spotify</string>
+
+    <!-- HomeScreen (screen 01 "Connexion Spotify") -->
+    <string name="home_headline">Your record collection,\nyour way.</string>
+    <string name="home_subtitle">Vinyl O’Tech reads your Spotify library: saved albums, playlists, liked songs, followed artists.</string>
+    <string name="home_continue_button">Continue with Spotify</string>
+    <string name="home_disclaimer">Sign in with your Spotify account. Premium required for playback; no data is sold.</string>
+
+    <string name="home_placeholder">Screen 02 "Home" — not built yet</string>
+
+    <!-- SpotifyScreen -->
+    <string name="spotify_playlists_title">Playlists</string>
+    <string name="spotify_error_prefix">❌ Error: %1$s</string>
+    <string name="spotify_by_prefix">by </string>
+    <string name="spotify_display_name_fallback">You</string>
+
+    <!-- Shared content descriptions -->
+    <string name="content_desc_spotify_logo">Spotify logo</string>
+    <string name="content_desc_remove_from_library">Remove from saved library</string>
+    <string name="content_desc_save_to_library">Save to library</string>
+    <string name="content_desc_play">Play</string>
+    <string name="content_desc_pause">Pause</string>
+
+    <!-- Bottom bar / navigation rail labels -->
+    <string name="nav_label_home">Home</string>
+    <string name="nav_label_spotify">Spotify</string>
+</resources>

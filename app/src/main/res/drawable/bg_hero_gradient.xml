@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dégradé héros de l'accueil (155° dans la maquette ≈ angle 295 côté Android). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="linear" android:angle="295"
+                android:startColor="@color/vot_grad_start"
+                android:centerColor="@color/vot_grad_mid"
+                android:endColor="@color/vot_grad_end"
+                android:centerX="0.42"/>
+        </shape>
+    </item>
+    <!-- Fondu vers le fond de l'écran, pour que le titre reste lisible -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="linear" android:angle="270"
+                android:startColor="#590C0A10"
+                android:centerColor="#000C0A10"
+                android:endColor="@color/vot_bg"
+                android:centerX="0.3"/>
+        </shape>
+    </item>
+</layer-list>
