@@ -47,3 +47,25 @@ val VinylGradEnd = Color(0xFF201636) // vot_grad_end
 // à ta façon.") — the design's default text color elsewhere is VinylTextPrimary,
 // not pure white.
 val VinylTextEmphasis = Color.White // vot_text_on_media
+
+// Sillons du disque, du centre vers le bord
+val VinylDiscHole = Color(0xFF0C0A10) // vot_vinyl_hole
+val VinylDiscDeep = Color(0xFF0F0E14) // vot_vinyl_deep
+val VinylDiscBase = Color(0xFF121117) // vot_vinyl_base
+val VinylDiscMid = Color(0xFF16151B) // vot_vinyl_mid
+val VinylDiscGroove = Color(0xFF2A2833) // vot_vinyl_groove
+val VinylDiscGrooveHi = Color(0xFF302E39) // vot_vinyl_groove_hi
+val VinylDiscRim = Color(0xFF4A4753) // vot_vinyl_rim
+
+// Platine
+val VinylArmMetal = Color(0xFFE6E2F0) // vot_arm_metal
+val VinylArmMetalDim = Color(0xFF8B8798) // vot_arm_metal_dim
+val VinylArmShadow = Color(0xFF2C2A34) // vot_arm_shadow
+
+// Feedback — snackbar haute (tons Error / Success / Info / Offline)
+val VinylFeedbackError = Color(0xFFFF5C6E) // vot_feedback_error
+val VinylFeedbackErrorText = Color(0xFFFF8A96) // vot_feedback_error_text
+val VinylFeedbackSuccess = Color(0xFF4ADE9B) // vot_feedback_success
+val VinylFeedbackSuccessText = Color(0xFF6FE7B2) // vot_feedback_success_text
+val VinylFeedbackNeutralText = Color(0xFFE6E2F0) // vot_feedback_neutral_text
+val VinylSnackSurface = Color(0xFF191722) // vot_snack_surface

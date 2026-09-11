@@ -12,11 +12,11 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             tools:targetApi="31"
-            android:theme="@style/Theme.Spotifymonorepo">
+            android:theme="@style/Theme.VinylOTech">
         <activity
                 android:name="org.vander.android.sample.MainActivity"
                 android:exported="true"
-                android:theme="@style/Theme.Spotifymonorepo">
+                android:theme="@style/Theme.VinylOTech">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

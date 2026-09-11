@@ -50,4 +50,13 @@ object VotDimens {
     // Ombres — maquette : 0 10px 34px rgba(124,92,255,0.4)
     val buttonElevation = 10.dp
     val sheetElevation = 18.dp
+
+    // Snackbar haute — ancrée sous la status bar, jamais en bas de l'écran
+    val snackMarginTop = 12.dp
+    val snackMarginH = 14.dp
+    val snackRadius = 18.dp
+    val snackActionRadius = 10.dp
+    val snackGlyph = 28.dp
+    val snackTimer = 2.dp
+    val snackElevation = 20.dp
 }

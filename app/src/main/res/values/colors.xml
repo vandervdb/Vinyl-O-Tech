@@ -51,4 +51,12 @@
     <color name="vot_arm_metal">#FFE6E2F0</color>
     <color name="vot_arm_metal_dim">#FF8B8798</color>
     <color name="vot_arm_shadow">#FF2C2A34</color>
+
+    <!-- Feedback / snackbar -->
+    <color name="vot_feedback_error">#FFFF5C6E</color>
+    <color name="vot_feedback_error_text">#FFFF8A96</color>
+    <color name="vot_feedback_success">#FF4ADE9B</color>
+    <color name="vot_feedback_success_text">#FF6FE7B2</color>
+    <color name="vot_feedback_neutral_text">#FFE6E2F0</color>
+    <color name="vot_snack_surface">#FF191722</color>
 </resources>
