@@ -21,7 +21,6 @@ import coil.request.ImageRequest
 import org.vander.android.sample.R
 import org.vander.android.sample.util.SPOTIFY_COVER_UI
 
-@Suppress("FunctionNaming")
 @Composable
 fun SpotifyTrackCover(
     modifier: Modifier = Modifier,
@@ -65,7 +64,6 @@ fun SpotifyTrackCover(
 }
 
 @Preview(showBackground = true)
-@Suppress("FunctionNaming")
 @Composable
 fun SpotifyTrackCoverPreview() {
     val painter = painterResource(id = R.drawable.mr_scurff_test_cover)

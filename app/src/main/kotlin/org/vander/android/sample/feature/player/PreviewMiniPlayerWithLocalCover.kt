@@ -10,7 +10,6 @@ import org.vander.core.logger.test.FakeLogger
 import org.vander.fake.spotify.FakePlayerViewModel
 
 @Preview(showBackground = true)
-@Suppress("FunctionNaming")
 @Composable
 fun PreviewMiniPlayerWithLocalCover() {
     val fakeViewModel = remember { FakePlayerViewModel() }

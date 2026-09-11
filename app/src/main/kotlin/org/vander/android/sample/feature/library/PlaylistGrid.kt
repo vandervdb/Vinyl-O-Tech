@@ -23,7 +23,6 @@ import org.vander.android.sample.designsystem.component.MarqueeTextInfinite
 import org.vander.core.domain.data.Playlist
 import org.vander.core.ui.presentation.viewmodel.PlaylistViewModel
 
-@Suppress("FunctionNaming")
 @Composable
 fun PlaylistComponent(
     viewModel: PlaylistViewModel,
@@ -47,7 +46,6 @@ fun PlaylistComponent(
     }
 }
 
-@Suppress("FunctionNaming")
 @Composable
 fun PlaylistCoverItem(playlist: Playlist) {
     val id = playlist.id

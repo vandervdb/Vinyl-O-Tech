@@ -8,7 +8,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
-@Suppress("FunctionNaming")
 fun LifecycleObserverComponent(
     tag: String? = null,
     onStartCallback: (() -> Unit)? = null,

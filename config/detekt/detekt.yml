@@ -1,0 +1,22 @@
+# Configuration detekt — Vinyl O'Tech
+#
+# PORTÉE — ce fichier est PARTIEL : il ne redéfinit que ce qui diverge de la
+# configuration par défaut de detekt. Il suppose donc l'option « Build upon the
+# default configuration » activée (Settings → Tools → detekt). Sans elle, les
+# règles absentes d'ici ne seraient plus appliquées du tout.
+#
+# OÙ DETEKT TOURNE — nulle part dans le build. Aucun plugin Gradle, aucune étape
+# lefthook : seul le plugin IntelliJ l'exécute. Il ne bloque donc ni commit ni
+# push, contrairement à Spotless. Voir .claude/rules/kotlin.md §Lint reality check.
+#
+# EMPLACEMENT — celui qu'attend par défaut le plugin Gradle de detekt, pour que
+# l'ajouter au build un jour ne demande aucun réglage supplémentaire.
+
+naming:
+  FunctionNaming:
+    # Un @Composable qui retourne Unit ne fait rien : il déclare un nœud de
+    # l'arbre d'UI. Les Compose API Guidelines le nomment donc comme un type,
+    # en PascalCase — VinylLoader, Text, Column — ce que le motif par défaut de
+    # detekt ([a-z][a-zA-Z0-9]*) rejette.
+    # Cette exemption remplace les 25 @Suppress("FunctionNaming") du repo.
+    ignoreAnnotated: ['Composable']

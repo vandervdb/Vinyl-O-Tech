@@ -64,7 +64,6 @@ data class TrackParams(
     val durationMS: Long,
 )
 
-@Suppress("FunctionNaming")
 @Composable
 fun MiniPlayer(
     viewModel: PlayerViewModel,
@@ -289,7 +288,6 @@ private fun TrackItem(
     }
 }
 
-@Suppress("FunctionNaming")
 @Composable
 fun MiniPlayerWithPainter(
     viewModel: PlayerViewModel,
@@ -337,7 +335,6 @@ fun MiniPlayerWithPainter(
 }
 
 @Preview(showBackground = true)
-@Suppress("FunctionNaming")
 @Composable
 fun MiniPlayerPreview() {
     PreviewMiniPlayerWithLocalCover()

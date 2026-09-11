@@ -21,7 +21,6 @@ import org.vander.android.sample.feature.connection.ConnectionScreen
  * destination ([org.vander.android.sample.ui.navigation.ConnectionRoute]) and is
  * not a tab, so the Accueil tab would have shown the login screen.
  */
-@Suppress("FunctionNaming")
 @Composable
 fun HomeScreen() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

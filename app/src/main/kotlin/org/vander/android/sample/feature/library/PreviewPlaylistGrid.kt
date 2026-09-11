@@ -8,7 +8,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.vander.fake.spotify.FakePlaylistViewModel
 
 @Preview(showBackground = true)
-@Suppress("FunctionNaming")
 @Composable
 fun PreviewPlaylistComponent() {
     val fakeViewModel = remember { FakePlaylistViewModel() }

@@ -45,7 +45,6 @@ import org.vander.fake.spotify.FakePlayerViewModel
 import org.vander.fake.spotify.FakePlaylistViewModel
 import org.vander.fake.spotify.FakeUserViewModel
 
-@Suppress("FunctionNaming")
 @Composable
 fun SpotifyScreen(
     playerViewModel: PlayerViewModel,
@@ -121,7 +120,6 @@ fun SpotifyScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("FunctionNaming")
 @Composable
 fun SpotifyTopBar(displayName: String?) {
     CenterAlignedTopAppBar(
@@ -168,7 +166,6 @@ fun SpotifyTopBar(displayName: String?) {
 }
 
 @Preview(showBackground = true, name = "SpotifyScreen Preview")
-@Suppress("FunctionNaming")
 @Composable
 fun SpotifyScreenPreview() {
     val fakePlayerViewModel = FakePlayerViewModel()

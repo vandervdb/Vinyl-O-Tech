@@ -22,7 +22,6 @@ import org.vander.core.logger.Logger
  * also compile (it is a KClass too) but would say the wrong thing: a bottom-bar
  * tab is not the app's entry point.
  */
-@Suppress("FunctionNaming")
 @Composable
 fun AppNavHost(
     navController: NavHostController,
