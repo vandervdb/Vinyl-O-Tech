@@ -10,7 +10,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import org.vander.android.sample.designsystem.AndroidAppTheme
 import org.vander.android.sample.designsystem.VinylInk
 import org.vander.android.sample.designsystem.VinylPurple
 import org.vander.android.sample.designsystem.VotDimens
@@ -26,7 +28,6 @@ import org.vander.android.sample.designsystem.VotDimens
  * @param fill remplissage du disque ; Color.Transparent pour une marque évidée.
  */
 @Composable
-@Suppress("FunctionNaming")
 fun VinylLogoMark(
     modifier: Modifier = Modifier,
     size: Dp = VotDimens.markSize,
@@ -55,5 +56,21 @@ fun VinylLogoMark(
                 cornerRadius = CornerRadius(nub * 0.27f),
             )
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+private fun VinylLogoMarkPreview() {
+    AndroidAppTheme {
+        VinylLogoMark()
+    }
+}
+
+@Preview(showBackground = true, name = "Empty Fill")
+@Composable
+private fun VinylLogoMarkEmptyPreview() {
+    AndroidAppTheme {
+        VinylLogoMark(fill = Color.Transparent)
     }
 }

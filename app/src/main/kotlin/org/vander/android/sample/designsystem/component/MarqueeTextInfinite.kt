@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOutQuad
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -16,8 +17,10 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.vander.android.sample.designsystem.AndroidAppTheme
 import org.vander.android.sample.designsystem.modifier.drawFadeEdges
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -46,7 +49,6 @@ import kotlin.math.roundToInt
  * @param fadeColor color the text fades into — should match the surface behind it
  */
 @Composable
-@Suppress("FunctionNaming")
 fun MarqueeTextInfinite(
     text: String,
     modifier: Modifier = Modifier,
@@ -136,5 +138,29 @@ fun MarqueeTextInfinite(
                 placeables[1].placeRelative(x = offset + totalLoopWidth, y = 0)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MarqueeTextInfiniteShortPreview() {
+    AndroidAppTheme {
+        MarqueeTextInfinite(
+            text = "Short text",
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MarqueeTextInfiniteLongPreview() {
+    AndroidAppTheme {
+        MarqueeTextInfinite(
+            text =
+                "This is a very long text that will definitely overflow the screen " +
+                    "and start the infinite marquee animation.",
+            modifier = Modifier.padding(16.dp),
+        )
     }
 }
