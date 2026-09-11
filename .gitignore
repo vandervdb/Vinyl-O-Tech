@@ -28,3 +28,6 @@ out-tsc/
 
 # Kotlin compiler session
 .kotlin/
+
+# Serena MCP workspace (local tooling state)
+.serena/
