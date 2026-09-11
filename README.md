@@ -12,6 +12,7 @@
 <img alt="Hilt" src="https://img.shields.io/badge/DI-Hilt%202.58-blue?style=for-the-badge" />
 <img alt="Gradle" src="https://img.shields.io/badge/Gradle-8.14.5-02303A?logo=gradle&logoColor=white&style=for-the-badge" />
 <img alt="Architecture" src="https://img.shields.io/badge/Architecture-MVVM%20%7C%20Multi--Module-6E7FF3?style=for-the-badge" />
+<img alt="License" src="https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge" />
 </p>
 
 ---
@@ -204,5 +205,9 @@ Assumed and documented, not hidden. Do not fix it as a side effect of another ta
 
 ## License
 
-Personal project, not distributed. Spotify trademarks belong to Spotify AB; this
-repository is neither affiliated with nor endorsed by Spotify.
+[MIT](LICENSE) — © 2026 Arnaud Vanderbecq.
+
+The licence covers this repository's own source. It does not extend to the Spotify SDK
+binaries under `spotify-lib/libs/`, which carry Spotify's own terms. Spotify trademarks
+belong to Spotify AB; this repository is neither affiliated with nor endorsed by
+Spotify.
