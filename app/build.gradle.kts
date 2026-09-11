@@ -79,8 +79,12 @@ dependencies {
     implementation(project(":fake"))
 
     // --- Spotify SDK AARs
-    implementation(files("../../android-lib/libs/spotify-app-remote-release-0.8.0.aar"))
-    implementation(files("../../android-lib/libs/spotify-auth-release-2.1.0.aar"))
+    // spotify-lib déclare ces AAR en `compileOnly`, donc ils ne sont pas propagés
+    // aux consommateurs : l'app doit les fournir à l'exécution. `rootProject.file`
+    // plutôt qu'un chemin relatif, pour rester valide quelle que soit la
+    // profondeur du module dans l'arborescence.
+    implementation(files(rootProject.file("spotify-lib/libs/spotify-app-remote-release-0.8.0.aar")))
+    implementation(files(rootProject.file("spotify-lib/libs/spotify-auth-release-2.1.0.aar")))
 
     // --- Required runtime deps for Spotify SDK mappers and logging
     implementation(libs.jackson.databind)

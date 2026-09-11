@@ -34,5 +34,8 @@ pre-push:
         catalog:
             run: echo "\033[0;34m🔍 Checking the Version Catalog...\033[0m" && ./gradlew checkCatalogConsistency checkVersionHardcodedUsages || { echo "\033[0;31m❌ Version Catalog FAILED!\033[0m" >&2; exit 1; }
 
+        palette:
+            run: echo "\033[0;34m🔍 Checking the colour palette...\033[0m" && ./gradlew checkColorPalette || { echo "\033[0;31m❌ Colour palette FAILED!\033[0m" >&2; exit 1; }
+
         android_build:
             run: echo "\033[0;33m🔨 Building the app...\033[0m" && ./gradlew assembleDebug || { echo "\033[0;31m❌ Build FAILED!\033[0m" >&2; exit 1; }

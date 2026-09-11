@@ -45,11 +45,10 @@ spotless {
     kotlin {
 
         target(
-            fileTree("android-lib") { include("**/*.kt") },
-            fileTree("apps/android-sample") { include("**/*.kt") },
-            fileTree("apps/RnSample/android/app") { include("**/*.kt") },
-            fileTree("packages/android") { include("**/*.kt") },
-            fileTree("rn-modules/RnModuleSpotifyClient/android/app") { include("**/*.kt") },
+            fileTree("app") { include("**/*.kt") },
+            fileTree("spotify-lib") { include("**/*.kt") },
+            fileTree("core") { include("**/*.kt") },
+            fileTree("fake") { include("**/*.kt") },
         )
 
         ktlint(libs.versions.ktlint.get())
@@ -60,14 +59,14 @@ spotless {
             files(
                 "settings.gradle.kts",
                 "build.gradle.kts",
-                "android-lib/build.gradle.kts",
-                "apps/android-sample/build.gradle.kts",
-                "packages/android/core-security/build.gradle.kts",
-                "packages/android/core-domain/build.gradle.kts",
-                "packages/android/core-dto/build.gradle.kts",
-                "packages/android/core-logger/build.gradle.kts",
-                "packages/android/core-ui/build.gradle.kts",
-                "packages/android/fake/build.gradle.kts",
+                "app/build.gradle.kts",
+                "spotify-lib/build.gradle.kts",
+                "core/domain/build.gradle.kts",
+                "core/dto/build.gradle.kts",
+                "core/logger/build.gradle.kts",
+                "core/security/build.gradle.kts",
+                "core/ui/build.gradle.kts",
+                "fake/build.gradle.kts",
             ),
         )
 
@@ -261,4 +260,93 @@ tasks.register<CheckVersionHardcodedUsagesTask>("checkVersionHardcodedUsages") {
             exclude("**/build/**")
         },
     )
+}
+
+/**
+ * The `vot_*` palette exists twice on purpose: `res/values/colors.xml` is read by the system
+ * for the launch theme (`Theme.VinylOTech`, before any Compose code runs), and
+ * `designsystem/Color.kt` is read by `AndroidAppTheme`. Neither language can read the other,
+ * so the duplication is irreducible — only the *correspondence* can be made checkable.
+ *
+ * That correspondence lives in a trailing comment on each Compose declaration:
+ *
+ *     val VinylTextMuted = Color(0xFFA29BB0) // vot_text_muted
+ *
+ * Without it nothing links `VinylTextMuted` to `vot_text_muted`, and the two palettes drifted
+ * exactly that way once already: two tokens were off by one rank, each file correct on its own.
+ *
+ * Tokens declared only in the XML are reported but do not fail: a colour can legitimately exist
+ * for the launch theme before a Composable consumes it.
+ */
+abstract class CheckColorPaletteTask : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val composeColors: RegularFileProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val androidColors: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        println("✅ Checking the vot_* colour palette (Compose <-> XML)...")
+
+        val kt = composeColors.get().asFile
+        val xml = androidColors.get().asFile
+        listOf(kt, xml).forEach { if (!it.exists()) throw GradleException("📛 Cannot find ${it.path} !") }
+
+        // val VinylX = Color(0xAARRGGBB) // vot_y
+        val compose =
+            Regex("""val\s+(\w+)\s*=\s*Color\(0x([0-9A-Fa-f]{8})\)\s*//\s*(vot_\w+)""")
+                .findAll(kt.readText())
+                .associate { it.groupValues[3] to (it.groupValues[1] to it.groupValues[2].uppercase()) }
+
+        val android =
+            Regex("""<color name="(vot_\w+)">#([0-9A-Fa-f]{8})</color>""")
+                .findAll(xml.readText())
+                .associate { it.groupValues[1] to it.groupValues[2].uppercase() }
+
+        val drift =
+            compose.mapNotNull { (token, pair) ->
+                val (name, composeHex) = pair
+                val androidHex = android[token] ?: return@mapNotNull null
+                if (composeHex == androidHex) null else "$token: $name=#$composeHex but XML #$androidHex"
+            }
+
+        val unmatched = compose.keys.filterNot { it in android }.sorted()
+        val xmlOnly = android.keys.filterNot { it in compose }.sorted()
+
+        println("   ${compose.size} tokens paired, ${android.size} declared in XML")
+        if (xmlOnly.isNotEmpty()) {
+            println("   ℹ️  XML-only, not consumed by Compose yet: ${xmlOnly.joinToString(", ")}")
+        }
+
+        val errors =
+            buildList {
+                drift.forEach { add("value mismatch — $it") }
+                unmatched.forEach { add("comment points at `$it`, which no <color> declares") }
+            }
+
+        if (errors.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("📛 The Compose and XML palettes disagree:")
+                    errors.forEach { appendLine("   - $it") }
+                    appendLine()
+                    appendLine("Fix the value, or the `// vot_*` comment if the mapping itself is wrong.")
+                },
+            )
+        }
+        println("   No divergence.")
+    }
+}
+
+tasks.register<CheckColorPaletteTask>("checkColorPalette") {
+    group = "verification"
+    description = "Verify the vot_* palette agrees between designsystem/Color.kt and res/values/colors.xml."
+
+    composeColors.set(
+        layout.projectDirectory.file("app/src/main/kotlin/org/vander/android/sample/designsystem/Color.kt"),
+    )
+    androidColors.set(layout.projectDirectory.file("app/src/main/res/values/colors.xml"))
 }
