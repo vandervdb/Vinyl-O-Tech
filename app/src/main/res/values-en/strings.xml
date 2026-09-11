@@ -25,4 +25,14 @@
     <!-- Bottom bar / navigation rail labels -->
     <string name="nav_label_home">Home</string>
     <string name="nav_label_spotify">Spotify</string>
+
+    <!-- Top snackbar (VinylSnackbarHost) -->
+    <string name="snack_auth_failed_title">Spotify sign-in failed</string>
+    <string name="snack_auth_failed_message">Could not authorise your account. Check your connection and try again.</string>
+    <string name="snack_retry">Retry</string>
+
+    <!-- Text engraved in the loader groove (VinylDisc) -->
+    <string name="loader_brand">VINYL O’TECH</string>
+    <string name="loader_connecting">CONNECTING…</string>
+    <string name="loader_connected">CONNECTED</string>
 </resources>
