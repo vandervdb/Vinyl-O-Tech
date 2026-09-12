@@ -14,6 +14,13 @@ import org.vander.core.dto.ImageDto
 import org.vander.core.dto.TrackDto
 import org.vander.core.dto.UserDto
 
+/**
+ * DTO-to-domain mappers for the Web API payloads.
+ *
+ * Each one flattens what the app does not use: the `external_urls` map becomes its `spotify`
+ * entry alone, `external_ids` keeps only the ISRC, and a null queue slot collapses to
+ * [Track.empty] so the list stays non-nullable for the UI.
+ */
 fun CurrentlyPlayingWithQueueDto.toDomain(): CurrentlyPlaying =
     CurrentlyPlaying(
         currentlyPlaying = currentlyPlaying?.toDomain(),

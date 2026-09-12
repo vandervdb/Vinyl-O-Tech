@@ -10,6 +10,12 @@ import org.vander.spotifyclient.domain.datasource.IRemotePlaylistDataSource
 import org.vander.spotifyclient.domain.repository.SpotifyPlaylistRepository
 import javax.inject.Inject
 
+/**
+ * Fetches the playlists, maps the DTO to the domain model and caches the result in memory.
+ *
+ * `getOrThrow()` inside a `try` is how the data source's [Result] is re-wrapped into this
+ * one: a mapping failure and a network failure then come out the same way.
+ */
 class SpotifyPlaylistRepositoryImpl
     @Inject
     constructor(

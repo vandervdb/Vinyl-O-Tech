@@ -1,5 +1,12 @@
 package org.vander.spotifyclient.model.api
 
+/**
+ * Flat description of the track being played, device included.
+ *
+ * Every field is nullable or defaulted, so a partial payload still builds.
+ *
+ * Note: nothing in the repo constructs or reads this class today.
+ */
 data class NowPlaying(
     val trackId: String? = null,
     val uri: String? = null,

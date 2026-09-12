@@ -1,5 +1,16 @@
 package org.vander.spotifyclient.bridge
 
+/**
+ * Authorization parameters a host can override; when it passes `null`, the library falls
+ * back to its own client id, redirect URI and scope list.
+ *
+ * [equals] and [hashCode] are hand-written because [scopes] is an `Array`, whose generated
+ * implementations compare identity rather than content — two configs with identical scopes
+ * would otherwise never be equal.
+ *
+ * @property showDialog forces the Spotify approval screen even when the user already granted
+ *   the scopes.
+ */
 data class AuthConfigK(
     val clientId: String,
     val redirectUrl: String,
@@ -27,6 +38,12 @@ data class AuthConfigK(
     }
 }
 
+/**
+ * Outcome of an authorization started through the bridge.
+ *
+ * [Failed.reason] is an enum rather than free text so a host can branch on it — typically to
+ * retry on `TIMEOUT` but not on `SESSION_FAILED`.
+ */
 sealed class AuthResult {
     data class Authenticated(
         val accessToken: String,
@@ -45,6 +62,12 @@ sealed class AuthResult {
     }
 }
 
+/**
+ * Player state flattened for a host, with every field nullable so a partial state still
+ * crosses the boundary.
+ *
+ * @property trackUri holds the bare track id despite its name — see `toPlayerStateDto`.
+ */
 data class PlayerStateDto(
     val isPlaying: Boolean,
     val positionMs: Long,

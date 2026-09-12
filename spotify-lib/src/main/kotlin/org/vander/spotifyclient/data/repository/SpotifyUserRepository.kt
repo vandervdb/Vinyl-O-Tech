@@ -12,6 +12,13 @@ import org.vander.spotifyclient.domain.repository.UserRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * Fetches the signed-in user's profile and publishes it on [currentUser].
+ *
+ * [CancellationException] is rethrown before the generic `catch`: swallowing it would break
+ * structured concurrency, since it is how a coroutine's cancellation propagates and not an
+ * error to report. Any other failure resets [currentUser] to `null` and is logged.
+ */
 class SpotifyUserRepository
     @Inject
     constructor(

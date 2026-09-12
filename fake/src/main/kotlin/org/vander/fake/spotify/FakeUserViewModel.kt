@@ -5,6 +5,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.vander.core.domain.data.User
 import org.vander.core.ui.presentation.viewmodel.UserViewModel
 
+/**
+ * [UserViewModel] serving a single static user, for `@Preview` of the profile chrome.
+ *
+ * Note that the display name is empty while the picture URL is set, so a preview using it
+ * exercises the picture-without-name case rather than a fully populated header.
+ */
 class FakeUserViewModel : UserViewModel {
     private val _currentUser =
         MutableStateFlow(

@@ -29,6 +29,19 @@ import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import org.vander.spotifyclient.domain.usecase.PlayerUseCase
 import javax.inject.Inject
 
+/**
+ * [SpotifyBridgeApi] implementation: it owns the Activity plumbing the rest of the library
+ * deliberately keeps out of its own classes.
+ *
+ * Two things live here and nowhere else. It holds its own `CoroutineScope` on
+ * `Dispatchers.Main.immediate` with a [SupervisorJob], because a host that is not an Android
+ * app gives it no lifecycle to hang off — which is also why [onDestroy] must be called, or
+ * the scope leaks. And it registers the `ActivityResultLauncher` itself, through
+ * [org.vander.spotifyclient.bridge.util.ActivityResultFactory], for the `Module` entry points.
+ *
+ * It adds no business logic: state comes straight from [sessionManager] and [useCase], and
+ * commands are forwarded to them.
+ */
 class SpotifyBridge
     @Inject
     constructor(

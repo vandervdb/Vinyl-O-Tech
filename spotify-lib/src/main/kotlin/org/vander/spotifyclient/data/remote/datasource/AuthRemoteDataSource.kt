@@ -18,6 +18,16 @@ import javax.inject.Named
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
+/**
+ * Exchanges the authorization code for a token against the Spotify accounts service.
+ *
+ * It uses its own `@Named("AuthHttpClient")` Ktor client, without the bearer plugin: this
+ * call authenticates with a Basic header built from the client id and secret, not with a
+ * token — and sending the app's own credentials to the API client would be wrong.
+ *
+ * Warning: this method logs the raw response body and the Base64 credentials at debug level,
+ * so an access token and the client secret end up in logcat on a debug build.
+ */
 class AuthRemoteDataSource
     @Inject
     constructor(

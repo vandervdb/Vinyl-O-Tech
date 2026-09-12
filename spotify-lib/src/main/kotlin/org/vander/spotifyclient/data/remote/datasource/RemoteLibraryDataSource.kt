@@ -14,6 +14,12 @@ import org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource
 import javax.inject.Inject
 import javax.inject.Named
 
+/**
+ * The `me/tracks` endpoints: read the saved flag, save, remove.
+ *
+ * `me/tracks/contains` answers with a JSON array aligned on the requested ids, so the single
+ * id sent here is read back as the first element.
+ */
 class RemoteLibraryDataSource
     @Inject
     constructor(

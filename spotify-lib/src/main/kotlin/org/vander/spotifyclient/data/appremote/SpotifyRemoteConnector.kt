@@ -7,6 +7,13 @@ import com.spotify.android.appremote.api.SpotifyAppRemote
 import org.vander.spotifyclient.domain.appremote.RemoteConnector
 import org.vander.spotifyclient.utils.REDIRECT_URI
 
+/**
+ * The only place in the app that touches `SpotifyAppRemote.connect`, which is static and
+ * therefore unmockable — isolating it here is what makes everything above it testable.
+ *
+ * Note that `redirectUrl` is ignored: the constant `REDIRECT_URI` is used instead of the
+ * value passed by the caller.
+ */
 class SpotifyRemoteConnector : RemoteConnector {
     override fun connect(
         context: Context,

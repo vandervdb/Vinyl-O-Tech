@@ -11,6 +11,10 @@ import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
 
+/**
+ * `GET me/player/queue`, with the bearer token read per call from [ITokenProvider] rather
+ * than captured at construction — the token is refreshed behind this class's back.
+ */
 class RemoteQueueDataSource
     @Inject
     constructor(

@@ -8,6 +8,12 @@ import org.vander.core.logger.KermitLoggerImpl
 import org.vander.core.logger.Logger
 import javax.inject.Singleton
 
+/**
+ * Binds [Logger] to the Kermit implementation for the whole application.
+ *
+ * `@Provides` and not `@Binds` because [KermitLoggerImpl] is built with a base tag Hilt
+ * cannot guess, and `@Singleton` so every consumer shares one Kermit configuration.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object LoggerModule {

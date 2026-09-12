@@ -7,6 +7,18 @@ import org.vander.core.logger.Logger
 private const val REPEAT_CONTEXT = 1
 private const val REPEAT_TRACK = 2
 
+/**
+ * Maps the SDK's `PlayerState` onto [PlayerStateData], stripping the Spotify URI prefixes so
+ * the ids are directly usable in a Web API call.
+ *
+ * Read it before trusting a field name: `stopped` and `seeking` are hardcoded to `false`, and
+ * `skippingNext`/`skippingPrevious` actually carry "skipping is not allowed" from the SDK's
+ * playback restrictions.
+ *
+ * The two local constants are also named the wrong way round: the SDK's `Repeat` defines
+ * `ONE = 1` and `ALL = 2`, while `REPEAT_CONTEXT` is 1 and `REPEAT_TRACK` is 2 here. Only
+ * the names are wrong — `repeating` tests both values, so its result is unaffected.
+ */
 fun PlayerState.toPlayerStateData(logger: Logger? = null): PlayerStateData {
     val track = this.track
 
@@ -44,6 +56,12 @@ fun PlayerState.toPlayerStateData(logger: Logger? = null): PlayerStateData {
     )
 }
 
+/**
+ * Extracts the image id from the SDK's `ImageId{spotify:image:…'}` rendering.
+ *
+ * It parses a `toString()` output, so an SDK upgrade that changes that formatting silently
+ * returns `null` here rather than failing. Returns `null` when the prefix does not match.
+ */
 fun String.extractSpotifyCoverIdOrNull(): String? =
     if (startsWith("ImageId{spotify:image:")) {
         substringAfter("ImageId{spotify:image:").substringBefore("'}")
@@ -51,5 +69,6 @@ fun String.extractSpotifyCoverIdOrNull(): String? =
         null
     }
 
+/** Strips the `spotify:track:` prefix; returns `null` for anything else, a local file included. */
 fun String.extractSpotifyTrackIdOrNull(): String? =
     if (startsWith("spotify:track:")) substringAfter("spotify:track:") else null

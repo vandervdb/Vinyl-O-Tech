@@ -2,6 +2,15 @@ package org.vander.core.logger.test
 
 import org.vander.core.logger.Logger
 
+/**
+ * [Logger] that records every call in memory so a test can assert on it.
+ *
+ * Shipped in `main` rather than in `src/test` on purpose: it is consumed by the tests of
+ * the other modules, which only see this module's main source set.
+ *
+ * Not thread-safe — entries go into a plain `MutableList`. Fine under `runTest`, not for
+ * a test that logs from several real threads.
+ */
 class FakeLogger : Logger {
     data class Entry(
         val tag: String,

@@ -8,6 +8,18 @@ import org.vander.core.dto.ErrorResponseDto
 import org.vander.core.logger.Logger
 import org.vander.core.logger.NoOpLogger
 
+/**
+ * Reads a Spotify response into [T], turning the API's error envelope into a failed [Result].
+ *
+ * The body is parsed twice on purpose: the API answers 200 with an `error` object in some
+ * cases, so the status code alone cannot be trusted and the payload has to be inspected for
+ * that key before deserializing into [T].
+ *
+ * `ignoreUnknownKeys` is on, so a field added by Spotify does not break the call.
+ *
+ * Warning: the successful branch logs the raw body at debug level, which includes personal
+ * data on the `me` endpoints.
+ */
 suspend inline fun <reified T> HttpResponse.parseSpotifyResult(
     tag: String = "SpotifyApi",
     logger: Logger,

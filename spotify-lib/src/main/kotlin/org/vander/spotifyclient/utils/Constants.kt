@@ -1,5 +1,14 @@
 package org.vander.spotifyclient.utils
 
+// Endpoints, redirect URI and OAuth scopes of the library.
+//
+// `internal`, so they stay invisible to `app` — a consumer configures the library through
+// AuthConfigK, not by reading these.
+//
+// Note that `USER_READ_PRIVATE` holds two space-separated scopes (`user-read-private` and
+// `user-read-email`) despite its singular name, and that `REQUEST_CODE` is a leftover of the
+// pre-`ActivityResult` API.
+
 internal const val REQUEST_CODE = 22114458
 internal const val REDIRECT_URI = "org-vander-androidapp://callback"
 internal const val HTTPS_API_SPOTIFY_COM_V_1 = "https://api.spotify.com/v1/"

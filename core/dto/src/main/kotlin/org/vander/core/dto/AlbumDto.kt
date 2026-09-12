@@ -3,6 +3,12 @@ package org.vander.core.dto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Wire shape of a Spotify Web API album object.
+ *
+ * @property releaseDatePrecision `year`, `month` or `day` — tells how much of
+ *   [releaseDate] is meaningful. Parsed but not carried into the domain model.
+ */
 @Serializable
 data class AlbumDto(
     @SerialName("album_type") val albumType: String,

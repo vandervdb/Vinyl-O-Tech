@@ -9,6 +9,12 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.repository.SpotifyQueueRepository
 import javax.inject.Inject
 
+/**
+ * [SpotifyRemoteUseCase] backed by [SpotifyQueueRepository].
+ *
+ * On failure the previous queue is kept rather than cleared — an intermittent network error
+ * leaves the displayed queue in place instead of blanking it.
+ */
 class SpotifyRemoteUseCaseImpl
     @Inject
     constructor(

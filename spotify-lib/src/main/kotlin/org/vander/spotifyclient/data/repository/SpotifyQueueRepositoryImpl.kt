@@ -10,6 +10,11 @@ import org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource
 import org.vander.spotifyclient.domain.repository.SpotifyQueueRepository
 import javax.inject.Inject
 
+/**
+ * Fetches the playback queue, maps it to the domain model and caches the result in memory.
+ *
+ * Same shape as [SpotifyPlaylistRepositoryImpl]; the cached value survives a failed refresh.
+ */
 class SpotifyQueueRepositoryImpl
     @Inject
     constructor(

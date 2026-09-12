@@ -24,6 +24,29 @@ import org.vander.spotifyclient.domain.state.togglePause
 import org.vander.spotifyclient.domain.state.update
 import javax.inject.Inject
 
+/**
+ * Merges the two sources the player screen needs — the App Remote (current track, position)
+ * and the Web API (queue, saved state) — into the single [DomainPlayerState] and
+ * [UIQueueState] a ViewModel exposes.
+ *
+ * The merge is the reason this class exists: the remote pushes a new state on every tick
+ * while the queue is a snapshot that has to be re-fetched, so [startUp] runs three
+ * collectors and `hasReceivedUpdatedQueue` guards against re-publishing a queue that no
+ * longer matches the playing track.
+ *
+ * [startUp] must be called from a scope that outlives the screen; its collectors never
+ * complete on their own.
+ *
+ * Known rough edges in the current implementation, do not rely on them:
+ * - [togglePlayPause] flips the local pause flag, sends the command, then flips it back, so
+ *   the optimistic update is cancelled out and only the remote's echo moves the UI.
+ * - [toggleSaveTrackState] only updates local state; it never calls [libraryRepository], so
+ *   the change is not persisted to the user's library.
+ * - `playerStateRepository` and `playerRepository` are two constructor parameters bound to
+ *   the same [PlayerStateRepository] instance.
+ * - the logger is built here with `KermitLoggerImpl` instead of being injected, unlike
+ *   [PlaylistUseCase].
+ */
 class PlayerUseCase
     @Inject
     constructor(

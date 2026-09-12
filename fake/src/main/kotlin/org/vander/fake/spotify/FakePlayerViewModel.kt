@@ -9,6 +9,14 @@ import org.vander.core.domain.state.SessionState
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
 import org.vander.core.ui.state.UIQueueState
 
+/**
+ * [PlayerViewModel] backed by static data, for `@Preview` and design work — no Hilt graph,
+ * no App Remote, no network.
+ *
+ * Renders a paused track with a full-length progress bar. Actions are accepted but most of
+ * them do not move the state yet (see the `TODO`s below), so a preview that depends on a
+ * play/pause toggle actually changing will not show it.
+ */
 class FakePlayerViewModel : PlayerViewModel {
     // Backing properties
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Ready)

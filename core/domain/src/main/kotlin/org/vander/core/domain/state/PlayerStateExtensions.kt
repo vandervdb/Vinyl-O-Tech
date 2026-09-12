@@ -1,5 +1,12 @@
 package org.vander.core.domain.state
 
+/**
+ * Read-only accessors that flatten [DomainPlayerState.base], so a consumer writes
+ * `state.trackName` instead of `state.base.trackName`, and two `copyWith*` helpers.
+ *
+ * Extensions rather than members: [DomainPlayerState] stays a plain data class with no
+ * behaviour, and the app can keep the shorthand without the domain model growing an API.
+ */
 val DomainPlayerState.trackName get() = base.trackName
 val DomainPlayerState.artistName get() = base.artistName
 val DomainPlayerState.albumName get() = base.albumName

@@ -9,6 +9,13 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.repository.SpotifyPlaylistRepository
 import javax.inject.Inject
 
+/**
+ * Loads the user's playlists and publishes them as a never-null flow.
+ *
+ * A failure is logged and collapses to [PlaylistCollection.empty] rather than surfacing, so
+ * the grid shows nothing instead of an error. A caller cannot distinguish "no playlists"
+ * from "the call failed".
+ */
 class PlaylistUseCase
     @Inject
     constructor(

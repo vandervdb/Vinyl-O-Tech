@@ -6,6 +6,13 @@ import org.vander.spotifyclient.data.remote.datasource.AuthRemoteDataSource
 import org.vander.spotifyclient.domain.auth.IDataStoreManager
 import javax.inject.Inject
 
+/**
+ * Turns an authorization code into a stored access token.
+ *
+ * Despite its name, [storeAccessToken] takes an authorization *code*, calls the token
+ * endpoint with it, and stores the access token it gets back — it does not store what it is
+ * handed. Reads go straight to DataStore without hitting the network.
+ */
 class AuthRepository
     @Inject
     constructor(

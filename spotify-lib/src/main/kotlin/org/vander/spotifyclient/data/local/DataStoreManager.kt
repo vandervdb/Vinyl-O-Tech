@@ -16,6 +16,20 @@ import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "spotify_prefs")
 
+/**
+ * Token storage on top of a Preferences DataStore named `spotify_prefs`.
+ *
+ * Every operation is wrapped so an [IOException] comes back as a failed [Result] rather than
+ * escaping the data layer. `@Singleton` matters here: DataStore refuses more than one active
+ * instance per file, so a second provider of this class would fail at runtime.
+ *
+ * A few caveats in the current state:
+ * - the three refresh-token methods are `TODO("Not yet implemented")` and throw if called.
+ * - the same `Context.dataStore` delegate is declared twice, once at file level and once in
+ *   the class, both on `spotify_prefs`. Only the class-level one is reachable; the
+ *   file-level one is never touched, which is the only reason the duplicate does not blow up.
+ * - [saveAccessToken] logs the token itself at debug level.
+ */
 @Singleton
 class DataStoreManager
     @Inject

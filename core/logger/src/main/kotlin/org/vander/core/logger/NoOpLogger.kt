@@ -1,5 +1,11 @@
 package org.vander.core.logger
 
+/**
+ * [Logger] that discards everything.
+ *
+ * Null object pattern: a component that takes a non-nullable [Logger] can be built without
+ * one in a preview or a test, with no `?.` sprinkled through the call sites.
+ */
 class NoOpLogger : Logger {
     override fun d(
         tag: String,

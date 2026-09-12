@@ -11,6 +11,7 @@ import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
 
+/** `GET me/playlists`. Parsing and error mapping are delegated to `parseSpotifyResult`. */
 class RemotePlaylistDataSource
     @Inject
     constructor(

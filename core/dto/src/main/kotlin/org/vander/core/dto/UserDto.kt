@@ -3,6 +3,15 @@ package org.vander.core.dto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Response of `GET /me`.
+ *
+ * None of these fields is optional here, so any key the API omits — several depend on the
+ * granted scopes — makes deserialization throw rather than yield a partial user. The app
+ * requests `user-read-private` and `user-read-email` (see `Constants.kt`).
+ *
+ * @property product subscription tier, as returned by the API.
+ */
 @Serializable
 data class UserDto(
     val country: String,

@@ -10,6 +10,19 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.player.PlayerClient
 import javax.inject.Inject
 
+/**
+ * Republishes the App Remote player state, and infers the "saved elsewhere" signal from it.
+ *
+ * That inference is the subtle part, and it rests on an assumption this class makes about the
+ * SDK rather than on a documented guarantee: a push carrying a state equal to the previous one
+ * is read as "something the SDK does not model changed", i.e. the track being saved from
+ * another device. It is published on [savedRemotelyChangedState], then immediately reset to
+ * `false` so it behaves as a one-shot event rather than a level. Any other cause of a
+ * duplicate push would produce a false positive.
+ *
+ * `isListening` makes [startListening] idempotent. Note that [stopListening] only clears that
+ * flag — it does not unsubscribe from the player.
+ */
 class DefaultPlayerStateRepository
     @Inject
     constructor(

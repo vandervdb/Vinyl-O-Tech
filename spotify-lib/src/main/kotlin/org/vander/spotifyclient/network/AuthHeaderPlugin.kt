@@ -7,6 +7,14 @@ import io.ktor.util.AttributeKey
 import org.vander.core.domain.auth.ITokenProvider
 import javax.inject.Inject
 
+/**
+ * Ktor plugin adding the `Authorization: Bearer` header to every request of the client it is
+ * installed on.
+ *
+ * The token is read from [ITokenProvider] inside the interceptor, once per request, so a
+ * refresh is picked up without rebuilding the client. A blank token means the header is
+ * simply omitted and the request still goes out — the plugin never short-circuits a call.
+ */
 class AuthHeaderPlugin
     @Inject
     constructor(
