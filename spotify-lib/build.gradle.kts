@@ -156,6 +156,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlinx.turbine)
     testImplementation(libs.mockk)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)
     kaptTest(libs.kotlin.metadata.jvm)

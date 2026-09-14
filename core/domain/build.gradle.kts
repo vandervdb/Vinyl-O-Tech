@@ -15,4 +15,7 @@ java {
 dependencies {
     implementation(kotlin("stdlib"))
     api(libs.kotlinx.coroutines.core)
+
+    // Pure JVM module: plain JUnit4, no Android runtime, no Robolectric.
+    testImplementation(libs.junit4)
 }
