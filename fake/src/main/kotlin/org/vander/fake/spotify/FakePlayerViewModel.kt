@@ -52,10 +52,6 @@ class FakePlayerViewModel : PlayerViewModel {
         )
     override val domainPlayerState: StateFlow<DomainPlayerState> get() = _domainPlayerState.asStateFlow()
 
-    override fun startUp() {
-        // TODO: initialise si besoin (_sessionState.value = SessionState.Ready, etc.)
-    }
-
     override fun togglePlayPause() {
         // TODO: ex. _domainPlayerState.update { it.togglePause() }
     }
@@ -72,12 +68,8 @@ class FakePlayerViewModel : PlayerViewModel {
         // TODO
     }
 
-    override fun checkIfTrackSaved(trackId: String) {
-        // Nothing to do (fake)
-    }
-
-    override fun toggleSaveTrack(trackId: String) {
-        // Nothing to do (fake)
+    override fun toggleSave() {
+        // TODO
     }
 
     override fun seekTo(position: Long) {

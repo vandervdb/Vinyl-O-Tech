@@ -27,13 +27,6 @@ interface PlayerViewModel {
     /** Current track, playback position and flags. */
     val domainPlayerState: StateFlow<DomainPlayerState>
 
-    /**
-     * Starts the collectors feeding every flow of this contract. Call it once, before any
-     * other function here — the others send commands to a player that is not observed yet
-     * otherwise.
-     */
-    fun startUp()
-
     fun togglePlayPause()
 
     fun skipNext()
@@ -42,25 +35,12 @@ interface PlayerViewModel {
 
     /**
      * @param trackId bare Spotify id, without the `spotify:track:` prefix — the layers below
-     *   rebuild the URI. Passing a full URI produces `spotify:track:spotify:track:…`.
+     *   wrap it in `SpotifyUri.track(...)`. Passing a full URI now throws there rather than
+     *   silently producing `spotify:track:spotify:track:…`.
      */
     fun playTrack(trackId: String)
 
-    /**
-     * Asks whether the track is in the user's library; the answer is expected on
-     * [domainPlayerState]'s `isTrackSaved`.
-     *
-     * Note: the app's implementation currently performs the call and discards the result, so
-     * nothing is published.
-     */
-    fun checkIfTrackSaved(trackId: String)
-
-    /**
-     * Adds or removes the track from the library, the direction being read from the current
-     * `isTrackSaved` — it is not a parameter, so a call made before that value is known
-     * behaves as "save".
-     */
-    fun toggleSaveTrack(trackId: String)
+    fun toggleSave()
 
     /**
      * @param position absolute playback head in milliseconds, not a delta. Out-of-range values

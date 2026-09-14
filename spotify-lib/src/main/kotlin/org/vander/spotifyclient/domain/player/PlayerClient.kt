@@ -1,6 +1,7 @@
 package org.vander.spotifyclient.domain.player
 
 import kotlinx.coroutines.flow.StateFlow
+import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
 import org.vander.core.domain.state.PlayerStateData
 
@@ -40,10 +41,13 @@ interface PlayerClient {
     fun unsubscribeFromPlayerState()
 
     /**
-     * @param trackUri a full `spotify:track:<id>` URI at this level, unlike the layers above
-     *   which take a bare id and build the URI on the way down.
+     * Starts playback of whatever [uri] addresses — a track, a playlist, an album.
+     *
+     * One command for every kind: the App Remote itself exposes a single `play(String)` and
+     * reads the kind from the URI, so a method per kind here would only be re-encoding in
+     * Kotlin what the URI already says.
      */
-    suspend fun play(trackUri: String)
+    suspend fun play(uri: SpotifyUri)
 
     suspend fun pause()
 

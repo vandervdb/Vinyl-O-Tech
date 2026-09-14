@@ -18,8 +18,6 @@ sealed class SessionState {
 
     object Ready : SessionState()
 
-    object IsPaused : SessionState()
-
     data class Failed(
         val exception: Throwable,
     ) : SessionState()

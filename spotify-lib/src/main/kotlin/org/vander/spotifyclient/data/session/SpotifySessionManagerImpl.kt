@@ -23,6 +23,18 @@ import org.vander.spotifyclient.domain.auth.ISpotifyAuthClient
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import javax.inject.Inject
 
+/**
+ * Runs the session as a state machine over [SessionState]: `Idle` -> `Authorizing` ->
+ * `ConnectingRemote` -> `Ready`, with `Failed` reachable from any step.
+ *
+ * The flow is split across three calls because the authorization leaves the app: the UI
+ * registers its launcher through [requestAuthorization], fires it with
+ * [launchAuthorizationFlow], and feeds the Activity result back through [handleAuthResult],
+ * which then exchanges the code for a token and connects the App Remote.
+ *
+ * The caller supplies the [CoroutineScope]: this manager is `@Singleton`-scoped and outlives
+ * any screen, so it must not own the scope the work runs in.
+ */
 class SpotifySessionManagerImpl
     @Inject
     constructor(
@@ -113,6 +125,9 @@ class SpotifySessionManagerImpl
         override suspend fun shutDown() {
             remoteProvider.disconnect()
             _sessionState.update { SessionState.Idle }
+        }
+
+        override suspend fun signout() {
             authRepository.clearAccessToken()
         }
 

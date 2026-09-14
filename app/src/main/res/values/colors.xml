@@ -18,6 +18,7 @@
     <color name="vot_bg_deep">#FF08070B</color>
     <color name="vot_surface">#FF100E16</color>
     <color name="vot_surface_high">#FF16131E</color>
+    <color name="vot_surface_card">#FF221C2E</color>
     <color name="vot_scrim">#D90C0A10</color>
 
     <!-- Text -->
@@ -27,6 +28,7 @@
     <color name="vot_text_tertiary">#FF6B6479</color>
     <color name="vot_text_muted">#FFA29BB0</color>
     <color name="vot_text_on_gradient">#FFCFC8DC</color>
+    <color name="vot_tile_label">#FFE8E4F0</color>
 
     <!-- Lines -->
     <color name="vot_outline">#12FFFFFF</color>

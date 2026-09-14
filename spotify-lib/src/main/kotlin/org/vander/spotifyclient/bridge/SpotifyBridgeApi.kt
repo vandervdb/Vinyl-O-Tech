@@ -107,8 +107,9 @@ interface SpotifyBridgeApi {
     suspend fun disconnect()
 
     /**
-     * @param uri a bare track id despite the name — the `spotify:track:` prefix is added
-     *   downstream.
+     * @param uri a bare track id despite the name — the implementation wraps it in
+     *   `SpotifyUri.track(...)`. The bridge keeps a plain `String` because its TypeScript
+     *   spec cannot express the domain type; the typing starts one layer below.
      */
     suspend fun playUri(uri: String)
 

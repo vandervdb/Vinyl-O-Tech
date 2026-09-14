@@ -16,9 +16,11 @@ import org.vander.spotifyclient.utils.REDIRECT_URI
 import org.vander.spotifyclient.utils.SCOPE_STREAMING
 import org.vander.spotifyclient.utils.USER_LIBRARY_MODIFY
 import org.vander.spotifyclient.utils.USER_LIBRARY_READ
+import org.vander.spotifyclient.utils.USER_MODIFY_PLAYBACK_STATE
 import org.vander.spotifyclient.utils.USER_READ_CURRENTLY_PLAYING
 import org.vander.spotifyclient.utils.USER_READ_PLAYBACK_STATE
 import org.vander.spotifyclient.utils.USER_READ_PRIVATE
+import org.vander.spotifyclient.utils.USER_READ_RECENTLY_PLAYED
 import javax.inject.Inject
 
 open class SpotifyAuthClient
@@ -83,6 +85,8 @@ open class SpotifyAuthClient
                                 USER_READ_PLAYBACK_STATE,
                                 USER_LIBRARY_MODIFY,
                                 USER_LIBRARY_READ,
+                                USER_READ_RECENTLY_PLAYED,
+                                USER_MODIFY_PLAYBACK_STATE,
                             ),
                         )
                         setShowDialog(true)

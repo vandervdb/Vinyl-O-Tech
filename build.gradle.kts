@@ -346,7 +346,7 @@ tasks.register<CheckColorPaletteTask>("checkColorPalette") {
     description = "Verify the vot_* palette agrees between designsystem/Color.kt and res/values/colors.xml."
 
     composeColors.set(
-        layout.projectDirectory.file("app/src/main/kotlin/org/vander/android/sample/designsystem/Color.kt"),
+        layout.projectDirectory.file("app/src/main/kotlin/org/vander/android/vinylotech/designsystem/Color.kt"),
     )
     androidColors.set(layout.projectDirectory.file("app/src/main/res/values/colors.xml"))
 }

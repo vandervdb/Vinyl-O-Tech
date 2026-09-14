@@ -21,6 +21,7 @@
     <string name="content_desc_save_to_library">Save to library</string>
     <string name="content_desc_play">Play</string>
     <string name="content_desc_pause">Pause</string>
+    <string name="content_desc_playlist_playing">%1$s, now playing</string>
 
     <!-- Bottom bar / navigation rail labels -->
     <string name="nav_label_home">Home</string>

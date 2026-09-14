@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 import org.vander.core.domain.auth.IAuthRepository
+import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
@@ -187,7 +188,7 @@ class SpotifyBridge
 
         override suspend fun playUri(uri: String) {
             logger.d(TAG, "playUri(uri=$uri)")
-            useCase.playUri(uri)
+            useCase.play(SpotifyUri.track(uri))
         }
 
         override suspend fun pause() {
@@ -243,7 +244,7 @@ class SpotifyBridge
             logger.d(TAG, "startUp() done (flow launched)")
 
             logger.d(TAG, "starting up PlayerUseCase")
-            useCase.startUp()
+            useCase.init()
         }
 
         suspend fun awaitAuthResult(timeout: Long = authTimeoutMs): AuthResult {

@@ -4,7 +4,7 @@
 
 - **English** identifiers everywhere — no French names
 - **Comment language**: match the language already used in the file's comments; if none (or mixed), write in English. When touching a file with mixed-language comments, rewrite the comments of the lines you touch in English
-- **Package root**: `org.vander.<module>` — `org.vander.spotifyclient` (`spotify-lib`), `org.vander.core.<name>` (`core/*`, e.g. `org.vander.core.security`), `org.vander.fake` (`fake`), `org.vander.android.sample` (`app`)
+- **Package root**: `org.vander.<module>` — `org.vander.spotifyclient` (`spotify-lib`), `org.vander.core.<name>` (`core/*`, e.g. `org.vander.core.security`), `org.vander.fake` (`fake`), `vinylotech` (`app`)
   - **Known inconsistency, do not propagate**: `spotify-lib/src/test/kotlin` uses `com.vander.spotifyclient` instead of `org.vander.spotifyclient` (main and `androidTest` both use `org.vander`). New unit tests in `spotify-lib` go under `org.vander.spotifyclient`, matching main — never copy the `com.vander` root into a new file. Don't silently rename the existing mismatched files unless that IS the task; report it instead
 - **`val`** over `var` everywhere — a `var` must be justified by actual mutation, not convenience
 - **Null-safety**: `?.`, `?:`, `let`/`takeIf` over explicit null checks. `!!` is forbidden except where nullability is provably impossible (add a one-line comment why). Prefer `sealed class`/`kotlin.Result` for error states over nullable returns that conflate "absent" and "failed"

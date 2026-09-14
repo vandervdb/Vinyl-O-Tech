@@ -2,6 +2,7 @@ package org.vander.spotifyclient.utils
 
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import org.vander.core.dto.ErrorResponseDto
@@ -48,4 +49,17 @@ suspend inline fun <reified T> HttpResponse.parseSpotifyResult(
 suspend inline fun <reified T> HttpResponse.parseSpotifyResult(tag: String = "SpotifyApi"): Result<T> {
     val defaultLogger: Logger = NoOpLogger()
     return this.parseSpotifyResult<T>(tag, defaultLogger)
+}
+
+suspend inline fun <reified T> HttpResponse.parseSpotifyResultOrNull(
+    tag: String = "SpotifyApi",
+    logger: Logger,
+): Result<T?> {
+    if (status == HttpStatusCode.NoContent) return Result.success(null)
+    return parseSpotifyResult<T>(tag, logger)
+}
+
+suspend inline fun <reified T> HttpResponse.parseSpotifyResultOrNull(): Result<T?> {
+    if (status == HttpStatusCode.NoContent) return Result.success(null)
+    return parseSpotifyResult<T>()
 }

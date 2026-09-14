@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.CurrentlyPlaying
+import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerStateRepository
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.PlayerStateData
@@ -30,11 +31,11 @@ import javax.inject.Inject
  * [UIQueueState] a ViewModel exposes.
  *
  * The merge is the reason this class exists: the remote pushes a new state on every tick
- * while the queue is a snapshot that has to be re-fetched, so [startUp] runs three
+ * while the queue is a snapshot that has to be re-fetched, so [init] runs three
  * collectors and `hasReceivedUpdatedQueue` guards against re-publishing a queue that no
  * longer matches the playing track.
  *
- * [startUp] must be called from a scope that outlives the screen; its collectors never
+ * [init] must be called from a scope that outlives the screen; its collectors never
  * complete on their own.
  *
  * Known rough edges in the current implementation, do not rely on them:
@@ -72,9 +73,9 @@ class PlayerUseCase
 
         private var hasReceivedUpdatedQueue = false
 
-        suspend fun startUp() =
+        suspend fun init() =
             coroutineScope {
-                logger.d(TAG, "Starting up...")
+                logger.d(TAG, "Initialization...")
                 launch { updateSpotifyPlayerStateAndUIQueueState() }
                 launch { collectSessionState() }
                 launch { observeSavedRemotelyChangedState() }
@@ -107,7 +108,11 @@ class PlayerUseCase
 
         suspend fun skipPrevious() = playerClient.skipPrevious()
 
-        suspend fun playUri(uri: String) = playerClient.play("spotify:track:$uri")
+        /**
+         * @param uri built by the caller through [SpotifyUri]'s factories, so the kind played is
+         *   decided where it is known rather than by a prefix concatenated here.
+         */
+        suspend fun play(uri: SpotifyUri) = playerClient.play(uri)
 
         private suspend fun collectSessionState() {
             logger.d(TAG, "Collecting session state...")

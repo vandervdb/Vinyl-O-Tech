@@ -10,14 +10,14 @@ plugins {
 }
 
 android {
-    namespace = "org.vander.android.sample"
+    namespace = "org.vander.android.vinylotech"
     compileSdk =
         libs.versions.android.compileSdk
             .get()
             .toInt()
 
     defaultConfig {
-        applicationId = "org.vander.android.sample"
+        applicationId = "org.vander.android.vinylotech"
         minSdk =
             libs.versions.android.minSdk
                 .get()

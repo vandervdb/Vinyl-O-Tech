@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.logger.Logger
@@ -64,10 +65,10 @@ class SpotifyPlayerClient
             }
         }
 
-        override suspend fun play(trackUri: String) {
-            logger.d(TAG, "play trackUri: $trackUri")
+        override suspend fun play(uri: SpotifyUri) {
+            logger.d(TAG, "play uri: $uri")
             playerApi
-                ?.play(trackUri)
+                ?.play(uri.value)
                 ?.setResultCallback { logger.d(TAG, "play: accepted") }
                 ?.setErrorCallback { logger.e(TAG, "play: failed", it) }
                 ?: logger.e(TAG, "play: spotifyPlayerApi is null")

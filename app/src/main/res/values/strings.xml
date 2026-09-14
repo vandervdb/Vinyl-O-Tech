@@ -21,6 +21,7 @@
     <string name="content_desc_save_to_library">Ajouter à la bibliothèque</string>
     <string name="content_desc_play">Lecture</string>
     <string name="content_desc_pause">Pause</string>
+    <string name="content_desc_playlist_playing">%1$s, en cours de lecture</string>
 
     <!-- Bottom bar / navigation rail labels -->
     <string name="nav_label_home">Accueil</string>

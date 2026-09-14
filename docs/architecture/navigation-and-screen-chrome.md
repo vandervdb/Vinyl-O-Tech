@@ -8,7 +8,10 @@ dans le fichier de design, pas supposé — les commandes de relevé sont en ann
 
 ## Contexte : ce que la maquette impose
 
-Le design Vinyl O'Tech décrit 11 écrans. Deux relevés en fixent l'architecture.
+Le design Vinyl O'Tech décrit 11 écrans. Deux relevés en fixent l'architecture. Ils ont
+été refaits le 2026-09-12 sur `Vinyl OTech - App Android V1 (standalone).html`, seul
+fichier de design encore présent — celui que cite l'annexe a disparu, et la colonne
+MiniPlayer des écrans 05 et 08 y était l'inverse de ce qu'elle est ici.
 
 **Quel écran porte quel encadrement :**
 
@@ -16,7 +19,7 @@ Le design Vinyl O'Tech décrit 11 écrans. Deux relevés en fixent l'architectur
 |---|---|---|
 | 00 Splash A/B · 01 Connexion | — | — |
 | 02 Accueil · 03 Recherche · 04 Bibliothèque · 10 Profil | ✅ | ✅ |
-| 05 Album · 08 Artiste | ✅ | — |
+| 05 Album · 08 Artiste | ✅ | ✅ |
 | 06 Lecteur · 07 File d'attente · 09 Paroles | — | — |
 
 **Quelle affordance porte chaque écran en haut à gauche :**
@@ -28,8 +31,12 @@ Le design Vinyl O'Tech décrit 11 écrans. Deux relevés en fixent l'architectur
 | `⌄` | 06 Lecteur · 07 File d'attente · 09 Paroles | **modale** : on referme vers le bas |
 
 Les deux tableaux se recouvrent exactement : **tout écran en `⌄` est sans encadrement,
-tout écran en `‹` le conserve.** L'affordance n'est pas un détail graphique, elle
-encode le registre de navigation.
+tout écran en `‹` le conserve — entièrement, MiniPlayer compris.** L'affordance n'est pas
+un détail graphique, elle encode le registre de navigation.
+
+> L'écran 09 Paroles porte bien un bandeau bas, mais qui lui est propre : pleine largeur,
+> `#17112E`, disque de 44 px, sans barre d'onglets ni carte MiniPlayer. Ce n'est pas
+> l'encadrement partagé, donc il reste hors de `CHROME`.
 
 > L'écran 04 semble faire exception avec un `⌄`, mais il s'agit du sélecteur de tri
 > « Récent ⌄ » à côté du titre, pas d'une affordance de fermeture.
@@ -72,8 +79,11 @@ data class ScreenChrome(val bottomBar: Boolean, val miniPlayer: Boolean) {
 }
 ```
 
-Deux booléens indépendants, parce qu'Album et Artiste portent la barre **sans** le
-MiniPlayer. Un seul suffirait s'ils allaient toujours ensemble.
+Deux booléens indépendants alors que, dans la maquette actuelle, tout écran qui porte la
+barre porte aussi le MiniPlayer : **un seul suffirait aujourd'hui.** Ils restent séparés
+parce que ce sont deux décisions de design distinctes qui se trouvent coïncider — une
+révision précédente donnait la barre seule à Album et Artiste — et qu'il faudrait défaire
+la fusion à la première divergence.
 
 La résolution passe par le **type** de la route, pas par une chaîne :
 
@@ -255,19 +265,29 @@ couvre simplement pas.
 
 ## Annexe — comment les relevés ont été faits
 
-Sur le fichier de design (`*.dc.html`), chaque écran est un `div data-screen-label`.
+Dans le fichier de design, chaque écran est un `div data-screen-label`. Attention, le
+balisage y est échappé (`\u002F`, `\n`, `\"`) : il faut le déséchapper avant toute
+recherche, sinon tous les motifs CSS ressortent vides.
 
-```bash
-# quels écrans portent le bandeau bas
-python3 - 'Vinyl OTech - App Android copy copy.dc.html' <<'PY'
-import re, sys
-s = open(sys.argv[1], encoding='utf-8').read()
-for p in re.split(r'(<div data-screen-label="[^"]+")', s):
-    m = re.match(r'<div data-screen-label="([^"]+)"', p)
-    if m: cur = m.group(1); continue
-    dock = 'border-radius: 999px' in p and 'position: absolute; left: 0; right: 0; bottom: 0' in p
-    print(cur, 'bandeau=', dock)
-PY
+Le relevé du 2026-09-12 a été fait sur `Vinyl OTech - App Android V1 (standalone).html`,
+en découpant par écran et en testant trois signatures CSS distinctes — le bandeau, la
+barre d'onglets et la carte du MiniPlayer, qui ne vont pas systématiquement ensemble :
+
+```python
+raw = open("Vinyl OTech - App Android V1 (standalone).html", encoding="utf-8").read()
+s = raw.replace("\\u002F", "/").replace("\\n", "\n").replace('\\"', '"')
+
+labels = [(m.start(), m.group(1)) for m in re.finditer(r'data-screen-label="([^"]+)"', s)]
+bounds = [(lab, off, labels[i + 1][0] if i + 1 < len(labels) else len(s))
+          for i, (off, lab) in enumerate(labels)]
+
+BAND = 'position: absolute; left: 0; right: 0; bottom: 0; z-index: 4'
+DOCK = 'justify-content: space-around; background: #16121E'
+MINI = 'background: #221C2E; border: 1px solid rgba(124,92,255,0.3); border-radius: 18px'
+
+for lab, a, b in bounds:
+    c = s[a:b]
+    print(lab, BAND in c, DOCK in c, MINI in c)
 ```
 
 L'affordance haute se relève de la même façon, en cherchant `‹` et `⌄` dans les
