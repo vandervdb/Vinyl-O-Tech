@@ -40,6 +40,8 @@ open class PlayerViewModelImpl
 
         override val uiQueueState = playerUseCase.uIQueueState
 
+        override val playbackContext = playerUseCase.playbackContext
+
         /**
          * Starts the collectors that feed [domainPlayerState] and [uiQueueState], once per instance.
          *

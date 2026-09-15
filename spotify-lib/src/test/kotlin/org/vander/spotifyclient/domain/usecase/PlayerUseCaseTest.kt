@@ -1,10 +1,12 @@
 package org.vander.spotifyclient.domain.usecase
 
+import app.cash.turbine.test
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
@@ -79,14 +81,35 @@ class PlayerUseCaseTest {
             coVerify(exactly = 1) { client.seekTo(4_200L) }
         }
 
+    @Test
+    fun `playbackContext is republished from the repository`() =
+        runTest {
+            // The use case adds nothing here: unlike the player state and the queue, the
+            // context needs no merging, so it is the repository's flow itself.
+            val stateRepository = FakePlayerStateRepository()
+            val useCase = useCaseWith(FakeSpotifyPlayerClient(), stateRepository)
+            val context = PlaybackContext(uri = SpotifyUri.playlist(PLAYLIST_ID), title = "Sillons")
+
+            useCase.playbackContext.test {
+                assertEquals(PlaybackContext.None, awaitItem())
+
+                stateRepository.emitContext(context)
+
+                assertEquals(PLAYLIST_ID, awaitItem().playlistId)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     /**
      * `playerStateRepository` and `playerRepository` are two constructor parameters bound to
      * the same instance in production; the test mirrors that rather than passing two, so a
      * behaviour depending on their identity is not hidden.
      */
-    private fun useCaseWith(playerClient: PlayerClient): PlayerUseCase {
-        val stateRepository = FakePlayerStateRepository()
-        return PlayerUseCase(
+    private fun useCaseWith(
+        playerClient: PlayerClient,
+        stateRepository: FakePlayerStateRepository = FakePlayerStateRepository(),
+    ): PlayerUseCase =
+        PlayerUseCase(
             sessionUseCase = FakeSpotifySessionManager(),
             remoteUseCase = FakeSpotifyRemoteUseCase(),
             playerStateRepository = stateRepository,
@@ -94,7 +117,6 @@ class PlayerUseCaseTest {
             playerRepository = stateRepository,
             playerClient = playerClient,
         )
-    }
 
     private companion object {
         const val TRACK_ID = "4cOdK2wGLETKBW3PvgPWqT"

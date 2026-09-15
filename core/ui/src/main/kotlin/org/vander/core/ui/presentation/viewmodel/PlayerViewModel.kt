@@ -1,6 +1,7 @@
 package org.vander.core.ui.presentation.viewmodel
 
 import kotlinx.coroutines.flow.StateFlow
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.ui.state.UIQueueState
@@ -26,6 +27,15 @@ interface PlayerViewModel {
 
     /** Current track, playback position and flags. */
     val domainPlayerState: StateFlow<DomainPlayerState>
+
+    /**
+     * What playback runs from — the playlist or album the current track belongs to.
+     *
+     * Pushed by the App Remote on a channel of its own, so it does not move in step with
+     * [domainPlayerState]: right after a playlist is started the track can change one frame
+     * before the context does.
+     */
+    val playbackContext: StateFlow<PlaybackContext>
 
     fun togglePlayPause()
 

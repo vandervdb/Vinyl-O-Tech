@@ -3,6 +3,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.player.PlayerStateRepository
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SavedRemotelyChangedState
@@ -21,7 +22,7 @@ import javax.inject.Inject
  * duplicate push would produce a false positive.
  *
  * `isListening` makes [startListening] idempotent. Note that [stopListening] only clears that
- * flag — it does not unsubscribe from the player.
+ * flag — it does not unsubscribe from the player, from either channel.
  */
 class DefaultPlayerStateRepository
     @Inject
@@ -41,11 +42,17 @@ class DefaultPlayerStateRepository
         override val savedRemotelyChangedState: StateFlow<SavedRemotelyChangedState> =
             _savedRemotelyChangedState.asStateFlow()
 
+        private val _playbackContext = MutableStateFlow(PlaybackContext.None)
+        override val playbackContext: StateFlow<PlaybackContext> = _playbackContext.asStateFlow()
+
         private var isListening = false
 
         override suspend fun startListening() {
             if (isListening) return
             isListening = true
+            // Two subscriptions, because the SDK publishes the context on its own channel.
+            // Both are opened here so `isListening` brackets them together.
+            playerClient.subscribeToPlayerContext { context -> _playbackContext.update { context } }
             playerClient.subscribeToPlayerState { newState ->
                 if (newState == _playerStateData.value) {
                     logger.d(TAG, "Player state did not change -> saved status changed")

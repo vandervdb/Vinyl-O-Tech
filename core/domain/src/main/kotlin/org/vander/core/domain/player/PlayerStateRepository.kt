@@ -1,6 +1,7 @@
 package org.vander.core.domain.player
 
 import kotlinx.coroutines.flow.StateFlow
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SavedRemotelyChangedState
 
@@ -17,6 +18,12 @@ interface PlayerStateRepository {
 
     /** Last "track saved" change observed from another device. */
     val savedRemotelyChangedState: StateFlow<SavedRemotelyChangedState>
+
+    /**
+     * What playback is running from, on the App Remote's own channel — it does not change
+     * at the same moments as [playerStateData]. Starts at [PlaybackContext.None].
+     */
+    val playbackContext: StateFlow<PlaybackContext>
 
     suspend fun startListening()
 

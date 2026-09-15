@@ -3,6 +3,7 @@ package org.vander.fake.spotify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SessionState
@@ -51,6 +52,9 @@ class FakePlayerViewModel : PlayerViewModel {
             ),
         )
     override val domainPlayerState: StateFlow<DomainPlayerState> get() = _domainPlayerState.asStateFlow()
+
+    private val _playbackContext = MutableStateFlow(PlaybackContext.None)
+    override val playbackContext: StateFlow<PlaybackContext> get() = _playbackContext.asStateFlow()
 
     override fun togglePlayPause() {
         // TODO: ex. _domainPlayerState.update { it.togglePause() }

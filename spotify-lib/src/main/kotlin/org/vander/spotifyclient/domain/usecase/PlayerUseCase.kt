@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.CurrentlyPlaying
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerStateRepository
 import org.vander.core.domain.state.DomainPlayerState
@@ -70,6 +71,12 @@ class PlayerUseCase
 
         val savedRemotelyChangedState: StateFlow<SavedRemotelyChangedState> =
             playerStateRepository.savedRemotelyChangedState
+
+        /**
+         * Republished as-is from the repository: the context needs no merging with anything,
+         * unlike the player state and the queue.
+         */
+        val playbackContext: StateFlow<PlaybackContext> = playerStateRepository.playbackContext
 
         private var hasReceivedUpdatedQueue = false
 

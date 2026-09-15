@@ -1,6 +1,7 @@
 package org.vander.spotifyclient.domain.player
 
 import kotlinx.coroutines.flow.StateFlow
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
 import org.vander.core.domain.state.PlayerStateData
@@ -39,6 +40,16 @@ interface PlayerClient {
     suspend fun subscribeToPlayerState(function: (PlayerStateData) -> Unit)
 
     fun unsubscribeFromPlayerState()
+
+    /**
+     * Subscribes to what playback runs from, and invokes [function] on every push.
+     *
+     * A channel of its own, not a field of the player state: the SDK publishes the two
+     * separately and at different moments. Pairs with [unsubscribeFromPlayerContext].
+     */
+    suspend fun subscribeToPlayerContext(function: (PlaybackContext) -> Unit)
+
+    fun unsubscribeFromPlayerContext()
 
     /**
      * Starts playback of whatever [uri] addresses — a track, a playlist, an album.

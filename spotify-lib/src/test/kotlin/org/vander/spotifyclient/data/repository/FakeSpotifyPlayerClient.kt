@@ -3,6 +3,7 @@ package org.vander.spotifyclient.data.repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
 import org.vander.core.domain.state.PlayerStateData
@@ -29,6 +30,21 @@ class FakeSpotifyPlayerClient : PlayerClient {
 
     override fun unsubscribeFromPlayerState() {
         listener = null
+    }
+
+    private var contextListener: ((PlaybackContext) -> Unit)? = null
+
+    override suspend fun subscribeToPlayerContext(function: (PlaybackContext) -> Unit) {
+        contextListener = function
+    }
+
+    override fun unsubscribeFromPlayerContext() {
+        contextListener = null
+    }
+
+    /** Pushes a context to whoever subscribed, as the App Remote would. */
+    fun emitContext(context: PlaybackContext) {
+        contextListener?.invoke(context)
     }
 
     /** Last URI handed to [play], so a test can assert what the layers above built. */

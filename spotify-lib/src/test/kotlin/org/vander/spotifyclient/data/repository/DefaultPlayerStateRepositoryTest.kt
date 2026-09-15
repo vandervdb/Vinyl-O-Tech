@@ -5,6 +5,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import org.vander.core.domain.data.PlaybackContext
+import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SavedRemotelyChangedState
 import org.vander.core.logger.test.FakeLogger
@@ -103,5 +105,53 @@ class DefaultPlayerStateRepositoryTest {
 
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun `playbackContext starts at None`() =
+        runTest {
+            assertEquals(PlaybackContext.None, DefaultPlayerStateRepository(fakeClient, logger).playbackContext.value)
+        }
+
+    @Test
+    fun `startListening republishes the player context`() =
+        runTest {
+            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            val context = PlaybackContext(uri = SpotifyUri.playlist("37i9dQZF1DXcBWIGoYBM5M"), title = "Sillons")
+
+            repo.playbackContext.test {
+                assertEquals(PlaybackContext.None, awaitItem())
+
+                repo.startListening()
+                runCurrent()
+                fakeClient.emitContext(context)
+
+                assertEquals(context, awaitItem())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `the context channel is independent of the state channel`() =
+        runTest {
+            // The point of keeping them apart: a context push moves playbackContext and
+            // leaves playerStateData alone, which is how the SDK behaves.
+            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            repo.startListening()
+            runCurrent()
+
+            fakeClient.emitContext(PlaybackContext(uri = SpotifyUri.playlist("p1")))
+
+            assertEquals("p1", repo.playbackContext.value.playlistId)
+            assertEquals(PlayerStateData.empty(), repo.playerStateData.value)
+        }
+
+    @Test
+    fun `no context arrives before startListening`() =
+        runTest {
+            // emitContext goes to whoever subscribed; nobody has yet.
+            fakeClient.emitContext(PlaybackContext(uri = SpotifyUri.playlist("p1")))
+
+            assertEquals(PlaybackContext.None, DefaultPlayerStateRepository(fakeClient, logger).playbackContext.value)
         }
 }

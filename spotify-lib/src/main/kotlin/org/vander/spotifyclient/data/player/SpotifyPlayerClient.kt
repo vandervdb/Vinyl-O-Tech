@@ -1,15 +1,20 @@
 package org.vander.spotifyclient.data.player
 
 import com.spotify.android.appremote.api.PlayerApi
+import com.spotify.protocol.client.Subscription
+import com.spotify.protocol.types.PlayerContext
+import com.spotify.protocol.types.PlayerState
 import com.spotify.protocol.types.Track
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.logger.Logger
+import org.vander.spotifyclient.data.player.mapper.toPlaybackContext
 import org.vander.spotifyclient.data.player.mapper.toPlayerStateData
 import org.vander.spotifyclient.domain.appremote.AppRemoteProvider
 import org.vander.spotifyclient.domain.player.PlayerClient
@@ -46,19 +51,24 @@ class SpotifyPlayerClient
         private val _lastState = MutableStateFlow(PlayerStateData.empty())
         override val lastState: StateFlow<PlayerStateData> = _lastState.asStateFlow()
 
+        private var stateSubscription: Subscription<PlayerState>? = null
+
+        private var contextSubscription: Subscription<PlayerContext>? = null
+
         override suspend fun subscribeToPlayerState(function: (PlayerStateData) -> Unit) {
             playerApi?.let { api ->
-                api.subscribeToPlayerState().setEventCallback { state ->
-                    val track: Track = state.track
-                    logger.d(
-                        TAG,
-                        "PlayerClient received new data: " + track.name + " by " + track.artist.name +
-                            "(paused: " + state.isPaused + " / coverUri: " + track.imageUri + ")",
-                    )
-                    isPlaying = !state.isPaused
-                    _lastState.value = state.toPlayerStateData(logger)
-                    function(state.toPlayerStateData(logger))
-                }
+                stateSubscription =
+                    api.subscribeToPlayerState().setEventCallback { state ->
+                        val track: Track = state.track
+                        logger.d(
+                            TAG,
+                            "PlayerClient received new data: " + track.name + " by " + track.artist.name +
+                                "(paused: " + state.isPaused + " / coverUri: " + track.imageUri + ")",
+                        )
+                        isPlaying = !state.isPaused
+                        _lastState.value = state.toPlayerStateData(logger)
+                        function(state.toPlayerStateData(logger))
+                    }
             } ?: run {
                 logger.e(TAG, "spotifyPlayerApi is null")
                 _playerConnectionState.update { PlayerConnectionState.NotConnected }
@@ -133,8 +143,28 @@ class SpotifyPlayerClient
 
         override fun isPlaying(): Boolean = isPlaying
 
+        override suspend fun subscribeToPlayerContext(function: (PlaybackContext) -> Unit) {
+            playerApi?.let { api ->
+                contextSubscription =
+                    api.subscribeToPlayerContext().setEventCallback { context ->
+                        val playbackContext = context.toPlaybackContext()
+                        logger.d(TAG, "PlayerClient received new context: $playbackContext")
+                        function(playbackContext)
+                    }
+            } ?: logger.e(TAG, "subscribeToPlayerContext: spotifyPlayerApi is null")
+        }
+
+        override fun unsubscribeFromPlayerContext() {
+            contextSubscription?.cancel()
+            contextSubscription = null
+        }
+
         override fun unsubscribeFromPlayerState() {
-            playerApi?.subscribeToPlayerState()?.cancel()
+            // Cancels the subscription that was opened, not a fresh one: calling
+            // subscribeToPlayerState() here would open a second one and cancel that instead,
+            // leaving the first running.
+            stateSubscription?.cancel()
+            stateSubscription = null
             appRemoteProvider.disconnect()
         }
     }
