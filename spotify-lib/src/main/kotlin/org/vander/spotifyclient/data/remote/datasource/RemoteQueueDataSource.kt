@@ -2,9 +2,6 @@ package org.vander.spotifyclient.data.remote.datasource
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
-import io.ktor.http.HttpHeaders
-import io.ktor.http.headers
-import org.vander.core.domain.auth.ITokenProvider
 import org.vander.core.dto.CurrentlyPlayingWithQueueDto
 import org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource
 import org.vander.spotifyclient.utils.parseSpotifyResult
@@ -12,27 +9,25 @@ import javax.inject.Inject
 import javax.inject.Named
 
 /**
- * `GET me/player/queue`, with the bearer token read per call from [ITokenProvider] rather
- * than captured at construction — the token is refreshed behind this class's back.
+ * `GET me/player/queue`. Parsing and error mapping are delegated to `parseSpotifyResult`.
+ *
+ * Authentication belongs to the client, not here: `auth_api_v1_client` installs
+ * `AuthHeaderPlugin`, which reads the token once per request and therefore picks up a
+ * refresh on its own.
  */
 class RemoteQueueDataSource
     @Inject
     constructor(
         @param:Named("auth_api_v1_client") private val httpClient: HttpClient,
-        private val tokenProvider: ITokenProvider,
     ) : IRemoteQueueDataSource {
-        override suspend fun fetchUserQueue(): Result<CurrentlyPlayingWithQueueDto> {
-            val token = tokenProvider.getAccessToken().orEmpty()
-            return try {
-                val response =
-                    httpClient.get("me/player/queue") {
-                        headers {
-                            append(HttpHeaders.Authorization, "Bearer $token")
-                        }
-                    }
-                return response.parseSpotifyResult<CurrentlyPlayingWithQueueDto>("SpotifyRemoteDataSource")
+        override suspend fun fetchUserQueue(): Result<CurrentlyPlayingWithQueueDto> =
+            try {
+                httpClient.get("me/player/queue").parseSpotifyResult<CurrentlyPlayingWithQueueDto>(TAG)
             } catch (e: Exception) {
                 Result.failure(e)
             }
+
+        private companion object {
+            const val TAG = "RemoteQueueDataSource"
         }
     }

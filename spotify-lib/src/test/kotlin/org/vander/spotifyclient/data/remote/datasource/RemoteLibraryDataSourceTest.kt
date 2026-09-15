@@ -9,14 +9,11 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.vander.core.domain.auth.ITokenProvider
 import org.vander.core.logger.test.FakeLogger
 
 class RemoteLibraryDataSourceTest {
@@ -105,14 +102,18 @@ class RemoteLibraryDataSourceTest {
         }
 
     @Test
-    fun `saveTrack reports success on an HTTP error — known defect`() =
+    fun `saveTrack succeeds on a 200`() =
         runTest {
-            // Records a real defect, NOT the intended behaviour. Ktor's `expectSuccess` is
-            // false by default, so a 403 ("Premium required") or a 401 never throws, and the
-            // try/catch has nothing to catch: the failure is reported as a success.
-            //
-            // Visible consequence: PlayerViewModelImpl.saveTrack flips the local heart on
-            // `onSuccess`, so the UI claims the track was saved when Spotify refused.
+            assertTrue(dataSource(jsonEngine("")).saveTrack(TRACK_ID).isSuccess)
+        }
+
+    @Test
+    fun `saveTrack fails on an HTTP error`() =
+        runTest {
+            // Ktor's `expectSuccess` is false by default, so a refusal never throws and the
+            // try/catch has nothing to catch — the status has to be inspected. Without it,
+            // PlayerViewModelImpl.saveTrack flips the local heart on `onSuccess` and the UI
+            // claims the track was saved when Spotify refused.
             val engine =
                 MockEngine {
                     respond("""{"error":{"status":403,"message":"Premium required"}}""", HttpStatusCode.Forbidden)
@@ -120,15 +121,48 @@ class RemoteLibraryDataSourceTest {
 
             val result = dataSource(engine).saveTrack(TRACK_ID)
 
-            assertTrue(result.isSuccess)
+            assertTrue(result.isFailure)
+            assertTrue(
+                result
+                    .exceptionOrNull()
+                    ?.message
+                    .orEmpty()
+                    .contains("403"),
+            )
         }
 
     @Test
-    fun `removeTrack reports success on an HTTP error too — known defect`() =
+    fun `a failed saveTrack is logged`() =
+        runTest {
+            val logger = FakeLogger()
+            val engine = MockEngine { respond("", HttpStatusCode.Forbidden) }
+
+            dataSource(engine, logger).saveTrack(TRACK_ID)
+
+            assertTrue(logger.contains(FakeLogger.Entry.Level.ERROR, TAG, "Error saving track"))
+        }
+
+    @Test
+    fun `removeTrack succeeds on a 200`() =
+        runTest {
+            assertTrue(dataSource(jsonEngine("")).removeTrack(TRACK_ID).isSuccess)
+        }
+
+    @Test
+    fun `removeTrack fails on an HTTP error`() =
         runTest {
             val engine = MockEngine { respond("", HttpStatusCode.Unauthorized) }
 
-            assertTrue(dataSource(engine).removeTrack(TRACK_ID).isSuccess)
+            assertTrue(dataSource(engine).removeTrack(TRACK_ID).isFailure)
+        }
+
+    @Test
+    fun `a 204 is a success, not an error`() =
+        runTest {
+            // Spotify answers 204 No Content on a successful library write.
+            val engine = MockEngine { respond("", HttpStatusCode.NoContent) }
+
+            assertTrue(dataSource(engine).saveTrack(TRACK_ID).isSuccess)
         }
 
     private fun jsonEngine(body: String) =
@@ -145,24 +179,13 @@ class RemoteLibraryDataSourceTest {
         logger: FakeLogger = FakeLogger(),
     ) = RemoteLibraryDataSource(
         httpClient = HttpClient(engine) { defaultRequest { url(BASE_URL) } },
-        tokenProvider = FakeTokenProvider(TOKEN),
         logger = logger,
     )
-
-    private class FakeTokenProvider(
-        private val token: String?,
-    ) : ITokenProvider {
-        override val tokenFlow: Flow<String?> = flowOf(token)
-
-        override suspend fun getAccessToken(): String? = token
-    }
 
     private companion object {
         const val BASE_URL = "https://api.spotify.com/v1/"
 
         const val TRACK_ID = "4cOdK2wGLETKBW3PvgPWqT"
-
-        const val TOKEN = "BQD-fake-access-token"
 
         const val TAG = "RemoteLibraryDataSource"
     }

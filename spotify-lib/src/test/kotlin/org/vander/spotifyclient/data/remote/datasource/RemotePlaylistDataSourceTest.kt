@@ -30,7 +30,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
 
-            val result = RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isSuccess)
             assertEquals(listOf("Sillons"), result.getOrThrow().items.map { it.name })
@@ -41,7 +41,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
 
-            RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertEquals(
                 "/v1/me/playlists",
@@ -52,33 +52,49 @@ class RemotePlaylistDataSourceTest {
         }
 
     @Test
-    fun `the data source does not actually set the Authorization header — known defect`() =
+    fun `the Authorization header comes from the plugin`() =
         runTest {
-            // Records a real defect, it is NOT the intended behaviour. The data source writes
-            // `headers { append(Authorization, ...) }` while importing `io.ktor.http.headers`,
-            // the top-level builder — which returns a `Headers` object that is then discarded.
-            // `AuthRemoteDataSource` imports `io.ktor.client.request.headers` instead and does
-            // reach the request, which is what makes the difference visible inside the repo.
-            //
-            // Production is unaffected only because the `auth_api_v1_client` installs
-            // AuthHeaderPlugin (see the next test). Point a data source at a client built with
-            // `enableAuthPlugin = false` and every call goes out unauthenticated, silently.
-            val engine = jsonEngine(PLAYLIST_PAGE_JSON)
-
-            RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
-
-            assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
-        }
-
-    @Test
-    fun `the plugin is what authenticates the call in production`() =
-        runTest {
+            // The data source builds no header of its own: authentication belongs to
+            // AuthHeaderPlugin, which reads the token per request and therefore picks up a
+            // refresh. It used to write one too, through `io.ktor.http.headers` — the
+            // top-level builder, whose result is discarded — so nothing was lost by removing it.
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
             val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(TOKEN) } }
 
-            RemotePlaylistDataSource(client, FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            RemotePlaylistDataSource(client).fetchUserPlaylists()
 
             assertEquals("Bearer $TOKEN", engine.requestHistory.single().headers[HttpHeaders.Authorization])
+        }
+
+    @Test
+    fun `the header is sent exactly once`() =
+        runTest {
+            // Guards the fix: a data source appending its own header on top of the plugin
+            // would send Authorization twice, which Spotify rejects.
+            val engine = jsonEngine(PLAYLIST_PAGE_JSON)
+            val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(TOKEN) } }
+
+            RemotePlaylistDataSource(client).fetchUserPlaylists()
+
+            assertEquals(
+                listOf("Bearer $TOKEN"),
+                engine.requestHistory
+                    .single()
+                    .headers
+                    .getAll(HttpHeaders.Authorization),
+            )
+        }
+
+    @Test
+    fun `without the plugin no header goes out at all`() =
+        runTest {
+            // Makes the dependency explicit: these data sources are only usable on a client
+            // that installs the plugin, i.e. the `auth_api_v1_client`.
+            val engine = jsonEngine(PLAYLIST_PAGE_JSON)
+
+            RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+
+            assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
         }
 
     @Test
@@ -88,7 +104,7 @@ class RemotePlaylistDataSourceTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
             val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(null) } }
 
-            val result = RemotePlaylistDataSource(client, FakeTokenProvider(null)).fetchUserPlaylists()
+            val result = RemotePlaylistDataSource(client).fetchUserPlaylists()
 
             assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
             assertTrue(result.isSuccess)
@@ -99,7 +115,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":401,"message":"The access token expired"}}""")
 
-            val result = RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
             assertTrue(
@@ -116,7 +132,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine("{ not json")
 
-            val result = RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
         }
@@ -128,7 +144,7 @@ class RemotePlaylistDataSourceTest {
             // data-source boundary, as the error-handling rule requires.
             val engine = MockEngine { respondError(HttpStatusCode.InternalServerError) }
 
-            val result = RemotePlaylistDataSource(clientOf(engine), FakeTokenProvider(TOKEN)).fetchUserPlaylists()
+            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
         }

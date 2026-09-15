@@ -8,14 +8,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.vander.core.domain.auth.ITokenProvider
 
 /**
  * The two remaining `GET` data sources, which share their shape with
@@ -29,7 +26,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine(QUEUE_JSON)
 
-            RemoteQueueDataSource(clientOf(engine), token()).fetchUserQueue()
+            RemoteQueueDataSource(clientOf(engine)).fetchUserQueue()
 
             assertEquals(
                 "/v1/me/player/queue",
@@ -42,7 +39,7 @@ class RemoteQueueAndUserDataSourceTest {
     @Test
     fun `a queue payload is parsed, holes included`() =
         runTest {
-            val result = RemoteQueueDataSource(clientOf(jsonEngine(QUEUE_JSON)), token()).fetchUserQueue()
+            val result = RemoteQueueDataSource(clientOf(jsonEngine(QUEUE_JSON))).fetchUserQueue()
 
             val dto = result.getOrThrow()
             assertEquals("current", dto.currentlyPlaying?.id)
@@ -55,7 +52,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             // Both fields default on the DTO, so `{}` is a valid answer — which is what the
             // API returns when nothing is playing.
-            val result = RemoteQueueDataSource(clientOf(jsonEngine("{}")), token()).fetchUserQueue()
+            val result = RemoteQueueDataSource(clientOf(jsonEngine("{}"))).fetchUserQueue()
 
             assertTrue(result.isSuccess)
             assertNull(result.getOrThrow().currentlyPlaying)
@@ -67,7 +64,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":401,"message":"expired"}}""")
 
-            assertTrue(RemoteQueueDataSource(clientOf(engine), token()).fetchUserQueue().isFailure)
+            assertTrue(RemoteQueueDataSource(clientOf(engine)).fetchUserQueue().isFailure)
         }
 
     // --- User
@@ -77,7 +74,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine(USER_JSON)
 
-            RemoteUserDataSource(clientOf(engine), token()).fetchUser()
+            RemoteUserDataSource(clientOf(engine)).fetchUser()
 
             assertEquals(
                 "/v1/me",
@@ -90,7 +87,7 @@ class RemoteQueueAndUserDataSourceTest {
     @Test
     fun `a user payload is parsed`() =
         runTest {
-            val result = RemoteUserDataSource(clientOf(jsonEngine(USER_JSON)), token()).fetchUser()
+            val result = RemoteUserDataSource(clientOf(jsonEngine(USER_JSON))).fetchUser()
 
             assertEquals("Vander", result.getOrThrow().displayName)
             assertEquals("premium", result.getOrThrow().product)
@@ -103,7 +100,7 @@ class RemoteQueueAndUserDataSourceTest {
             // makes the whole call fail rather than yield a partial user — documented on the DTO.
             val engine = jsonEngine("""{"display_name":"Vander"}""")
 
-            assertTrue(RemoteUserDataSource(clientOf(engine), token()).fetchUser().isFailure)
+            assertTrue(RemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
         }
 
     @Test
@@ -111,7 +108,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":403,"message":"forbidden"}}""")
 
-            assertTrue(RemoteUserDataSource(clientOf(engine), token()).fetchUser().isFailure)
+            assertTrue(RemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
         }
 
     private fun jsonEngine(body: String) =
@@ -124,16 +121,6 @@ class RemoteQueueAndUserDataSourceTest {
         }
 
     private fun clientOf(engine: MockEngine) = HttpClient(engine) { defaultRequest { url(BASE_URL) } }
-
-    private fun token() = FakeTokenProvider("BQD-fake-access-token")
-
-    private class FakeTokenProvider(
-        private val token: String?,
-    ) : ITokenProvider {
-        override val tokenFlow: Flow<String?> = flowOf(token)
-
-        override suspend fun getAccessToken(): String? = token
-    }
 
     private companion object {
         const val BASE_URL = "https://api.spotify.com/v1/"
