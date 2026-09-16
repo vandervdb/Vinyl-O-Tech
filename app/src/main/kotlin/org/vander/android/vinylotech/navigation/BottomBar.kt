@@ -13,10 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +38,11 @@ private val DockShape = RoundedCornerShape(percent = 50)
 /**
  * The floating dock of screens 02 · 03 · 04 · 10, not a Material navigation bar.
  *
+ * It holds no state. The selected tab used to live in a `remember`ed index, which moved the
+ * highlight without navigating anywhere — the Spotify tab could not be reached — and disagreed
+ * with the back stack as soon as anything else navigated. The caller now derives [selected]
+ * from the back stack and navigates in [onSelect], so the dock can only show where the app is.
+ *
  * `ShortNavigationBar` was dropped rather than restyled: the design overrides its
  * surface, its shape, its height and its item layout, so nothing of Material's would
  * have survived except the name. What is left — labelling only the selected item — is
@@ -55,11 +56,11 @@ private val DockShape = RoundedCornerShape(percent = 50)
  */
 @Composable
 fun BottomBar(
+    selected: NavItem?,
+    onSelect: (NavItem) -> Unit,
     modifier: Modifier = Modifier,
     navItems: List<NavItem> = NavItem.all,
 ) {
-    var selectedItem by remember { mutableStateOf(0) }
-
     Row(
         modifier =
             modifier
@@ -75,11 +76,11 @@ fun BottomBar(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        navItems.forEachIndexed { index, item ->
+        navItems.forEach { item ->
             DockItem(
                 item = item,
-                selected = selectedItem == index,
-                onClick = { selectedItem = index },
+                selected = item == selected,
+                onClick = { onSelect(item) },
             )
         }
     }
@@ -132,6 +133,6 @@ private fun DockItem(
 @Composable
 private fun BottomBarPreview() {
     AndroidAppTheme {
-        BottomBar()
+        BottomBar(selected = NavItem.Home, onSelect = {})
     }
 }

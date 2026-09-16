@@ -20,9 +20,8 @@ import org.vander.core.logger.Logger
  * the controller, the start destination and the content inset.
  *
  * `startDestination` is `ConnectionRoute::class` — the KClass overload is the one that
- * takes an `@Serializable object` route. Passing `NavItem.Home.route` would also compile
- * (it is a KClass too) but would say the wrong thing: a bottom-bar tab is not the app's
- * entry point.
+ * takes an `@Serializable object` route. A bottom-bar tab would compile there too but would
+ * say the wrong thing: a tab is not the app's entry point.
  *
  * The tabs sit inside [MainGraph] rather than at the root. Nesting buys two things that
  * a flat graph cannot express: a single `popUpTo` target for the whole post-login stack,
@@ -57,7 +56,7 @@ fun AppNavHost(
 
         navigation<MainGraph>(startDestination = HomeRoute::class) {
             homeNavGraph()
-            libraryNavGraph(logger)
+            libraryNavGraph(navController, logger)
         }
     }
 }

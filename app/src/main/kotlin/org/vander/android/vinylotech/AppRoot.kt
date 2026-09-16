@@ -47,6 +47,7 @@ import org.vander.android.vinylotech.navigation.AppNavHost
 import org.vander.android.vinylotech.navigation.BottomBar
 import org.vander.android.vinylotech.navigation.MainGraph
 import org.vander.android.vinylotech.navigation.NavItem
+import org.vander.android.vinylotech.navigation.navigateToTab
 import org.vander.android.vinylotech.navigation.ScreenChrome
 import org.vander.android.vinylotech.navigation.screenChrome
 import org.vander.android.vinylotech.util.LifecycleObserverComponent
@@ -119,6 +120,8 @@ fun AppRoot() {
     MainShell(
         chrome = chrome,
         snack = snack,
+        selectedTab = NavItem.all.firstOrNull { it.isSelectedIn(backEntry?.destination) },
+        onTabSelected = navController::navigateToTab,
         // A slot, not a ViewModel parameter: the body below only runs when MainShell
         // actually renders the MiniPlayer, i.e. inside MainGraph. getBackStackEntry throws
         // when its route is off the back stack, so resolving it eagerly would crash on the
@@ -154,6 +157,8 @@ fun AppRoot() {
 private fun MainShell(
     chrome: ScreenChrome,
     snack: VinylSnackbarHostState,
+    selectedTab: NavItem?,
+    onTabSelected: (NavItem) -> Unit,
     miniPlayer: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -196,7 +201,7 @@ private fun MainShell(
                     if (chrome.miniPlayer) {
                         miniPlayer()
                     }
-                    BottomBar(navItems = NavItem.all)
+                    BottomBar(selected = selectedTab, onSelect = onTabSelected)
                 }
             }
         }
@@ -212,6 +217,8 @@ private fun PreviewMainShell() {
         MainShell(
             chrome = ScreenChrome(bottomBar = true, miniPlayer = true),
             snack = rememberVinylSnackbarHostState(),
+            selectedTab = NavItem.Home,
+            onTabSelected = {},
             miniPlayer = { MiniPlayer(viewModel = FakePlayerViewModel(), logger = NoOpLogger()) },
         ) { padding ->
             Box(
