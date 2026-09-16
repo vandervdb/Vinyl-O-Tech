@@ -90,6 +90,12 @@ class PlayerUseCase
 
         suspend fun shutDown() = sessionUseCase.shutDown()
 
+        /**
+         * @param uri built by the caller through [SpotifyUri]'s factories, so the kind played is
+         *   decided where it is known rather than by a prefix concatenated here.
+         */
+        suspend fun play(uri: SpotifyUri) = playerClient.play(uri)
+
         suspend fun togglePlayPause() {
             _domainPlayerState.togglePause()
             if (playerClient.isPlaying()) {
@@ -114,12 +120,6 @@ class PlayerUseCase
         suspend fun skipNext() = playerClient.skipNext()
 
         suspend fun skipPrevious() = playerClient.skipPrevious()
-
-        /**
-         * @param uri built by the caller through [SpotifyUri]'s factories, so the kind played is
-         *   decided where it is known rather than by a prefix concatenated here.
-         */
-        suspend fun play(uri: SpotifyUri) = playerClient.play(uri)
 
         private suspend fun collectSessionState() {
             logger.d(TAG, "Collecting session state...")
