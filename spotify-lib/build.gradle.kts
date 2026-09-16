@@ -88,7 +88,6 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:logger"))
     implementation(project(":core:dto"))
-    implementation(project(":core:ui"))
 
     // --- KotlinX
     implementation(libs.kotlinx.coroutines.core)

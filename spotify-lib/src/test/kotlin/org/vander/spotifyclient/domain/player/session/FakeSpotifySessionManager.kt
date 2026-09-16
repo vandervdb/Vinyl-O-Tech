@@ -18,6 +18,11 @@ class FakeSpotifySessionManager : SpotifySessionManager {
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Idle)
     override val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
 
+    /** Moves the session, as the real manager does when authorization and connection progress. */
+    fun emit(state: SessionState) {
+        _sessionState.value = state
+    }
+
     override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) {
         TODO("Not yet implemented")
     }
@@ -32,7 +37,7 @@ class FakeSpotifySessionManager : SpotifySessionManager {
     }
 
     override suspend fun shutDown() {
-        TODO("Not yet implemented")
+        _sessionState.value = SessionState.Idle
     }
 
     override suspend fun signout() {

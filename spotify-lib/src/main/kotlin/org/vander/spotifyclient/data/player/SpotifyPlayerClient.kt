@@ -1,7 +1,9 @@
 package org.vander.spotifyclient.data.player
 
 import com.spotify.android.appremote.api.PlayerApi
+import com.spotify.protocol.client.CallResult
 import com.spotify.protocol.client.Subscription
+import com.spotify.protocol.types.Empty
 import com.spotify.protocol.types.PlayerContext
 import com.spotify.protocol.types.PlayerState
 import com.spotify.protocol.types.Track
@@ -9,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.state.PlayerConnectionState
@@ -18,7 +22,9 @@ import org.vander.spotifyclient.data.player.mapper.toPlaybackContext
 import org.vander.spotifyclient.data.player.mapper.toPlayerStateData
 import org.vander.spotifyclient.domain.appremote.AppRemoteProvider
 import org.vander.spotifyclient.domain.player.PlayerClient
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 /**
  * A client for interacting with the Spotify player.
@@ -37,6 +43,8 @@ class SpotifyPlayerClient
     ) : PlayerClient {
         companion object {
             const val TAG = "SpotifyPlayerClient"
+
+            private const val COMMAND_TIMEOUT_MS = 5_000L
         }
 
         private var isPlaying = false
@@ -75,54 +83,53 @@ class SpotifyPlayerClient
             }
         }
 
-        override suspend fun play(uri: SpotifyUri) {
+        override suspend fun play(uri: SpotifyUri): Result<Unit> {
             logger.d(TAG, "play uri: $uri")
-            playerApi
-                ?.play(uri.value)
-                ?.setResultCallback { logger.d(TAG, "play: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "play: failed", it) }
-                ?: logger.e(TAG, "play: spotifyPlayerApi is null")
+            return command("play") { play(uri.value) }
         }
 
-        override suspend fun pause() {
-            playerApi
-                ?.pause()
-                ?.setResultCallback { logger.d(TAG, "pause: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "pause: failed", it) }
-                ?: logger.e(TAG, "pause: spotifyPlayerApi is null")
-        }
+        override suspend fun pause(): Result<Unit> = command("pause") { pause() }
 
-        override suspend fun resume() {
-            logger.d(TAG, "resume: ")
-            playerApi
-                ?.resume()
-                ?.setResultCallback { logger.d(TAG, "resume: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "resume: failed", it) }
-                ?: logger.e(TAG, "resume: spotifyPlayerApi is null")
-        }
+        override suspend fun resume(): Result<Unit> = command("resume") { resume() }
 
-        override suspend fun skipNext() {
-            playerApi
-                ?.skipNext()
-                ?.setResultCallback { logger.d(TAG, "skipNext: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "skipNext: failed", it) }
-                ?: logger.e(TAG, "skipNext: spotifyPlayerApi is null")
-        }
+        override suspend fun skipNext(): Result<Unit> = command("skipNext") { skipNext() }
 
-        override suspend fun skipPrevious() {
-            playerApi
-                ?.skipPrevious()
-                ?.setResultCallback { logger.d(TAG, "skipPrevious: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "skipPrevious: failed", it) }
-                ?: logger.e(TAG, "skipPrevious: spotifyPlayerApi is null")
-        }
+        override suspend fun skipPrevious(): Result<Unit> = command("skipPrevious") { skipPrevious() }
 
-        override fun seekTo(position: Long) {
-            playerApi
-                ?.seekTo(position)
-                ?.setResultCallback { logger.d(TAG, "seekTo: accepted") }
-                ?.setErrorCallback { logger.e(TAG, "seekTo: failed", it) }
-                ?: logger.e(TAG, "seekTo: spotifyPlayerApi is null")
+        override suspend fun seekTo(position: Long): Result<Unit> = command("seekTo") { seekTo(position) }
+
+        /**
+         * Sends one command and suspends until the App Remote answers.
+         *
+         * The SDK reports through two callbacks on a `CallResult`; this turns them into a
+         * [Result]. Two guards: a missing `PlayerApi` fails at once instead of dropping the call,
+         * and [COMMAND_TIMEOUT_MS] bounds the wait, since a remote that dies mid-call never calls
+         * either callback back. Cancelling the caller cancels the SDK call too.
+         */
+        private suspend fun command(
+            name: String,
+            call: PlayerApi.() -> CallResult<Empty>,
+        ): Result<Unit> {
+            val api = playerApi
+            if (api == null) {
+                logger.e(TAG, "$name: spotifyPlayerApi is null")
+                return Result.failure(IllegalStateException("$name: PlayerApi unavailable"))
+            }
+
+            val outcome =
+                withTimeoutOrNull(COMMAND_TIMEOUT_MS) {
+                    suspendCancellableCoroutine { continuation ->
+                        val pending = api.call()
+                        pending.setResultCallback { if (continuation.isActive) continuation.resume(Result.success(Unit)) }
+                        pending.setErrorCallback { if (continuation.isActive) continuation.resume(Result.failure(it)) }
+                        continuation.invokeOnCancellation { pending.cancel() }
+                    }
+                } ?: Result.failure(TimeoutException("$name: no answer from the App Remote within ${COMMAND_TIMEOUT_MS}ms"))
+
+            outcome
+                .onSuccess { logger.d(TAG, "$name: accepted") }
+                .onFailure { logger.e(TAG, "$name: failed", it) }
+            return outcome
         }
 
         override fun setShuffle(shuffle: Boolean) {

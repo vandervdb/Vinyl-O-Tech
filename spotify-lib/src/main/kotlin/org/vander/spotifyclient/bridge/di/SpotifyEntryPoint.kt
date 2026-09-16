@@ -11,7 +11,7 @@ import org.vander.core.logger.KermitLoggerImpl
 import org.vander.spotifyclient.bridge.SpotifyBridge
 import org.vander.spotifyclient.bridge.SpotifyBridgeApi
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
-import org.vander.spotifyclient.domain.usecase.PlayerUseCase
+import org.vander.spotifyclient.domain.player.PlayerController
 
 /**
  * Hilt [EntryPoint] letting a component Hilt does not build reach into the graph.
@@ -27,7 +27,7 @@ interface SpotifyEntryPoint {
 
     fun authRepository(): IAuthRepository
 
-    fun spotifyUseCase(): PlayerUseCase
+    fun playerController(): PlayerController
 }
 
 /**
@@ -42,7 +42,7 @@ fun obtainBridgeFromHilt(context: Context): SpotifyBridgeApi {
     val entryPoint = EntryPointAccessors.fromApplication(app, SpotifyEntryPoint::class.java)
     return SpotifyBridge(
         sessionManager = entryPoint.spotifySessionManager(),
-        useCase = entryPoint.spotifyUseCase(),
+        controller = entryPoint.playerController(),
         authRepository = entryPoint.authRepository(),
         appContext = context.applicationContext,
         logger = KermitLoggerImpl("ANDROID_LIB"),

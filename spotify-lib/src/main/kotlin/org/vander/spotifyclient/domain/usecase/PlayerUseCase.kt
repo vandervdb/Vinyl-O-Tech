@@ -1,230 +1,194 @@
 package org.vander.spotifyclient.domain.usecase
 
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.CurrentlyPlaying
-import org.vander.core.domain.data.PlaybackContext
-import org.vander.core.domain.data.SpotifyUri
+import org.vander.core.domain.data.QueuedTrack
+import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerStateRepository
-import org.vander.core.domain.state.DomainPlayerState
+import org.vander.core.domain.state.PlaybackState
 import org.vander.core.domain.state.PlayerStateData
-import org.vander.core.domain.state.SavedRemotelyChangedState
 import org.vander.core.domain.state.SessionState
-import org.vander.core.logger.KermitLoggerImpl
-import org.vander.core.ui.domain.UIQueueItem
-import org.vander.core.ui.state.UIQueueState
+import org.vander.core.logger.Logger
+import org.vander.spotifyclient.di.ApplicationScope
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import org.vander.spotifyclient.domain.player.PlayerClient
+import org.vander.spotifyclient.domain.player.PlayerController
 import org.vander.spotifyclient.domain.repository.LibraryRepository
-import org.vander.spotifyclient.domain.state.setTrackSaved
-import org.vander.spotifyclient.domain.state.togglePause
-import org.vander.spotifyclient.domain.state.update
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
- * Merges the two sources the player screen needs — the App Remote (current track, position)
- * and the Web API (queue, saved state) — into the single [DomainPlayerState] and
- * [UIQueueState] a ViewModel exposes.
+ * [PlayerController] over the App Remote and the Web API.
  *
- * The merge is the reason this class exists: the remote pushes a new state on every tick
- * while the queue is a snapshot that has to be re-fetched, so [init] runs three
- * collectors and `hasReceivedUpdatedQueue` guards against re-publishing a queue that no
- * longer matches the playing track.
+ * It merges three sources that move at different rhythms into one [PlaybackState]: the App
+ * Remote pushes a snapshot on every tick and a context on its own channel, while the queue and
+ * the saved flag are Web API snapshots that have to be fetched. Each source has its own
+ * collector, launched once by [start] in the injected [scope] — a process-wide scope in
+ * production, so a screen going away does not stop what other screens read.
  *
- * [init] must be called from a scope that outlives the screen; its collectors never
- * complete on their own.
- *
- * Known rough edges in the current implementation, do not rely on them:
- * - [togglePlayPause] flips the local pause flag, sends the command, then flips it back, so
- *   the optimistic update is cancelled out and only the remote's echo moves the UI.
- * - [toggleSaveTrackState] only updates local state; it never calls [libraryRepository], so
- *   the change is not persisted to the user's library.
- * - `playerStateRepository` and `playerRepository` are two constructor parameters bound to
- *   the same [PlayerStateRepository] instance.
- * - the logger is built here with `KermitLoggerImpl` instead of being injected, unlike
- *   [PlaylistUseCase].
+ * Two rules keep the Web API calls bounded:
+ * - the saved flag is looked up when the track changes, not on every tick;
+ * - a queue that disagrees with the playing track is refetched once per track, since the Web
+ *   API lags behind the App Remote after a skip and each refetch emits a new value.
  */
 class PlayerUseCase
     @Inject
     constructor(
-        val sessionUseCase: SpotifySessionManager,
-        val remoteUseCase: SpotifyRemoteUseCase,
-        val playerStateRepository: PlayerStateRepository,
-        val libraryRepository: LibraryRepository,
-        val playerRepository: PlayerStateRepository,
-        val playerClient: PlayerClient,
-    ) {
-        private val logger = KermitLoggerImpl("PLAYER_USE_CASE")
-        private val _domainPlayerState =
-            MutableStateFlow(DomainPlayerState.empty())
-        val domainPlayerState: StateFlow<DomainPlayerState> = _domainPlayerState.asStateFlow()
+        private val sessionManager: SpotifySessionManager,
+        private val remoteUseCase: SpotifyRemoteUseCase,
+        private val playerStateRepository: PlayerStateRepository,
+        private val libraryRepository: LibraryRepository,
+        private val playerClient: PlayerClient,
+        @param:ApplicationScope private val scope: CoroutineScope,
+        private val logger: Logger,
+    ) : PlayerController {
+        private val _state = MutableStateFlow(PlaybackState())
+        override val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
-        val currentUserQueue: StateFlow<CurrentlyPlaying?> = remoteUseCase.currentUserQueue
+        private val started = AtomicBoolean(false)
 
-        private val _uIQueueState = MutableStateFlow<UIQueueState>(UIQueueState.empty())
-        val uIQueueState: StateFlow<UIQueueState> = _uIQueueState.asStateFlow()
+        override fun start() {
+            if (!started.compareAndSet(false, true)) return
+            logger.d(TAG, "Starting")
+            scope.launch { observeSession() }
+            scope.launch { observePlayer() }
+            scope.launch { observeSavedFlag() }
+            scope.launch { observeSavedElsewhere() }
+            scope.launch { observeQueue() }
+            scope.launch { observeContext() }
+        }
 
-        val savedRemotelyChangedState: StateFlow<SavedRemotelyChangedState> =
+        override suspend fun dispatch(command: PlayerCommand): Result<Unit> =
+            when (command) {
+                PlayerCommand.TogglePlayPause -> if (playerClient.isPlaying()) playerClient.pause() else playerClient.resume()
+                PlayerCommand.Pause -> playerClient.pause()
+                PlayerCommand.Resume -> playerClient.resume()
+                PlayerCommand.SkipNext -> playerClient.skipNext()
+                PlayerCommand.SkipPrevious -> playerClient.skipPrevious()
+                is PlayerCommand.SeekTo -> playerClient.seekTo(command.positionMs)
+                is PlayerCommand.Play -> playerClient.play(command.uri)
+                PlayerCommand.ToggleSave -> toggleSave()
+            }.onFailure { logger.e(TAG, "dispatch($command) failed", it) }
+
+        /**
+         * Persists the change, then publishes it. The flag only moves on success, so a refused
+         * call leaves the heart as it was rather than showing a state the library does not have.
+         */
+        private suspend fun toggleSave(): Result<Unit> {
+            val player = _state.value.player
+            val trackId = player.base.trackId
+            if (trackId.isEmpty()) return Result.failure(IllegalStateException("ToggleSave: no track loaded"))
+
+            val wasSaved = player.isTrackSaved == true
+            val result = if (wasSaved) libraryRepository.removeTrack(trackId) else libraryRepository.saveTrack(trackId)
+            return result.onSuccess { publishSavedFlag(trackId, !wasSaved) }
+        }
+
+        private suspend fun observeSession() {
+            sessionManager.sessionState.collect { session ->
+                if (session !is SessionState.Ready) return@collect
+                logger.d(TAG, "Session ready")
+                remoteUseCase.getAndEmitUserQueueFlow()
+                playerStateRepository.startListening()
+            }
+        }
+
+        private suspend fun observePlayer() {
+            playerStateRepository.playerStateData.collect { snapshot ->
+                _state.update { current ->
+                    val trackChanged = snapshot.trackId != current.player.base.trackId
+                    // A flag belongs to one track: carrying it over would show the previous
+                    // track's heart until the new lookup answers.
+                    val isTrackSaved = if (trackChanged) null else current.player.isTrackSaved
+                    current.copy(player = current.player.copy(base = snapshot, isTrackSaved = isTrackSaved))
+                }
+            }
+        }
+
+        private suspend fun observeSavedFlag() {
+            playerStateRepository.playerStateData
+                .map { it.trackId }
+                .filter { it.isNotEmpty() }
+                .distinctUntilChanged()
+                .collect { trackId -> lookUpSavedFlag(trackId) }
+        }
+
+        private suspend fun observeSavedElsewhere() {
             playerStateRepository.savedRemotelyChangedState
-
-        /**
-         * Republished as-is from the repository: the context needs no merging with anything,
-         * unlike the player state and the queue.
-         */
-        val playbackContext: StateFlow<PlaybackContext> = playerStateRepository.playbackContext
-
-        private var hasReceivedUpdatedQueue = false
-
-        suspend fun init() =
-            coroutineScope {
-                logger.d(TAG, "Initialization...")
-                launch { updateSpotifyPlayerStateAndUIQueueState() }
-                launch { collectSessionState() }
-                launch { observeSavedRemotelyChangedState() }
-            }
-
-        suspend fun shutDown() = sessionUseCase.shutDown()
-
-        /**
-         * @param uri built by the caller through [SpotifyUri]'s factories, so the kind played is
-         *   decided where it is known rather than by a prefix concatenated here.
-         */
-        suspend fun play(uri: SpotifyUri) = playerClient.play(uri)
-
-        suspend fun togglePlayPause() {
-            _domainPlayerState.togglePause()
-            if (playerClient.isPlaying()) {
-                playerClient.pause()
-            } else {
-                playerClient.resume()
-            }
-            _domainPlayerState.togglePause()
+                .filter { it.isSaved && it.trackId.isNotEmpty() }
+                .collect { event -> lookUpSavedFlag(event.trackId) }
         }
 
-        suspend fun pause() = playerClient.pause()
-
-        suspend fun resume() = playerClient.resume()
-
-        suspend fun seekTo(ms: Long) = playerClient.seekTo(ms)
-
-        fun toggleSaveTrackState(trackId: String) {
-            val newSaveState = _domainPlayerState.value.isTrackSaved == false
-            _domainPlayerState.setTrackSaved(newSaveState)
+        private suspend fun lookUpSavedFlag(trackId: String) {
+            libraryRepository
+                .isTrackSaved(trackId)
+                .onSuccess { publishSavedFlag(trackId, it) }
+                .onFailure { logger.e(TAG, "Saved flag lookup failed for $trackId", it) }
         }
 
-        suspend fun skipNext() = playerClient.skipNext()
-
-        suspend fun skipPrevious() = playerClient.skipPrevious()
-
-        private suspend fun collectSessionState() {
-            logger.d(TAG, "Collecting session state...")
-            sessionUseCase.sessionState.collect { sessionState ->
-                logger.d(TAG, "Received session state: $sessionState")
-                when (sessionState) {
-                    is SessionState.Ready -> {
-                        logger.d(TAG, "Session state: Ready")
-                        remoteUseCase.getAndEmitUserQueueFlow()
-                        playerRepository.startListening()
-                    }
-
-                    else -> {
-                        logger.d(TAG, "Session state: $sessionState")
-                    }
-                }
+        /** Ignores an answer that arrives after the track changed. */
+        private fun publishSavedFlag(
+            trackId: String,
+            isSaved: Boolean,
+        ) {
+            _state.update { current ->
+                if (current.player.base.trackId != trackId) return@update current
+                current.copy(player = current.player.copy(isTrackSaved = isSaved))
             }
         }
 
-        private suspend fun observeSavedRemotelyChangedState() {
-            logger.d(TAG, "Observing saved remotely changed state...")
-            savedRemotelyChangedState.collect { state ->
-                val isSaved = state.isSaved
-                logger.d(TAG, "Received saved remotely changed state: $isSaved")
-                if (isSaved) {
-                    logger.d(TAG, "Saved remotely changed state: true")
-                    val trackId = state.trackId
-                    updateSpotifyPlayerWithIsSavedState(playerStateData = null, trackId)
-                }
-            }
-        }
+        private suspend fun observeQueue() {
+            var refetchedFor: String? = null
+            combine(remoteUseCase.currentUserQueue, playerStateRepository.playerStateData, ::Pair)
+                .collect { (queue, snapshot) ->
+                    if (queue == null || snapshot.trackId.isEmpty()) return@collect
 
-        private suspend fun updateSpotifyPlayerStateAndUIQueueState() {
-            combine(
-                currentUserQueue,
-                playerStateRepository.playerStateData,
-            ) { queueData, playerStateData ->
-                Pair(queueData, playerStateData)
-            }.collect { (queueData, playerStateData) ->
-                logger.d(TAG, "Received player state data: $playerStateData")
-                logger.d(TAG, "Received queue data: $queueData")
-                if (queueData != null && !hasReceivedUpdatedQueue) {
-                    val playerStateDataItem =
-                        UIQueueItem(
-                            trackName = playerStateData.trackName,
-                            artistName = playerStateData.artistName,
-                            trackId = playerStateData.trackId,
-                        )
-                    val matchesCurrent = queueData.currentlyPlaying?.id == playerStateData.trackId
-                    if (!matchesCurrent) {
-                        logger.d(
-                            TAG,
-                            "queueData's currentlyPlaying and playerStateData don't share same trackId",
-                        )
-                        remoteUseCase.getAndEmitUserQueueFlow()
+                    if (queue.currentlyPlaying?.id == snapshot.trackId) {
+                        _state.update { it.copy(queue = queueOf(snapshot, queue)) }
                         return@collect
                     }
-                    logger.d(TAG, "queueData's currentlyPlaying and playerStateData share same trackId")
-                    logger.d(TAG, "Updating UI queue state...")
-                    hasReceivedUpdatedQueue = true
-                    val queueListItems =
-                        queueData.queue.tracks.map {
-                            UIQueueItem(
-                                trackName = it.name,
-                                artistName = it.artists[0].name,
-                                trackId = it.id,
-                            )
-                        }
-                    val parsedQueAndPlayerStateItems = listOf(playerStateDataItem) + queueListItems
-                    _uIQueueState.update { UIQueueState(parsedQueAndPlayerStateItems) }
-                }
 
-                if (hasReceivedUpdatedQueue && playerStateData != PlayerStateData.empty()) {
-                    if (!isTrackInQueue(playerStateData.trackId, _uIQueueState.value)) {
-                        logger.d(TAG, "Queue is not updated, so we will request it again")
-                        hasReceivedUpdatedQueue = false
-                        remoteUseCase.getAndEmitUserQueueFlow()
-                    }
-                    updateSpotifyPlayerWithIsSavedState(playerStateData)
+                    if (refetchedFor == snapshot.trackId) return@collect
+                    refetchedFor = snapshot.trackId
+                    logger.d(TAG, "Queue out of step with ${snapshot.trackId}, refetching once")
+                    remoteUseCase.getAndEmitUserQueueFlow()
                 }
+        }
+
+        private suspend fun observeContext() {
+            playerStateRepository.playbackContext.collect { context ->
+                _state.update { it.copy(context = context) }
             }
         }
 
-        private suspend fun updateSpotifyPlayerWithIsSavedState(
-            playerStateData: PlayerStateData? = null,
-            trackId: String? = null,
-        ) {
-            logger.d(TAG, "Updating Spotify player state: $playerStateData")
-            val currentTrackId = playerStateData?.trackId ?: trackId!!
-            val isSaved = libraryRepository.isTrackSaved(currentTrackId).getOrDefault(false)
-            val currentPlayerState = _domainPlayerState.value
-            logger.d(TAG, "(Spotify player state: $currentPlayerState)")
-            _domainPlayerState.update { currentPlayerState.copy(isTrackSaved = isSaved) }
+        /**
+         * The playing track first — taken from the App Remote, which is ahead of the Web API —
+         * then the upcoming tracks. A null slot, mapped to `Track.empty()` upstream, has no
+         * artist: `firstOrNull` keeps it from throwing.
+         */
+        private fun queueOf(
+            snapshot: PlayerStateData,
+            queue: CurrentlyPlaying,
+        ): List<QueuedTrack> =
+            listOf(QueuedTrack(snapshot.trackId, snapshot.trackName, snapshot.artistName)) +
+                queue.queue.tracks.map { track ->
+                    QueuedTrack(
+                        id = track.id,
+                        name = track.name,
+                        artistName = track.artists.firstOrNull()?.name.orEmpty(),
+                    )
+                }
 
-            if (playerStateData != null) {
-                _domainPlayerState.update { _domainPlayerState.value.copy(base = playerStateData) }
-            }
-        }
-
-        fun isTrackInQueue(
-            trackIdToFind: String,
-            uIQueueState: UIQueueState,
-        ): Boolean = uIQueueState.items.any { it.trackId == trackIdToFind }
-
-        companion object Companion {
-            private const val TAG = "PlayerUseCase"
+        private companion object {
+            const val TAG = "PlayerUseCase"
         }
     }

@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.SpotifyUri
+import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.logger.Logger
-import org.vander.spotifyclient.domain.repository.LibraryRepository
-import org.vander.spotifyclient.domain.usecase.PlayerUseCase
+import org.vander.spotifyclient.domain.player.PlayerController
 import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
 import javax.inject.Inject
 
@@ -15,9 +15,8 @@ import javax.inject.Inject
 class HomeViewModelImpl
     @Inject
     constructor(
-        private val spotifyLibraryRepository: LibraryRepository,
         private val playlistUseCase: PlaylistUseCase,
-        private val playerUseCase: PlayerUseCase,
+        private val controller: PlayerController,
         private val logger: Logger,
     ) : ViewModel(),
         HomeViewModel {
@@ -34,7 +33,7 @@ class HomeViewModelImpl
         override fun playPlaylist(playlistId: String) {
             logger.d(tag, "playPlaylist: $playlistId")
             viewModelScope.launch {
-                playerUseCase.play(SpotifyUri.playlist(playlistId))
+                controller.dispatch(PlayerCommand.Play(SpotifyUri.playlist(playlistId)))
             }
         }
     }

@@ -10,7 +10,8 @@ import org.vander.core.domain.state.PlayerStateData
 import org.vander.spotifyclient.domain.player.PlayerClient
 
 /**
- * Fake implementation of PlayerClient for testing DefaultPlayerStateRepository.
+ * [PlayerClient] driven by the test: [emit] and [emitContext] push as the App Remote would,
+ * [commands] records what was sent, [nextResult] decides how it answers.
  */
 class FakeSpotifyPlayerClient : PlayerClient {
     private val _playerConnectionState =
@@ -51,19 +52,31 @@ class FakeSpotifyPlayerClient : PlayerClient {
     var lastPlayed: SpotifyUri? = null
         private set
 
-    override suspend fun play(uri: SpotifyUri) {
+    /** Every transport command received, in order, by name — `"seekTo:4200"` for arguments. */
+    val commands = mutableListOf<String>()
+
+    /** What every transport command answers; set a failure to simulate a refusal. */
+    var nextResult: Result<Unit> = Result.success(Unit)
+
+    override suspend fun play(uri: SpotifyUri): Result<Unit> {
         lastPlayed = uri
+        return record("play")
     }
 
-    override suspend fun pause() {}
+    override suspend fun pause(): Result<Unit> = record("pause")
 
-    override suspend fun resume() {}
+    override suspend fun resume(): Result<Unit> = record("resume")
 
-    override suspend fun skipNext() {}
+    override suspend fun skipNext(): Result<Unit> = record("skipNext")
 
-    override suspend fun skipPrevious() {}
+    override suspend fun skipPrevious(): Result<Unit> = record("skipPrevious")
 
-    override fun seekTo(position: Long) {}
+    override suspend fun seekTo(position: Long): Result<Unit> = record("seekTo:$position")
+
+    private fun record(command: String): Result<Unit> {
+        commands += command
+        return nextResult
+    }
 
     override fun setShuffle(shuffle: Boolean) {}
 

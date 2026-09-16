@@ -25,11 +25,22 @@ class FakePlayerStateRepository : PlayerStateRepository {
         _playbackContext.value = context
     }
 
-    override suspend fun startListening() {
-        TODO("Not yet implemented")
+    var startListeningCount: Int = 0
+        private set
+
+    /** Pushes a player snapshot, as the App Remote would. */
+    fun emitState(state: PlayerStateData) {
+        _playerStateData.value = state
     }
 
-    override suspend fun stopListening() {
-        TODO("Not yet implemented")
+    /** Signals a track saved or unsaved from another device. */
+    fun emitSavedRemotely(event: SavedRemotelyChangedState) {
+        _savedRemotelyChangedState.value = event
     }
+
+    override suspend fun startListening() {
+        startListeningCount++
+    }
+
+    override suspend fun stopListening() = Unit
 }

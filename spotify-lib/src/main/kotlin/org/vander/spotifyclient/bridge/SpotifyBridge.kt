@@ -14,20 +14,23 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withTimeout
 import org.vander.core.domain.auth.IAuthRepository
+import org.vander.core.domain.data.QueuedTrack
 import org.vander.core.domain.data.SpotifyUri
+import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
-import org.vander.core.ui.state.UIQueueState
 import org.vander.spotifyclient.bridge.util.ActivityResultFactory
 import org.vander.spotifyclient.data.player.mapper.toPlayerStateDto
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
-import org.vander.spotifyclient.domain.usecase.PlayerUseCase
+import org.vander.spotifyclient.domain.player.PlayerController
 import javax.inject.Inject
 
 /**
@@ -40,14 +43,14 @@ import javax.inject.Inject
  * the scope leaks. And it registers the `ActivityResultLauncher` itself, through
  * [org.vander.spotifyclient.bridge.util.ActivityResultFactory], for the `Module` entry points.
  *
- * It adds no business logic: state comes straight from [sessionManager] and [useCase], and
- * commands are forwarded to them.
+ * It adds no business logic: state comes straight from [sessionManager] and [controller], and
+ * commands are forwarded to them as [PlayerCommand]s.
  */
 class SpotifyBridge
     @Inject
     constructor(
         private val sessionManager: SpotifySessionManager,
-        private val useCase: PlayerUseCase,
+        private val controller: PlayerController,
         private val authRepository: IAuthRepository,
         private val appContext: Context,
         private val logger: Logger,
@@ -73,8 +76,11 @@ class SpotifyBridge
             )
 
         override val sessionState: StateFlow<SessionState> = sessionManager.sessionState
-        override val playerState: StateFlow<DomainPlayerState> = useCase.domainPlayerState
-        override val uIQueueState: StateFlow<UIQueueState> = useCase.uIQueueState
+        override val playerState: StateFlow<DomainPlayerState> =
+            controller.state.map { it.player }.stateIn(scope, SharingStarted.Eagerly, DomainPlayerState.empty())
+
+        override val queue: StateFlow<List<QueuedTrack>> =
+            controller.state.map { it.queue }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
         override val playerEvents: Flow<PlayerStateDto> =
             playerState
@@ -105,9 +111,9 @@ class SpotifyBridge
             return value
         }
 
-        override fun getUIQueueState(): UIQueueState {
-            val value = uIQueueState.value
-            logger.d(TAG, "getUIQueueState: $value")
+        override fun getQueue(): List<QueuedTrack> {
+            val value = queue.value
+            logger.d(TAG, "getQueue: ${value.size} tracks")
             return value
         }
 
@@ -188,37 +194,37 @@ class SpotifyBridge
 
         override suspend fun playUri(uri: String) {
             logger.d(TAG, "playUri(uri=$uri)")
-            useCase.play(SpotifyUri.track(uri))
+            controller.dispatch(PlayerCommand.Play(SpotifyUri.track(uri)))
         }
 
         override suspend fun pause() {
             logger.d(TAG, "pause()")
-            useCase.pause()
+            controller.dispatch(PlayerCommand.Pause)
         }
 
         override suspend fun resume() {
             logger.d(TAG, "resume()")
-            useCase.resume()
+            controller.dispatch(PlayerCommand.Resume)
         }
 
         override suspend fun seekTo(ms: Long) {
             logger.d(TAG, "seekTo(ms=$ms)")
-            useCase.seekTo(ms)
+            controller.dispatch(PlayerCommand.SeekTo(ms))
         }
 
         override suspend fun skipNext() {
             logger.d(TAG, "skipNext()")
-            useCase.skipNext()
+            controller.dispatch(PlayerCommand.SkipNext)
         }
 
         override suspend fun skipPrevious() {
             logger.d(TAG, "skipPrevious()")
-            useCase.skipPrevious()
+            controller.dispatch(PlayerCommand.SkipPrevious)
         }
 
-        override fun toggleSaveTrackState(trackId: String) {
-            logger.d(TAG, "toggleSaveTrackState(trackId=$trackId)")
-            useCase.toggleSaveTrackState(trackId)
+        override suspend fun toggleSave() {
+            logger.d(TAG, "toggleSave()")
+            controller.dispatch(PlayerCommand.ToggleSave)
         }
 
         fun onDestroy() {
@@ -243,8 +249,8 @@ class SpotifyBridge
             sessionManager.launchAuthorizationFlow(activity, config)
             logger.d(TAG, "startUp() done (flow launched)")
 
-            logger.d(TAG, "starting up PlayerUseCase")
-            useCase.init()
+            logger.d(TAG, "starting up the player controller")
+            controller.start()
         }
 
         suspend fun awaitAuthResult(timeout: Long = authTimeoutMs): AuthResult {

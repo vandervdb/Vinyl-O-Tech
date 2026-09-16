@@ -57,19 +57,22 @@ interface PlayerClient {
      * One command for every kind: the App Remote itself exposes a single `play(String)` and
      * reads the kind from the URI, so a method per kind here would only be re-encoding in
      * Kotlin what the URI already says.
+     *
+     * The transport commands below all suspend until the App Remote answers, and return its
+     * verdict: a refusal (no Premium, nothing to resume) is a failed [Result], not a log line.
      */
-    suspend fun play(uri: SpotifyUri)
+    suspend fun play(uri: SpotifyUri): Result<Unit>
 
-    suspend fun pause()
+    suspend fun pause(): Result<Unit>
 
-    suspend fun resume()
+    suspend fun resume(): Result<Unit>
 
-    suspend fun skipNext()
+    suspend fun skipNext(): Result<Unit>
 
-    suspend fun skipPrevious()
+    suspend fun skipPrevious(): Result<Unit>
 
     /** @param position absolute playback head in milliseconds. */
-    fun seekTo(position: Long)
+    suspend fun seekTo(position: Long): Result<Unit>
 
     fun setShuffle(shuffle: Boolean)
 

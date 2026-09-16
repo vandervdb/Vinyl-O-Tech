@@ -3,9 +3,9 @@ package org.vander.spotifyclient.bridge
 import android.app.Activity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import org.vander.core.domain.data.QueuedTrack
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.SessionState
-import org.vander.core.ui.state.UIQueueState
 
 /**
  * Facade over the whole library for a host that is not this app — a React Native
@@ -22,7 +22,8 @@ import org.vander.core.ui.state.UIQueueState
 interface SpotifyBridgeApi {
     val playerEvents: Flow<PlayerStateDto>
     val sessionState: StateFlow<SessionState>
-    val uIQueueState: StateFlow<UIQueueState>
+    /** The current track first, then what comes next. */
+    val queue: StateFlow<List<QueuedTrack>>
     val playerState: StateFlow<DomainPlayerState>
 
     /**
@@ -34,8 +35,8 @@ interface SpotifyBridgeApi {
     /** Current value of [sessionState]; same rationale as [getPlayerState]. */
     fun getSessionState(): SessionState
 
-    /** Current value of [uIQueueState]; same rationale as [getPlayerState]. */
-    fun getUIQueueState(): UIQueueState
+    /** Current value of [queue]; same rationale as [getPlayerState]. */
+    fun getQueue(): List<QueuedTrack>
 
     /**
      * Waits for a token to be available, polling storage every 100 ms.
@@ -121,10 +122,12 @@ interface SpotifyBridgeApi {
     suspend fun seekTo(ms: Long)
 
     /**
-     * Flips the local "saved" flag of [playerState] only. It performs no Web API call, so the
-     * user's library is left untouched — saving is the host's job.
+     * Adds the current track to the user's library, or removes it, then updates [playerState].
+     *
+     * Replaces `toggleSaveTrackState(trackId)`, which only flipped a local flag and left saving
+     * to the host: the library write now lives in the player itself.
      */
-    fun toggleSaveTrackState(trackId: String)
+    suspend fun toggleSave()
 
     suspend fun skipNext()
 
