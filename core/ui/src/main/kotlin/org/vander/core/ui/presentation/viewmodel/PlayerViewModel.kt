@@ -1,10 +1,8 @@
 package org.vander.core.ui.presentation.viewmodel
 
 import kotlinx.coroutines.flow.StateFlow
-import org.vander.core.domain.data.PlaybackContext
-import org.vander.core.domain.state.DomainPlayerState
-import org.vander.core.domain.state.SessionState
-import org.vander.core.ui.state.UIQueueState
+import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.ui.state.PlayerUiState
 
 /**
  * Contract every player ViewModel must honour, real or fake.
@@ -14,47 +12,13 @@ import org.vander.core.ui.state.UIQueueState
  * same surface without `app` depending on `fake` at runtime — dependency inversion applied to
  * the presentation layer.
  *
- * State is exposed read-only and collected with `collectAsStateWithLifecycle()`. Every
- * function is fire-and-forget: it starts work and the outcome comes back through a flow,
- * never as a return value.
+ * Two members, where there used to be eleven: one state to draw, one entry point for what the
+ * user does. A new action is a new [PlayerCommand], not a new method on every implementation —
+ * which is what left the fake with empty bodies and previews that never reacted.
  */
 interface PlayerViewModel {
-    /** Connection lifecycle with the Spotify App Remote. */
-    val sessionState: StateFlow<SessionState>
+    val state: StateFlow<PlayerUiState>
 
-    /** Upcoming tracks, already mapped to UI models. */
-    val uiQueueState: StateFlow<UIQueueState>
-
-    /** Current track, playback position and flags. */
-    val domainPlayerState: StateFlow<DomainPlayerState>
-
-    /**
-     * What playback runs from — the playlist or album the current track belongs to.
-     *
-     * Pushed by the App Remote on a channel of its own, so it does not move in step with
-     * [domainPlayerState]: right after a playlist is started the track can change one frame
-     * before the context does.
-     */
-    val playbackContext: StateFlow<PlaybackContext>
-
-    fun togglePlayPause()
-
-    fun skipNext()
-
-    fun skipPrevious()
-
-    /**
-     * @param trackId bare Spotify id, without the `spotify:track:` prefix — the layers below
-     *   wrap it in `SpotifyUri.track(...)`. Passing a full URI now throws there rather than
-     *   silently producing `spotify:track:spotify:track:…`.
-     */
-    fun playTrack(trackId: String)
-
-    fun toggleSave()
-
-    /**
-     * @param position absolute playback head in milliseconds, not a delta. Out-of-range values
-     *   are not clamped here.
-     */
-    fun seekTo(position: Long)
+    /** Fire-and-forget: the outcome comes back through [state], never as a return value. */
+    fun onCommand(command: PlayerCommand)
 }

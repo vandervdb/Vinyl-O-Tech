@@ -1,6 +1,6 @@
 package org.vander.spotifyclient.domain.repository
 
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import org.vander.core.domain.data.User
 
 /**
@@ -11,7 +11,7 @@ import org.vander.core.domain.data.User
  * react to an error.
  */
 interface UserRepository {
-    val currentUser: Flow<User?>
+    val currentUser: StateFlow<User?>
 
     suspend fun fetchCurrentUser()
 }

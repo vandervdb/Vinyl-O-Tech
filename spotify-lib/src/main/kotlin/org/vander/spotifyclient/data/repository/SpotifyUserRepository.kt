@@ -1,7 +1,7 @@
 package org.vander.spotifyclient.data.repository
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.User
@@ -26,7 +26,7 @@ class SpotifyUserRepository
         private val logger: Logger,
     ) : UserRepository {
         private val _currentUser = MutableStateFlow<User?>(null)
-        override val currentUser: Flow<User?> = _currentUser.asStateFlow()
+        override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
         override suspend fun fetchCurrentUser() {
             try {

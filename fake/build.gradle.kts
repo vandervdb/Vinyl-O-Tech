@@ -49,4 +49,6 @@ dependencies {
     implementation(project(":core:ui"))
 
     implementation(libs.androidx.core.ktx)
+
+    testImplementation(libs.junit4)
 }

@@ -7,7 +7,6 @@
     <string name="home_continue_button">Continue with Spotify</string>
     <string name="home_disclaimer">Sign in with your Spotify account. Premium required for playback; no data is sold.</string>
 
-    <string name="home_placeholder">Screen 02 "Home" — not built yet</string>
 
     <!-- SpotifyScreen -->
     <string name="spotify_playlists_title">Playlists</string>

@@ -10,7 +10,7 @@ import org.vander.core.ui.presentation.viewmodel.PlaylistViewModel
  * [PlaylistViewModel] serving 80 generated playlists with remote placeholder covers,
  * enough to exercise scrolling and recycling in a `@Preview` of the grid.
  *
- * [refresh] is not implemented and throws — never call it from a preview.
+ * [refresh] does nothing: the collection is static, and a preview may call it freely.
  */
 class FakePlaylistViewModel : PlaylistViewModel {
     private val _playlists =
@@ -29,7 +29,5 @@ class FakePlaylistViewModel : PlaylistViewModel {
 
     override val playlists = _playlists as StateFlow<PlaylistCollection>
 
-    override fun refresh() {
-        TODO("Not yet implemented")
-    }
+    override fun refresh() = Unit
 }

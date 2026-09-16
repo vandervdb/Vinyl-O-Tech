@@ -54,9 +54,11 @@ import org.vander.android.vinylotech.designsystem.VotDimens
 import org.vander.android.vinylotech.designsystem.component.MarqueeTextInfinite
 import org.vander.android.vinylotech.designsystem.component.VinylMiniTurntable
 import org.vander.core.domain.state.SessionState
+import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.logger.Logger
 import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
+import org.vander.core.ui.state.PlayerUiState
 
 // Spotify's own "restart vs. go to previous track" cutoff for skipPrevious() — not
 // documented by the SDK, approximated from observed behavior. Tune if it misfires.
@@ -101,45 +103,40 @@ fun MiniPlayer(
     viewModel: PlayerViewModel,
     logger: Logger,
 ) {
-    val playerState by viewModel.domainPlayerState.collectAsStateWithLifecycle()
-    val uIQueueState by viewModel.uiQueueState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    logger.d("MiniPlayer", "Session is ready")
-    logger.d("MiniPlayer", "Player state: $playerState")
-    logger.d("MiniPlayer", "Queue state: $uIQueueState")
-
-//    if (uIQueueState.items.isNotEmpty()) {
     MiniPlayerContent(
-        trackParams =
-            TrackParams(
-                tracksQueue = uIQueueState.items,
-                trackId = playerState.base.trackId,
-                isSaved = playerState.isTrackSaved == true,
-                isPaused = playerState.base.isPaused,
-                positionMS = playerState.base.positionMs,
-                durationMS = playerState.base.durationMs,
-            ),
-        onToggleSave = { viewModel.toggleSave() },
+        trackParams = state.toTrackParams(),
+        onToggleSave = { viewModel.onCommand(PlayerCommand.ToggleSave) },
         skipNext = {
             logger.d("MiniPlayer", "Skipping next track")
-            viewModel.skipNext()
+            viewModel.onCommand(PlayerCommand.SkipNext)
         },
         skipPrevious = {
             logger.d("MiniPlayer", "Skipping previous track")
-            viewModel.skipPrevious()
+            viewModel.onCommand(PlayerCommand.SkipPrevious)
         },
-        onPlayPause = { viewModel.togglePlayPause() },
-        onSeekTo = { targetMs -> viewModel.seekTo(targetMs) },
+        onPlayPause = { viewModel.onCommand(PlayerCommand.TogglePlayPause) },
+        onSeekTo = { targetMs -> viewModel.onCommand(PlayerCommand.SeekTo(targetMs)) },
         cover = {
             SpotifyTrackCover(
-                imageUri = playerState.base.coverId,
+                imageUri = state.player.base.coverId,
                 modifier = Modifier.fillMaxSize(),
             )
         },
         logger = logger,
     )
-//    }
 }
+
+private fun PlayerUiState.toTrackParams() =
+    TrackParams(
+        tracksQueue = queue.items,
+        trackId = player.base.trackId,
+        isSaved = player.isTrackSaved == true,
+        isPaused = player.base.isPaused,
+        positionMS = player.base.positionMs,
+        durationMS = player.base.durationMs,
+    )
 
 @Composable
 private fun MiniPlayerContent(
@@ -156,7 +153,7 @@ private fun MiniPlayerContent(
     val currentTrackId = trackParams.trackId
     val currentTrackIndex = trackParams.tracksQueue.indexOfFirst { it.trackId == currentTrackId }
 
-    // Workaround to prevent the swipe gesture callback (playTrack(newTrackId)) to be triggered
+    // Keeps a programmatic page change (the player moved on) from being read as a user swipe
     var suppressSwipeCallback by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentTrackId) {
@@ -168,8 +165,8 @@ private fun MiniPlayerContent(
         }
     }
     LaunchedEffect(pagerState.currentPage) {
-        // currentTrackIndex == -1 means domainPlayerState hasn't caught up with a freshly
-        // rebuilt uiQueueState yet — the real current track isn't identified in the queue,
+        // currentTrackIndex == -1 means the player snapshot hasn't caught up with a freshly
+        // rebuilt queue yet — the real current track isn't identified in the queue,
         // so page 0 can't be trusted as a user swipe target.
         if (!suppressSwipeCallback && currentTrackIndex >= 0) {
             val newTrackId = trackParams.tracksQueue.getOrNull(pagerState.currentPage)?.trackId
@@ -343,41 +340,31 @@ fun MiniPlayerWithPainter(
     coverPainter: Painter,
     logger: Logger,
 ) {
-    val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
-    val playerState by viewModel.domainPlayerState.collectAsStateWithLifecycle()
-    val uIQueueState by viewModel.uiQueueState.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    if (sessionState is SessionState.Ready) {
-        MiniPlayerContent(
-            trackParams =
-                TrackParams(
-                    tracksQueue = uIQueueState.items,
-                    trackId = playerState.base.trackId,
-                    isSaved = playerState.isTrackSaved == true,
-                    isPaused = playerState.base.isPaused,
-                    positionMS = playerState.base.positionMs,
-                    durationMS = playerState.base.durationMs,
-                ),
-            onToggleSave = { viewModel.toggleSave() },
-            skipNext = {
-                logger.d("MiniPlayer", "Skipping next track")
-                viewModel.skipNext()
-            },
-            skipPrevious = {
-                logger.d("MiniPlayer", "Skipping previous track")
-                viewModel.skipPrevious()
-            },
-            onPlayPause = { viewModel.togglePlayPause() },
-            onSeekTo = { targetMs -> viewModel.seekTo(targetMs) },
-            cover = {
-                SpotifyTrackCover(
-                    painter = coverPainter,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            },
-            logger = logger,
-        )
-    }
+    if (state.session !is SessionState.Ready) return
+
+    MiniPlayerContent(
+        trackParams = state.toTrackParams(),
+        onToggleSave = { viewModel.onCommand(PlayerCommand.ToggleSave) },
+        skipNext = {
+            logger.d("MiniPlayer", "Skipping next track")
+            viewModel.onCommand(PlayerCommand.SkipNext)
+        },
+        skipPrevious = {
+            logger.d("MiniPlayer", "Skipping previous track")
+            viewModel.onCommand(PlayerCommand.SkipPrevious)
+        },
+        onPlayPause = { viewModel.onCommand(PlayerCommand.TogglePlayPause) },
+        onSeekTo = { targetMs -> viewModel.onCommand(PlayerCommand.SeekTo(targetMs)) },
+        cover = {
+            SpotifyTrackCover(
+                painter = coverPainter,
+                modifier = Modifier.fillMaxSize(),
+            )
+        },
+        logger = logger,
+    )
 }
 
 @Preview(showBackground = true)

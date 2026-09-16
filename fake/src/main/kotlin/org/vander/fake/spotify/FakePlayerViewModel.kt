@@ -3,80 +3,112 @@ package org.vander.fake.spotify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.PlaybackContext
+import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.DomainPlayerState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SessionState
+import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
+import org.vander.core.ui.state.PlayerUiState
 import org.vander.core.ui.state.UIQueueState
 
 /**
- * [PlayerViewModel] backed by static data, for `@Preview` and design work — no Hilt graph,
- * no App Remote, no network.
+ * [PlayerViewModel] for `@Preview` and design work — no Hilt graph, no App Remote, no network.
  *
- * Renders a paused track with a full-length progress bar. Actions are accepted but most of
- * them do not move the state yet (see the `TODO`s below), so a preview that depends on a
- * play/pause toggle actually changing will not show it.
+ * Every command moves the state the way the real player would, so an interactive preview
+ * reacts: play/pause flips, a skip walks the queue, the heart toggles. [received] records what
+ * was sent, for a test that only cares about the intent.
+ *
+ * @param initial starting state; defaults to a playing track at the head of a short queue.
  */
-class FakePlayerViewModel : PlayerViewModel {
-    // Backing properties
-    private val _sessionState = MutableStateFlow<SessionState>(SessionState.Ready)
-    override val sessionState: StateFlow<SessionState> get() = _sessionState.asStateFlow()
+class FakePlayerViewModel(
+    initial: PlayerUiState = sampleState(),
+) : PlayerViewModel {
+    private val _state = MutableStateFlow(initial)
+    override val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
-    private val _uiQueueState = MutableStateFlow(UIQueueState.empty())
-    override val uiQueueState: StateFlow<UIQueueState> get() = _uiQueueState.asStateFlow()
+    val received = mutableListOf<PlayerCommand>()
 
-    private val _domainPlayerState =
-        MutableStateFlow(
+    override fun onCommand(command: PlayerCommand) {
+        received += command
+        _state.update { reduce(it, command) }
+    }
+
+    companion object {
+        fun sampleState(): PlayerUiState {
+            val queue =
+                listOf(
+                    UIQueueItem(trackName = "Nuits blanches", artistName = "Elia Faure", trackId = "t1"),
+                    UIQueueItem(trackName = "Marée haute", artistName = "Nord Nord", trackId = "t2"),
+                    UIQueueItem(trackName = "Braise", artistName = "Cléo Wend", trackId = "t3"),
+                )
+            val current = queue.first()
+            return PlayerUiState(
+                session = SessionState.Ready,
+                player =
+                    DomainPlayerState(
+                        base =
+                            PlayerStateData.empty().copy(
+                                trackName = current.trackName,
+                                artistName = current.artistName,
+                                albumName = "Sillons",
+                                trackId = current.trackId,
+                                isPaused = false,
+                                paused = false,
+                                playing = true,
+                                positionMs = 42_000,
+                                durationMs = 214_000,
+                            ),
+                        isTrackSaved = false,
+                    ),
+                queue = UIQueueState(queue),
+            )
+        }
+    }
+}
+
+/** What the real player would do, reduced to what a preview can show. */
+internal fun reduce(
+    state: PlayerUiState,
+    command: PlayerCommand,
+): PlayerUiState =
+    when (command) {
+        PlayerCommand.TogglePlayPause -> state.withPaused(!state.player.base.isPaused)
+        PlayerCommand.Pause -> state.withPaused(true)
+        PlayerCommand.Resume -> state.withPaused(false)
+        PlayerCommand.SkipNext -> state.movedBy(1)
+        PlayerCommand.SkipPrevious -> state.movedBy(-1)
+        is PlayerCommand.SeekTo -> {
+            val base = state.player.base
+            state.withBase(base.copy(positionMs = command.positionMs.coerceIn(0, base.durationMs)))
+        }
+        is PlayerCommand.Play -> state.withPaused(false).copy(context = PlaybackContext(uri = command.uri))
+        PlayerCommand.ToggleSave ->
+            state.copy(player = state.player.copy(isTrackSaved = state.player.isTrackSaved != true))
+    }
+
+private fun PlayerUiState.withBase(base: PlayerStateData) = copy(player = player.copy(base = base))
+
+private fun PlayerUiState.withPaused(paused: Boolean) =
+    withBase(player.base.copy(isPaused = paused, paused = paused, playing = !paused))
+
+/** Walks the queue; stays put at either end rather than wrapping around. */
+private fun PlayerUiState.movedBy(delta: Int): PlayerUiState {
+    val items = queue.items
+    val target = items.getOrNull(items.indexOfFirst { it.trackId == player.base.trackId } + delta) ?: return this
+    return copy(
+        player =
             DomainPlayerState(
                 base =
-                    PlayerStateData(
-                        trackName = "Zelda's Theme",
-                        artistName = "Koji Kondo",
-                        albumName = "Zelda",
-                        coverId = "",
-                        trackId = "",
-                        isPaused = true,
-                        playing = false,
-                        paused = true,
-                        stopped = false,
-                        shuffling = false,
-                        repeating = true,
-                        seeking = false,
-                        skippingNext = false,
-                        skippingPrevious = false,
-                        positionMs = 1234567890L,
-                        durationMs = 1234567890L,
+                    player.base.copy(
+                        trackId = target.trackId,
+                        trackName = target.trackName,
+                        artistName = target.artistName,
+                        positionMs = 0,
                     ),
                 isTrackSaved = false,
             ),
-        )
-    override val domainPlayerState: StateFlow<DomainPlayerState> get() = _domainPlayerState.asStateFlow()
-
-    private val _playbackContext = MutableStateFlow(PlaybackContext.None)
-    override val playbackContext: StateFlow<PlaybackContext> get() = _playbackContext.asStateFlow()
-
-    override fun togglePlayPause() {
-        // TODO: ex. _domainPlayerState.update { it.togglePause() }
-    }
-
-    override fun skipNext() {
-        // TODO
-    }
-
-    override fun skipPrevious() {
-        // TODO
-    }
-
-    override fun playTrack(trackId: String) {
-        // TODO
-    }
-
-    override fun toggleSave() {
-        // TODO
-    }
-
-    override fun seekTo(position: Long) {
-        // Nothing to do (fake)
-    }
+    )
 }

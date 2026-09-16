@@ -7,7 +7,6 @@
     <string name="home_continue_button">Continuer avec Spotify</string>
     <string name="home_disclaimer">Connexion via ton compte Spotify. Compte Premium requis pour la lecture ; aucune donnée revendue.</string>
 
-    <string name="home_placeholder">Écran 02 « Accueil » — à construire</string>
 
     <!-- SpotifyScreen -->
     <string name="spotify_playlists_title">Playlists</string>
