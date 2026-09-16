@@ -21,6 +21,8 @@ class HomeViewModelImpl
         private val logger: Logger,
     ) : ViewModel(),
         HomeViewModel {
+
+            val tag = "HomeViewModelImpl"
         override val playlists = playlistUseCase.playlists
 
         init {
@@ -30,7 +32,7 @@ class HomeViewModelImpl
         }
 
         override fun playPlaylist(playlistId: String) {
-            logger.d("HomeViewModelImpl", "playPlaylist: $playlistId")
+            logger.d(tag, "playPlaylist: $playlistId")
             viewModelScope.launch {
                 playerUseCase.play(SpotifyUri.playlist(playlistId))
             }

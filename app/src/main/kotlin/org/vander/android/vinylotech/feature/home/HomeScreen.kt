@@ -7,23 +7,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.vander.core.logger.Logger
 
 @Composable
 fun HomeScreen(
-    viewmodel: HomeViewModel,
-    logger: Logger,
+    viewModel: HomeViewModel,
 ) {
     val tag = "HomeScreen"
 
-    val playlists by viewmodel.playlists.collectAsStateWithLifecycle()
-    logger.d(tag, "playlists: $playlists")
+    val playlists by viewModel.playlists.collectAsStateWithLifecycle()
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         PlaylistGrid(
             playlists = playlists.items,
             playingPlaylistId = null,
-            onPlaylistClick = { playlist -> viewmodel.playPlaylist(playlist.id) },
+            onPlaylistClick = { playlist -> viewModel.playPlaylist(playlist.id) },
         )
     }
 }

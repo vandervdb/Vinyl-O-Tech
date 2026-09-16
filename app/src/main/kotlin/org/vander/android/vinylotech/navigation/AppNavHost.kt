@@ -56,7 +56,7 @@ fun AppNavHost(
         )
 
         navigation<MainGraph>(startDestination = HomeRoute::class) {
-            homeNavGraph(logger)
+            homeNavGraph()
             libraryNavGraph(logger)
         }
     }

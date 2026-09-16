@@ -9,9 +9,9 @@ import org.vander.core.logger.Logger
 @Serializable
 object HomeRoute
 
-fun NavGraphBuilder.homeNavGraph(logger: Logger) {
+fun NavGraphBuilder.homeNavGraph() {
     composable<HomeRoute> {
-        val viewmodel = hiltViewModel<HomeViewModelImpl>()
-        HomeScreen(viewmodel, logger)
+        val viewModel = hiltViewModel<HomeViewModelImpl>()
+        HomeScreen(viewModel)
     }
 }
