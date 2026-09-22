@@ -6,9 +6,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.vander.core.domain.auth.IAuthRepository
 import org.vander.core.logger.Logger
+import org.vander.core.security.api.SecureTokenStorage
 import org.vander.spotifyclient.data.remote.datasource.AuthRemoteDataSource
 import org.vander.spotifyclient.data.repository.AuthRepository
-import org.vander.spotifyclient.domain.auth.IDataStoreManager
 import javax.inject.Singleton
 
 @Module
@@ -18,7 +18,7 @@ object AuthProvidesModule {
     @Singleton
     fun provideAuthRepository(
         authRemoteDataSource: AuthRemoteDataSource,
-        dataStoreManager: IDataStoreManager,
+        secureTokenStorage: SecureTokenStorage,
         logger: Logger,
-    ): IAuthRepository = AuthRepository(authRemoteDataSource, dataStoreManager, logger)
+    ): IAuthRepository = AuthRepository(authRemoteDataSource, secureTokenStorage, logger)
 }

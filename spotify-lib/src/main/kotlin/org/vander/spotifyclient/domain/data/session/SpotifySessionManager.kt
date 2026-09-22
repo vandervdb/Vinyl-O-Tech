@@ -31,6 +31,15 @@ interface SpotifySessionManager {
      */
     fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>)
 
+    suspend fun requestAuthorization(
+        launchAuth: ActivityResultLauncher<Intent>,
+        activity: Activity,
+        context: Context,
+        coroutineScope: CoroutineScope,
+        dispatcher: CoroutineDispatcher,
+        config: AuthConfigK?,
+    )
+
     /**
      * Consumes the Activity result, exchanges the code for a token, then connects the App
      * Remote — the rest of the session runs from here.

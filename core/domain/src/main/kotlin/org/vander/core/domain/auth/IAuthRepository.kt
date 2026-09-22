@@ -1,25 +1,36 @@
 package org.vander.core.domain.auth
 
+import org.vander.core.domain.data.TokenResponse
+
 /**
- * Persists the Spotify Web API access token obtained by the authorization flow.
+ * Obtains and persists the Spotify Web API tokens.
  *
- * Every operation returns a [Result] rather than throwing: storage is backed by DataStore,
- * whose failures are recoverable and must be surfaced to the caller, not crash it.
+ * Fetching and storing are two operations under two names: one hits the accounts service, the
+ * other writes to disk, and they fail for unrelated reasons. Every operation returns a
+ * [Result] rather than throwing — storage failures are recoverable and belong to the caller.
+ *
  * Implementations live in the `spotify-lib` data layer; consumers depend on this interface only.
  */
 interface IAuthRepository {
     /**
-     * Obtains an access token and stores it.
+     * Exchanges an authorization code against the accounts service. Stores nothing.
      *
-     * @param token the authorization **code** returned by the Spotify login flow, not a token:
-     *   the implementation exchanges it against the accounts service and stores what comes back.
-     * @return failure if the exchange or the write failed; the error is logged either way.
+     * @param authorizationCode the **code** returned by the Spotify login flow, not a token.
      */
-    suspend fun storeAccessToken(token: String): Result<Unit>
+    suspend fun fetchTokenResponse(authorizationCode: String): Result<TokenResponse>
 
     /**
-     * @return a success holding an empty string when no token was ever stored — absence and
-     *   failure are not distinguished here, only an I/O error produces a failure.
+     * Persists a token pair.
+     *
+     * A null [TokenResponse.refreshToken] keeps the currently stored one; the call fails only
+     * when the response carries none and nothing was stored either.
+     */
+    suspend fun storeTokenResponse(tokenResponse: TokenResponse): Result<Unit>
+
+    /**
+     * @return a success holding an empty string when no session is stored — absence is not a
+     *   failure. A failure means the store could not be read or its content could not be
+     *   decrypted, and the error is logged either way.
      */
     suspend fun getAccessToken(): Result<String>
 

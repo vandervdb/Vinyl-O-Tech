@@ -1,39 +1,68 @@
 package org.vander.spotifyclient.data.repository
 
 import org.vander.core.domain.auth.IAuthRepository
+import org.vander.core.domain.data.TokenResponse
 import org.vander.core.logger.Logger
+import org.vander.core.security.api.SecureTokenStorage
+import org.vander.core.security.api.StoredTokensResult
 import org.vander.spotifyclient.data.remote.datasource.AuthRemoteDataSource
-import org.vander.spotifyclient.domain.auth.IDataStoreManager
+import org.vander.spotifyclient.data.remote.mapper.toDomain
 import javax.inject.Inject
 
 /**
- * Turns an authorization code into a stored access token.
+ * Exchanges an authorization code against the accounts service, and keeps the resulting
+ * tokens in [SecureTokenStorage] — encrypted, unlike the plain `DataStoreManager` this
+ * repository used to write to.
  *
- * Despite its name, [storeAccessToken] takes an authorization *code*, calls the token
- * endpoint with it, and stores the access token it gets back — it does not store what it is
- * handed. Reads go straight to DataStore without hitting the network.
+ * Reads and writes now go through the same store: a session written here is the one read back.
  */
 class AuthRepository
     @Inject
     constructor(
         private val authRemoteDataSource: AuthRemoteDataSource,
-        private val dataStoreManager: IDataStoreManager,
+        private val secureTokenStorage: SecureTokenStorage,
         private val logger: Logger,
     ) : IAuthRepository {
         companion object Companion {
             private const val TAG = "AuthRepository"
         }
 
-        override suspend fun storeAccessToken(token: String): Result<Unit> =
+        override suspend fun fetchTokenResponse(authorizationCode: String): Result<TokenResponse> =
             authRemoteDataSource
-                .fetchAccessToken(token)
-                .onFailure { logger.e(TAG, "Error fetching access token", it) }
-                .mapCatching { dto ->
-                    logger.d(TAG, "Saving access token: ${dto.accessToken}")
-                    dataStoreManager.saveAccessToken(dto.accessToken)
+                .fetchAccessToken(authorizationCode)
+                .map { dto -> dto.toDomain() }
+                .onFailure { logger.e(TAG, "Error fetching the token response", it) }
+
+        override suspend fun storeTokenResponse(tokenResponse: TokenResponse): Result<Unit> {
+            // A refresh grant omits refresh_token: absent means "keep the one already stored".
+            val refreshToken = tokenResponse.refreshToken ?: storedRefreshToken()
+            if (refreshToken == null) {
+                logger.e(TAG, "No refresh token in the response and none stored")
+                return Result.failure(IllegalStateException("No refresh token available"))
+            }
+
+            return secureTokenStorage
+                .save(tokenResponse.accessToken, refreshToken, tokenResponse.expiresAt)
+                .onFailure { logger.e(TAG, "Error saving the tokens", it) }
+        }
+
+        override suspend fun getAccessToken(): Result<String> =
+            when (val result = secureTokenStorage.get()) {
+                is StoredTokensResult.Found -> Result.success(result.tokens.accessToken)
+                StoredTokensResult.Empty -> Result.success("")
+                is StoredTokensResult.ReadFailed -> {
+                    logger.e(TAG, "Could not read the stored session", result.cause)
+                    Result.failure(result.cause)
                 }
+                is StoredTokensResult.DecryptionFailed -> {
+                    logger.e(TAG, "Stored session is unreadable, clearing it", result.cause)
+                    secureTokenStorage.clear()
+                    Result.failure(result.cause)
+                }
+            }
 
-        override suspend fun getAccessToken(): Result<String> = dataStoreManager.getAccessToken()
+        override suspend fun clearAccessToken(): Result<Unit> = secureTokenStorage.clear()
 
-        override suspend fun clearAccessToken(): Result<Unit> = dataStoreManager.clearAccessToken()
+        private suspend fun storedRefreshToken(): String? =
+            (secureTokenStorage.get() as? StoredTokensResult.Found)?.tokens?.refreshToken
     }

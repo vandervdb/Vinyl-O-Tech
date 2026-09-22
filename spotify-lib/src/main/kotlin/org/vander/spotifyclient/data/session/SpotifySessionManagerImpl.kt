@@ -58,6 +58,37 @@ class SpotifySessionManagerImpl
             _sessionState.update { SessionState.Authorizing }
         }
 
+        override suspend fun requestAuthorization(
+            launchAuth: ActivityResultLauncher<Intent>,
+            activity: Activity,
+            context: Context,
+            coroutineScope: CoroutineScope,
+            dispatcher: CoroutineDispatcher,
+            config: AuthConfigK?,
+        ) {
+            logger.d(TAG, "Requesting authorization...")
+            launchAuthFlow = launchAuth
+            _sessionState.update { SessionState.Authorizing }
+
+            val sessionDispatcher = dispatcher ?: Dispatchers.Main
+
+            coroutineScope.launch {
+                authRepository.getAccessToken()
+                    .onSuccess { token ->
+                        if (token.isNotBlank()) {
+                            logger.d(TAG, "Access token stored, Connecting to remote...")
+                            connectRemote(context, coroutineScope, sessionDispatcher)
+                        } else {
+                            launchAuthorizationFlow(activity, config)
+                        }
+                    }
+                    .onFailure { error ->
+                        logger.e(TAG, "Error checking access token", error)
+                        launchAuthorizationFlow(activity, config)
+                    }
+            }
+        }
+
         override fun launchAuthorizationFlow(
             activity: Activity,
             config: AuthConfigK?,
@@ -155,6 +186,14 @@ class SpotifySessionManagerImpl
             }
         }
 
-        private suspend fun fetchAndStoreAuthToken(authCode: String): Result<Unit> =
-            authRepository.storeAccessToken(authCode)
+        private suspend fun fetchAndStoreAuthToken(authCode: String): Result<Unit> {
+            val tokenResponse =
+                authRepository.fetchTokenResponse(authCode).getOrElse { error ->
+                    return Result.failure(error)
+                }
+
+            logger.d(TAG, "Access token fetched successfully. Storing...")
+            return authRepository.storeTokenResponse(tokenResponse)
+                .onSuccess { logger.d(TAG, "Access token successfully stored.") }
+        }
     }
