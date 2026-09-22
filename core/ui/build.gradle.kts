@@ -47,6 +47,7 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
 
     api(project(":core:domain"))
+    implementation(project(":core:logger"))
 
     // Compose runtime is required by the Compose compiler plugin
     implementation(platform(libs.compose.bom))

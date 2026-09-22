@@ -35,4 +35,20 @@
     <string name="loader_brand">VINYL O’TECH</string>
     <string name="loader_connecting">CONNECTING…</string>
     <string name="loader_connected">CONNECTED</string>
+
+    <!-- Screen 02 "Home" (HomeContent) -->
+    <string name="brand_name">Vinyl O’Tech</string>
+    <string name="content_desc_search">Search</string>
+    <string name="content_desc_settings">Settings</string>
+    <string name="home_filter_all">All</string>
+    <string name="home_filter_albums">Albums</string>
+    <string name="home_filter_playlists">Playlists</string>
+    <string name="home_filter_artists">Artists</string>
+    <string name="home_resume_kicker">Resume listening</string>
+    <string name="home_resume_listen">Listen</string>
+    <string name="home_library_title">Your library</string>
+    <plurals name="home_library_count">
+        <item quantity="one">%d playlist</item>
+        <item quantity="other">%d playlists</item>
+    </plurals>
 </resources>

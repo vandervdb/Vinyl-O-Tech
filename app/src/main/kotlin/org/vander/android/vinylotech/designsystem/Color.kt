@@ -56,6 +56,9 @@ val VinylGradStart = Color(0xFF4B2AA8) // vot_grad_start
 val VinylGradMid = Color(0xFF7C5CFF) // vot_grad_mid
 val VinylGradEnd = Color(0xFF201636) // vot_grad_end
 
+// Sous-titre posé sur le dégradé héros (« Elia Faure · 2023 · 11 titres »)
+val VinylTextOnGradient = Color(0xFFCFC8DC) // vot_text_on_gradient
+
 // One-off pure-white emphasis used only for hero headlines (e.g. "Ta discothèque,
 // à ta façon.") — the design's default text color elsewhere is VinylTextPrimary,
 // not pure white.

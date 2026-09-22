@@ -25,6 +25,7 @@ import org.vander.spotifyclient.domain.player.PlayerClient
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A client for interacting with the Spotify player.
@@ -117,7 +118,7 @@ class SpotifyPlayerClient
             }
 
             val outcome =
-                withTimeoutOrNull(COMMAND_TIMEOUT_MS) {
+                withTimeoutOrNull(COMMAND_TIMEOUT_MS.milliseconds) {
                     suspendCancellableCoroutine { continuation ->
                         val pending = api.call()
                         pending.setResultCallback { if (continuation.isActive) continuation.resume(Result.success(Unit)) }

@@ -53,8 +53,8 @@ import org.vander.android.vinylotech.designsystem.VinylTextPrimary
 import org.vander.android.vinylotech.designsystem.VotDimens
 import org.vander.android.vinylotech.designsystem.component.MarqueeTextInfinite
 import org.vander.android.vinylotech.designsystem.component.VinylMiniTurntable
-import org.vander.core.domain.state.SessionState
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
 import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel

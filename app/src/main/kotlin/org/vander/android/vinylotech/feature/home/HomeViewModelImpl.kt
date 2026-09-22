@@ -6,15 +6,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.player.PlayerController
 import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
+import org.vander.spotifyclient.domain.usecase.RecentlyPlayedUseCase
 import javax.inject.Inject
 
 /**
@@ -29,6 +29,7 @@ class HomeViewModelImpl
     @Inject
     constructor(
         private val playlistUseCase: PlaylistUseCase,
+        val recentlyPlayedUseCase: RecentlyPlayedUseCase,
         private val controller: PlayerController,
         private val logger: Logger,
     ) : ViewModel(),
@@ -36,9 +37,16 @@ class HomeViewModelImpl
         override val state: StateFlow<HomeUiState> =
             combine(
                 playlistUseCase.playlists,
-                controller.state.map { it.context.playlistId }.distinctUntilChanged(),
-                ::HomeUiState,
-            ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState())
+                controller.state,
+                recentlyPlayedUseCase.recentlyPlayed,
+            ) { playlists, playback, recentlyPlayed ->
+                HomeUiState(
+                    playlists = playlists,
+                    resume = playback.toResume(),
+                    playingPlaylistId = recentlyPlayed.lastResumable?.track?.id,
+                )
+            }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState())
 
         init {
             controller.start()
@@ -47,6 +55,7 @@ class HomeViewModelImpl
 
         override fun playPlaylist(playlistId: String) {
             logger.d(TAG, "playPlaylist: $playlistId")
+            logger.d(TAG, "ResumeListening: ${state.value.resume}")
             viewModelScope.launch { controller.dispatch(PlayerCommand.Play(SpotifyUri.playlist(playlistId))) }
         }
 
@@ -54,5 +63,14 @@ class HomeViewModelImpl
             const val TAG = "HomeViewModelImpl"
 
             const val STOP_TIMEOUT_MS = 5_000L
+        }
+
+        private fun PlaybackState.toResume(): ResumeListening? {
+            val title = context.title.ifEmpty { return null }
+            return ResumeListening(
+                title = title,
+                subtitle = player.base.artistName,
+                isSaved = null,
+            )
         }
     }

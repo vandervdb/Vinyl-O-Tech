@@ -398,7 +398,10 @@ class PlayerUseCaseTest {
     private fun track(id: String) =
         Track(
             album = Album.empty(),
-            artists = listOf(Artist(externalUrls = "", href = "", id = "ar", name = "Artist of $id", type = "artist", uri = "")),
+            artists =
+                listOf(
+                    Artist(externalUrls = "", href = "", id = "ar", name = "Artist of $id", type = "artist", uri = ""),
+                ),
             availableMarkets = emptyList(),
             discNumber = 1,
             durationMs = 214_000,

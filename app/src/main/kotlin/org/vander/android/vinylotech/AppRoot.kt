@@ -31,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.vander.android.vinylotech.designsystem.AndroidAppTheme
 import org.vander.android.vinylotech.designsystem.VinylInk
@@ -47,8 +48,8 @@ import org.vander.android.vinylotech.navigation.AppNavHost
 import org.vander.android.vinylotech.navigation.BottomBar
 import org.vander.android.vinylotech.navigation.MainGraph
 import org.vander.android.vinylotech.navigation.NavItem
-import org.vander.android.vinylotech.navigation.navigateToTab
 import org.vander.android.vinylotech.navigation.ScreenChrome
+import org.vander.android.vinylotech.navigation.navigateToTab
 import org.vander.android.vinylotech.navigation.screenChrome
 import org.vander.android.vinylotech.util.LifecycleObserverComponent
 import org.vander.android.vinylotech.util.rememberSpotifySessionManager
@@ -65,7 +66,7 @@ import org.vander.fake.spotify.FakePlayerViewModel
  */
 @Composable
 fun AppRoot() {
-    val tag = "APPROOT"
+    val tag = "APP_ROOT"
     val logger: Logger = remember { KermitLoggerImpl(tag) }
 
     val navController = rememberNavController()
@@ -87,8 +88,16 @@ fun AppRoot() {
 
     val onContinueWithSpotify: () -> Unit = {
         activity?.let {
-            sessionManager.requestAuthorization(launcher)
-            sessionManager.launchAuthorizationFlow(it)
+            lifecycleOwner.lifecycleScope.launch {
+                sessionManager.requestAuthorization(
+                    launcher,
+                    it,
+                    it,
+                    lifecycleOwner.lifecycleScope,
+                    Dispatchers.Main,
+                    null,
+                )
+            }
         }
     }
 
@@ -108,7 +117,7 @@ fun AppRoot() {
                 message = failureMessage,
                 tone = VinylSnackTone.Error,
                 actionLabel = retryLabel,
-                onAction = onContinueWithSpotify,
+                onAction = onContinueWithSpotify as (() -> Unit)?,
             ),
         )
     }

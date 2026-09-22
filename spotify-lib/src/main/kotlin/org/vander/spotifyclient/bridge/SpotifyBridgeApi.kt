@@ -22,6 +22,7 @@ import org.vander.core.domain.state.SessionState
 interface SpotifyBridgeApi {
     val playerEvents: Flow<PlayerStateDto>
     val sessionState: StateFlow<SessionState>
+
     /** The current track first, then what comes next. */
     val queue: StateFlow<List<QueuedTrack>>
     val playerState: StateFlow<DomainPlayerState>
