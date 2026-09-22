@@ -75,6 +75,9 @@ dependencies {
     implementation(project(":spotify-lib"))
     implementation(project(":core:domain"))
     implementation(project(":core:logger"))
+    // Hilt assembles the SingletonComponent here, so this module needs compile visibility of
+    // every type bound anywhere in the graph — including `core:security`'s.
+    implementation(project(":core:security"))
     implementation(project(":core:ui"))
     implementation(project(":fake"))
 

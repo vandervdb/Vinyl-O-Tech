@@ -47,13 +47,17 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":core:logger"))
+
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     kapt(libs.kotlin.metadata.jvm)
 
-    implementation(libs.datastore.preferences)
-
-    implementation(libs.tink.android)
+    // api, not implementation: `DataStore<Preferences>` and Tink `Aead` both appear in a Hilt
+    // binding of this module, so they are part of its compile surface for whoever assembles
+    // the graph — `:app`, where the SingletonComponent is generated.
+    api(libs.datastore.preferences)
+    api(libs.tink.android)
 
     implementation(libs.kotlinx.coroutines.core)
 

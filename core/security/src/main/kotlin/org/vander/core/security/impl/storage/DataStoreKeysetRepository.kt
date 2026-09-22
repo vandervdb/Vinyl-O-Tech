@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
 import org.vander.core.security.api.KeysetRepository
+import org.vander.core.security.di.SecurityDataStore
 import java.util.Base64
 import javax.inject.Inject
 
@@ -21,7 +22,7 @@ import javax.inject.Inject
 class DataStoreKeysetRepository
     @Inject
     constructor(
-        private val dataStore: DataStore<Preferences>,
+        @param:SecurityDataStore private val dataStore: DataStore<Preferences>,
     ) : KeysetRepository {
         companion object {
             private val KEYSET_KEY = stringPreferencesKey("keyset")
