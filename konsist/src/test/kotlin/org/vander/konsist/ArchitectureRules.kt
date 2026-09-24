@@ -3,6 +3,7 @@ package org.vander.konsist
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
+import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
 import com.lemonappdev.konsist.api.declaration.type.KoTypeDeclaration
 import com.lemonappdev.konsist.api.provider.KoModuleProvider
 
@@ -38,6 +39,25 @@ internal fun KoFileDeclaration.importsAny(prefixes: List<String>) =
     }
 
 internal fun KoFileDeclaration.importsAndroidLog() = hasImport { import -> import.name == "android.util.Log" }
+
+// Top-level only: a nested interface takes its effective visibility from its parent, so an
+// internal parent already makes it internal without the modifier on the nested one.
+internal val spotifyLibInterfaces
+    get() = productionScope.interfaces(includeNested = false).filter { it.resideInModule("spotify-lib") }
+
+// Imports are a complete signal here: no two modules share a package and nothing imports
+// spotifyclient with a wildcard, so any cross-module use needs an import. Test sources are
+// included: an app test that uses a contract keeps that contract public.
+private val importedOutsideSpotifyLib by lazy {
+    Konsist
+        .scopeFromProject()
+        .files
+        .filterNot { it.resideInModule("spotify-lib") }
+        .flatMap { file -> file.imports.map { it.name } }
+        .toSet()
+}
+
+internal fun KoInterfaceDeclaration.isUsedOutsideSpotifyLib() = fullyQualifiedName in importedOutsideSpotifyLib
 
 // An allowlist, not a denylist: a ViewModel depending on any other module, even a future one, fails.
 // core/logger and core/ui are cross-cutting, not business contracts.

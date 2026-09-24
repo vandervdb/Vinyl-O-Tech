@@ -17,7 +17,7 @@ import org.vander.core.domain.auth.IAuthRepository
 import org.vander.core.domain.error.SessionError
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
-import org.vander.spotifyclient.bridge.AuthConfigK
+import org.vander.spotifyclient.domain.auth.AuthConfigK
 import org.vander.spotifyclient.domain.appremote.AppRemoteProvider
 import org.vander.spotifyclient.domain.auth.ISpotifyAuthClient
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager

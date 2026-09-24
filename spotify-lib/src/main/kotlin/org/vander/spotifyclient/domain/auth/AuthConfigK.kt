@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.bridge
+package org.vander.spotifyclient.domain.auth
 
 /**
  * Authorization parameters a host can override; when it passes `null`, the library falls
@@ -37,44 +37,3 @@ data class AuthConfigK(
         return result
     }
 }
-
-/**
- * Outcome of an authorization started through the bridge.
- *
- * [Failed.reason] is an enum rather than free text so a host can branch on it — typically to
- * retry on `TIMEOUT` but not on `SESSION_FAILED`.
- */
-sealed class AuthResult {
-    data class Authenticated(
-        val accessToken: String,
-    ) : AuthResult()
-
-    data class Failed(
-        val reason: Reason,
-        val cause: Throwable? = null,
-    ) : AuthResult()
-
-    enum class Reason {
-        TIMEOUT,
-        SESSION_FAILED,
-        TOKEN_MISSING,
-        UNEXPECTED,
-    }
-}
-
-/**
- * Player state flattened for a host, with every field nullable so a partial state still
- * crosses the boundary.
- *
- * @property trackUri holds the bare track id despite its name — see `toPlayerStateDto`.
- */
-data class PlayerStateDto(
-    val isPlaying: Boolean,
-    val positionMs: Long,
-    val durationMs: Long,
-    val trackUri: String? = null,
-    val coverId: String? = null,
-    val trackName: String? = null,
-    val artistName: String? = null,
-    val albumName: String? = null,
-)

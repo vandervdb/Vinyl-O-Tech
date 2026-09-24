@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.vander.core.domain.state.SessionState
-import org.vander.spotifyclient.bridge.AuthConfigK
+import org.vander.spotifyclient.domain.auth.AuthConfigK
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 
 class FakeSpotifySessionManager : SpotifySessionManager {
@@ -26,6 +26,7 @@ class FakeSpotifySessionManager : SpotifySessionManager {
     override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) {
         TODO("Not yet implemented")
     }
+
 
     override fun handleAuthResult(
         context: Context,

@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import org.vander.core.domain.state.SessionState
-import org.vander.spotifyclient.bridge.AuthConfigK
+import org.vander.spotifyclient.domain.auth.AuthConfigK
 
 /**
  * Orchestrates a full session: authorization first, then the App Remote connection,

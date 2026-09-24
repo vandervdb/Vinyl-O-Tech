@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.vander.core.domain.state.SessionState
-import org.vander.spotifyclient.bridge.AuthConfigK
+import org.vander.spotifyclient.domain.auth.AuthConfigK
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 
 /**
@@ -22,6 +22,7 @@ class FakeSessionManager(
     override val sessionState = MutableStateFlow(initial)
 
     override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) = Unit
+
 
     override fun handleAuthResult(
         context: Context,

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import org.vander.spotifyclient.bridge.AuthConfigK
 
 /**
  * Drives the Spotify authorization flow, which runs in the Spotify app or a browser tab
