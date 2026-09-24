@@ -47,7 +47,6 @@ open class PlayerViewModelImpl
                 )
 
         init {
-            // Idempotent: harmless if another screen already started it.
             controller.start()
         }
 

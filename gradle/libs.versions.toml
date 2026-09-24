@@ -8,6 +8,7 @@ android-versionName = "1.5"
 
 core = "1.5.0"
 kermit = "1.2.2"
+konsist = "0.17.3"
 kotlin = "2.4.0"
 agp = "8.13.2"
 
@@ -82,9 +83,12 @@ ktlintGradle = "12.1.0"
 # ---------- Libraries ----------
 [libraries]
 # Build-logic
+androidx-appcompat = { module = "androidx.appcompat:appcompat" }
 androidx-core = { module = "androidx.test:core", version.ref = "core" }
 androidx-runner = { module = "androidx.test:runner", version.ref = "runner" }
+junit = { module = "junit:junit" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 

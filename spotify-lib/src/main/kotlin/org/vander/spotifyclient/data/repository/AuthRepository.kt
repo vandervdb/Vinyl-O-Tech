@@ -34,7 +34,6 @@ class AuthRepository
                 .onFailure { logger.e(TAG, "Error fetching the token response", it) }
 
         override suspend fun storeTokenResponse(tokenResponse: TokenResponse): Result<Unit> {
-            // A refresh grant omits refresh_token: absent means "keep the one already stored".
             val refreshToken = tokenResponse.refreshToken ?: storedRefreshToken()
             if (refreshToken == null) {
                 logger.e(TAG, "No refresh token in the response and none stored")

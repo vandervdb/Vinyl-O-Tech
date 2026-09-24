@@ -1,5 +1,4 @@
 import com.diffplug.gradle.spotless.SpotlessTask
-import com.diffplug.spotless.LineEnding
 
 plugins {
     alias(libs.plugins.android.application) apply false
