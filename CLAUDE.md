@@ -128,6 +128,8 @@ une fois.
 
 - `docs/architecture/navigation-and-screen-chrome.md` — navigation à deux registres
   (push / modale), `ScreenChrome`, portée des ViewModels, relevés de la maquette
+- `docs/architecture/contracts-cleanup.md` — placement des contrats (ports / adapters),
+  convention de nommage, tests Konsist et cliquet de dette, étapes restantes du chantier
 
 ---
 
