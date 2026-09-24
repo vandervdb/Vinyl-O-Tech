@@ -7,6 +7,8 @@ import org.vander.konsist.FRAMEWORK_IMPORTS
 import org.vander.konsist.SPOTIFY_LIB_INTERNALS
 import org.vander.konsist.SPOTIFY_LIB_OUTER_LAYERS
 import org.vander.konsist.appViewModels
+import org.vander.konsist.hasIPrefix
+import org.vander.konsist.hasImplSuffix
 import org.vander.konsist.importsAndroidLog
 import org.vander.konsist.importsAny
 import org.vander.konsist.isUsedOutsideSpotifyLib
@@ -41,6 +43,27 @@ class ArchitectureDebtTest {
                     "$fqn: not found, renamed or moved? Update ArchitectureDebt."
                 }
             check(violates(contract)) { "$fqn no longer violates its rule: remove it from ArchitectureDebt." }
+        }
+    }
+
+    @Test
+    fun `every misnamed declaration is still misnamed`() {
+        val interfaces = productionScope.interfaces()
+        val classes = productionScope.classes()
+        assertStillMisnamed(ArchitectureDebt.interfacesWithIPrefix, interfaces.map { it.fullyQualifiedName to it.hasIPrefix() })
+        assertStillMisnamed(ArchitectureDebt.classesWithImplSuffix, classes.map { it.fullyQualifiedName to it.hasImplSuffix() })
+    }
+
+    private fun assertStillMisnamed(
+        debt: Set<String>,
+        declarations: List<Pair<String?, Boolean>>,
+    ) {
+        debt.forEach { fqn ->
+            val misnamed =
+                checkNotNull(declarations.singleOrNull { it.first == fqn }) {
+                    "$fqn: not found, renamed or moved? Update ArchitectureDebt."
+                }.second
+            check(misnamed) { "$fqn no longer violates its rule: remove it from ArchitectureDebt." }
         }
     }
 

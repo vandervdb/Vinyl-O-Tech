@@ -70,6 +70,36 @@ internal object ArchitectureDebt {
             "$SPOTIFY_LIB_PACKAGE.domain.usecase.SpotifyRemoteUseCase",
         )
 
+    // Naming rules span every module, so entries spell out the full package.
+    val interfacesWithIPrefix =
+        setOf(
+            "org.vander.core.domain.auth.IAuthRepository",
+            "org.vander.core.domain.auth.ITokenProvider",
+            "org.vander.spotifyclient.domain.auth.IAuthRemoteDatasource",
+            "org.vander.spotifyclient.domain.auth.IDataStoreManager",
+            "org.vander.spotifyclient.domain.auth.ISpotifyAuthClient",
+            "org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource",
+            "org.vander.spotifyclient.domain.datasource.IRemotePlaylistDataSource",
+            "org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource",
+            "org.vander.spotifyclient.domain.datasource.IRemoteRecentlyPlayedDataSource",
+            "org.vander.spotifyclient.domain.datasource.IRemoteUserDataSource",
+        )
+
+    val classesWithImplSuffix =
+        setOf(
+            "org.vander.android.vinylotech.feature.connection.ConnectionViewModelImpl",
+            "org.vander.android.vinylotech.feature.home.HomeViewModelImpl",
+            "org.vander.android.vinylotech.feature.library.PlayListViewModelImpl",
+            "org.vander.android.vinylotech.feature.library.UserViewModelImpl",
+            "org.vander.android.vinylotech.feature.player.PlayerViewModelImpl",
+            "org.vander.core.logger.KermitLoggerImpl",
+            "org.vander.spotifyclient.data.repository.SpotifyPlaylistRepositoryImpl",
+            "org.vander.spotifyclient.data.repository.SpotifyQueueRepositoryImpl",
+            "org.vander.spotifyclient.data.repository.SpotifyRecentlyPlayedRepositoryImpl",
+            "org.vander.spotifyclient.data.session.SpotifySessionManagerImpl",
+            "org.vander.spotifyclient.domain.usecase.SpotifyRemoteUseCaseImpl",
+        )
+
     // Declaration-level rule: entries are class names, not paths.
     val viewModelsDependingOnSpotifyLib =
         setOf(

@@ -6,6 +6,7 @@ import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.declaration.KoInterfaceDeclaration
 import com.lemonappdev.konsist.api.declaration.type.KoTypeDeclaration
 import com.lemonappdev.konsist.api.provider.KoModuleProvider
+import com.lemonappdev.konsist.api.provider.KoNameProvider
 
 // Parsing every production file is the slow part of each test; do it once per test JVM.
 internal val productionScope by lazy { Konsist.scopeFromProduction() }
@@ -58,6 +59,13 @@ private val importedOutsideSpotifyLib by lazy {
 }
 
 internal fun KoInterfaceDeclaration.isUsedOutsideSpotifyLib() = fullyQualifiedName in importedOutsideSpotifyLib
+
+// `I` followed by a capital then a lowercase letter: IAuthRepository, not IOSettings or Item.
+private val I_PREFIX = Regex("^I[A-Z][a-z]")
+
+internal fun KoNameProvider.hasIPrefix() = I_PREFIX.containsMatchIn(name)
+
+internal fun KoNameProvider.hasImplSuffix() = name.endsWith("Impl")
 
 // An allowlist, not a denylist: a ViewModel depending on any other module, even a future one, fails.
 // core/logger and core/ui are cross-cutting, not business contracts.
