@@ -23,6 +23,14 @@ class FakeSessionManager(
 
     override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) = Unit
 
+    override suspend fun requestAuthorization(
+        launchAuth: ActivityResultLauncher<Intent>,
+        activity: Activity,
+        context: Context,
+        coroutineScope: CoroutineScope,
+        dispatcher: CoroutineDispatcher,
+        config: AuthConfigK?,
+    ) = Unit
 
     override fun handleAuthResult(
         context: Context,

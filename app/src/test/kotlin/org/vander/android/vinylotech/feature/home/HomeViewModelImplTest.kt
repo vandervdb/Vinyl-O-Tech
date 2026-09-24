@@ -13,12 +13,15 @@ import org.vander.android.vinylotech.testing.MainDispatcherRule
 import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.data.Playlist
 import org.vander.core.domain.data.PlaylistCollection
+import org.vander.core.domain.data.RecentlyPlayed
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.test.FakeLogger
+import org.vander.spotifyclient.domain.repository.RecentlyPlayedRepository
 import org.vander.spotifyclient.domain.repository.SpotifyPlaylistRepository
 import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
+import org.vander.spotifyclient.domain.usecase.RecentlyPlayedUseCase
 
 class HomeViewModelImplTest {
     @get:Rule
@@ -31,6 +34,7 @@ class HomeViewModelImplTest {
     private fun viewModel() =
         HomeViewModelImpl(
             playlistUseCase = PlaylistUseCase(FakePlaylistRepository(Result.success(playlists)), FakeLogger()),
+            recentlyPlayedUseCase = RecentlyPlayedUseCase(FakeRecentlyPlayedRepository(), FakeLogger()),
             controller = controller,
             logger = FakeLogger(),
         )
@@ -87,6 +91,12 @@ class HomeViewModelImplTest {
         override val playlists: StateFlow<PlaylistCollection?> = MutableStateFlow(null)
 
         override suspend fun getUserPlaylists(): Result<PlaylistCollection> = result
+    }
+
+    private class FakeRecentlyPlayedRepository : RecentlyPlayedRepository {
+        override val recentlyPlayed: StateFlow<RecentlyPlayed?> = MutableStateFlow(null)
+
+        override suspend fun getRecentlyPlayed(): Result<RecentlyPlayed> = Result.success(RecentlyPlayed.empty())
     }
 
     private companion object {

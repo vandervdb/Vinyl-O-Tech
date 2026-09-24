@@ -47,6 +47,7 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.data.session.SpotifySessionManager",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerController",
+            "$SPOTIFY_LIB_PACKAGE.domain.repository.RecentlyPlayedRepository",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.SpotifyPlaylistRepository",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.UserRepository",
         )
@@ -65,7 +66,6 @@ internal object ArchitectureDebt {
             "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteUserDataSource",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerClient",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.LibraryRepository",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.RecentlyPlayedRepository",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.SpotifyQueueRepository",
             "$SPOTIFY_LIB_PACKAGE.domain.usecase.SpotifyRemoteUseCase",
         )

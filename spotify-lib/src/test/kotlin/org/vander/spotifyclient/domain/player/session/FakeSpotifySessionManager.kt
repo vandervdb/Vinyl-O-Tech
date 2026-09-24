@@ -27,6 +27,16 @@ class FakeSpotifySessionManager : SpotifySessionManager {
         TODO("Not yet implemented")
     }
 
+    override suspend fun requestAuthorization(
+        launchAuth: ActivityResultLauncher<Intent>,
+        activity: Activity,
+        context: Context,
+        coroutineScope: CoroutineScope,
+        dispatcher: CoroutineDispatcher,
+        config: AuthConfigK?,
+    ) {
+        TODO("Not yet implemented")
+    }
 
     override fun handleAuthResult(
         context: Context,
