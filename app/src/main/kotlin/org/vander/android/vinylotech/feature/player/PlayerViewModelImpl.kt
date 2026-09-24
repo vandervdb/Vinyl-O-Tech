@@ -32,12 +32,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 open class PlayerViewModelImpl
-    @Inject
-    constructor(
+    @Inject constructor(
         private val controller: PlayerController,
         sessionManager: SpotifySessionManager,
-    ) : ViewModel(),
-        PlayerViewModel {
+    ) : ViewModel(), PlayerViewModel {
         override val state: StateFlow<PlayerUiState> =
             combine(sessionManager.sessionState, controller.state, ::toUiState)
                 .stateIn(
