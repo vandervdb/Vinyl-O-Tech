@@ -1,7 +1,10 @@
 package org.vander.konsist
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
+import com.lemonappdev.konsist.api.declaration.type.KoTypeDeclaration
+import com.lemonappdev.konsist.api.provider.KoModuleProvider
 
 // Parsing every production file is the slow part of each test; do it once per test JVM.
 internal val productionScope by lazy { Konsist.scopeFromProduction() }
@@ -35,3 +38,25 @@ internal fun KoFileDeclaration.importsAny(prefixes: List<String>) =
     }
 
 internal fun KoFileDeclaration.importsAndroidLog() = hasImport { import -> import.name == "android.util.Log" }
+
+// An allowlist, not a denylist: a ViewModel depending on any other module, even a future one, fails.
+// core/logger and core/ui are cross-cutting, not business contracts.
+private val VIEW_MODEL_ALLOWED_MODULES = setOf("core/domain", "core/logger", "core/ui")
+
+internal val appViewModels
+    get() =
+        productionScope
+            .classes()
+            .filter { it.resideInModule("app") && it.hasAnnotationWithName("HiltViewModel") }
+
+internal fun KoClassDeclaration.receivesOnlyContractTypes() =
+    primaryConstructor
+        ?.parameters
+        .orEmpty()
+        .all { it.type.isFromAllowedModule() }
+
+// A library type (SavedStateHandle...) belongs to no project module: only project declarations are constrained.
+private fun KoTypeDeclaration.isFromAllowedModule(): Boolean {
+    val module = (sourceDeclaration as? KoModuleProvider)?.moduleName ?: return true
+    return module in VIEW_MODEL_ALLOWED_MODULES
+}

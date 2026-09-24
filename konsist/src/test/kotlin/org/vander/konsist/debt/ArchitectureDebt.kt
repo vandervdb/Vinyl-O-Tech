@@ -43,6 +43,16 @@ internal object ArchitectureDebt {
             "$APP/util/RememberSessionManager.kt",
         )
 
+    // Declaration-level rule: entries are class names, not paths.
+    val viewModelsDependingOnSpotifyLib =
+        setOf(
+            "ConnectionViewModelImpl",
+            "HomeViewModelImpl",
+            "PlayListViewModelImpl",
+            "PlayerViewModelImpl",
+            "UserViewModelImpl",
+        )
+
     val androidUtilLog =
         setOf(
             "$APP/feature/library/PlaylistGrid.kt",
