@@ -1,6 +1,7 @@
 package org.vander.konsist
 
 import com.lemonappdev.konsist.api.verify.assertFalse
+import com.lemonappdev.konsist.api.verify.assertTrue
 import org.junit.Test
 import org.vander.konsist.debt.ArchitectureDebt
 
@@ -23,5 +24,30 @@ class NamingConventionTest {
             .classes()
             .filterNot { it.fullyQualifiedName in ArchitectureDebt.classesWithImplSuffix }
             .assertFalse(strict = true) { it.hasImplSuffix() }
+    }
+
+    @Test
+    fun `spotify-lib adapters of core domain ports are named after Spotify`() {
+        productionScope
+            .classes()
+            .filter { it.resideInModule("spotify-lib") && it.implementsCoreDomainPort() }
+            .filterNot { it.fullyQualifiedName in ArchitectureDebt.adaptersNotNamedAfterSpotify }
+            .assertTrue(strict = true) { it.name.startsWith("Spotify") }
+    }
+
+    @Test
+    fun `app ViewModels are named Spotify Feature ViewModel`() {
+        appViewModels.assertTrue(strict = true) { it.name.startsWith("Spotify") && it.name.endsWith("ViewModel") }
+    }
+
+    @Test
+    fun `fake ViewModels are named Fake Feature ViewModel`() {
+        productionScope
+            .classes()
+            .filter { viewModel ->
+                viewModel.resideInModule("fake") &&
+                    viewModel.hasParentImportedFrom("org.vander.core.ui.") &&
+                    viewModel.parents().any { it.name.endsWith("ViewModel") }
+            }.assertTrue(strict = true) { it.name.startsWith("Fake") && it.name.endsWith("ViewModel") }
     }
 }

@@ -37,6 +37,16 @@ internal object ArchitectureDebt {
             "$SPOTIFY_LIB_PACKAGE.domain.data.session.SpotifySessionManager",
         )
 
+    // A core/domain contract that only spotify-lib uses: it is not a port and belongs in spotify-lib, internal.
+    val coreDomainContractsUsedOnlyBySpotifyLib =
+        setOf(
+            "org.vander.core.domain.auth.IAuthRepository",
+            "org.vander.core.domain.auth.ITokenProvider",
+            "org.vander.core.domain.library.LibraryRepository",
+            "org.vander.core.domain.player.PlayerStateRepository",
+            "org.vander.core.domain.queue.QueueRepository",
+        )
+
     val contractsToMakeInternal =
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.AppRemoteProvider",
@@ -58,6 +68,12 @@ internal object ArchitectureDebt {
         setOf(
             "org.vander.core.logger.KermitLoggerImpl",
             "org.vander.spotifyclient.data.session.SpotifySessionManagerImpl",
+        )
+
+    val adaptersNotNamedAfterSpotify =
+        setOf(
+            "org.vander.spotifyclient.data.local.DataStoreTokenProvider",
+            "org.vander.spotifyclient.data.repository.AuthRepository",
         )
 
     // Declaration-level rule: entries are class names, not paths.

@@ -60,6 +60,35 @@ private val importedOutsideSpotifyLib by lazy {
 
 internal fun KoInterfaceDeclaration.isUsedOutsideSpotifyLib() = fullyQualifiedName in importedOutsideSpotifyLib
 
+internal val coreDomainInterfaces
+    get() = productionScope.interfaces(includeNested = false).filter { it.resideInModule("core/domain") }
+
+// A port joins two modules: the adapter's, and a consumer's. spotify-lib holds every adapter, so
+// only an import from a third module (app, fake, core/ui..., tests included) proves a consumer.
+private val importedOutsideCoreDomainAndSpotifyLib by lazy {
+    Konsist
+        .scopeFromProject()
+        .files
+        .filterNot { it.resideInModule("core/domain") || it.resideInModule("spotify-lib") }
+        .flatMap { file -> file.imports.map { it.name } }
+        .toSet()
+}
+
+internal fun KoInterfaceDeclaration.hasConsumerOutsideSpotifyLib() =
+    fullyQualifiedName in importedOutsideCoreDomainAndSpotifyLib
+
+// A parent declared in another module does not resolve to its package, so the parent is matched
+// through the file's imports: a supertype `X` imported as `org.vander.core.domain.….X`.
+internal fun KoClassDeclaration.hasParentImportedFrom(packagePrefix: String): Boolean {
+    val imported = containingFile.imports.map { it.name }.filter { it.startsWith(packagePrefix) }
+    return parents().any { parent ->
+        val simpleName = parent.name.substringBefore('<')
+        imported.any { it.substringAfterLast('.') == simpleName }
+    }
+}
+
+internal fun KoClassDeclaration.implementsCoreDomainPort() = hasParentImportedFrom("org.vander.core.domain.")
+
 // `I` followed by a capital then a lowercase letter: IAuthRepository, not IOSettings or Item.
 private val I_PREFIX = Regex("^I[A-Z][a-z]")
 
