@@ -3,11 +3,10 @@ colors: true
 # Projet Android pur : un seul arbre, donc pas de filtrage par chemin — tout ce
 # qui est commité relève de Gradle. Les globs par extension suffisent.
 #
-# À savoir : Spotless BLOQUE le commit. ktlint a `ignoreFailures` sur la tâche
-# Gradle `ktlintCheck`, mais scripts/spotless-pre-commit.sh tourne avec `set -e`,
-# donc une règle non auto-corrigeable (standard:filename, property-naming,
-# no-empty-file) interrompt le commit. Et il analyse TOUT le projet, pas
-# seulement l'index : un .kt vide laissé n'importe où bloque n'importe quel commit.
+# À savoir : Spotless BLOQUE le commit. scripts/spotless-pre-commit.sh tourne avec
+# `set -e`, donc une règle ktlint non auto-corrigeable (standard:filename,
+# property-naming, max-line-length, no-empty-file) interrompt le commit. Et il
+# analyse TOUT le projet, pas seulement l'index : un .kt vide laissé n'importe où bloque n'importe quel commit.
 
 pre-commit:
     parallel: true
@@ -16,10 +15,6 @@ pre-commit:
         spotless:
             glob: "*.{kt,kts}"
             run: ./scripts/spotless-pre-commit.sh
-
-        ktlint:
-            glob: "*.kt"
-            run: echo "\033[0;34m🔍 Running Ktlint format...\033[0m" && ./gradlew ktlintFormat -x ktlintCheck -x spotlessKotlin -x spotlessKotlinGradle || { echo "\033[0;31m❌ Ktlint FAILED!\033[0m" >&2; exit 1; }
 
 pre-push:
     parallel: false

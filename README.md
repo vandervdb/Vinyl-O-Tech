@@ -155,13 +155,13 @@ comment pointing at a missing `<color>`. XML-only tokens are reported, not faile
 
 | Stage | Runs |
 |---|---|
-| pre-commit | Spotless, `ktlintFormat` |
+| pre-commit | Spotless (ktlint, version from the catalog) |
 | pre-push | `lint`, `test`, the three gates above, `assembleDebug` |
 
 Two things worth knowing, because they contradict what is easy to assume:
 
-- **Spotless does fail the commit.** `ktlintCheck` carries `ignoreFailures`, but
-  `scripts/spotless-pre-commit.sh` runs with `set -e`, so a rule that cannot be
+- **Spotless does fail the commit.** `scripts/spotless-pre-commit.sh` runs with
+  `set -e`, so a rule that cannot be
   auto-fixed — `standard:filename`, `standard:property-naming`,
   `standard:max-line-length`, `standard:no-empty-file` — aborts the commit.
 - **It runs project-wide, not on staged files only.** A single empty `.kt` left anywhere

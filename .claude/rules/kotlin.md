@@ -34,7 +34,7 @@ fun process(item: Item?) {
 
 ## Version Catalog discipline [Enforced]
 
-Two custom root Gradle tasks enforce this — unlike ktlint (see below), they DO fail the build:
+Two custom root Gradle tasks enforce this — they DO fail the build:
 
 - Every dependency in a `dependencies {}` block must reference `libs.*` from `gradle/libs.versions.toml`. `./gradlew checkVersionHardcodedUsages` fails on a hardcoded `"group:artifact:version"` string
 - Every version key declared in `libs.versions.toml` must be referenced somewhere. `./gradlew checkCatalogConsistency` fails on unused keys (a short allow-list exists for `android-compileSdk`/`minSdk`/`targetSdk`/`versionCode`/`versionName`)
@@ -42,8 +42,9 @@ Two custom root Gradle tasks enforce this — unlike ktlint (see below), they DO
 
 ## Lint reality check [Enforced]
 
-- **ktlint runs but does not gate anything**: root `build.gradle.kts` sets `ignoreFailures.set(true)` both at root and per-subproject. `lefthook.yml`'s pre-commit `ktlint` step runs `ktlintFormat` (auto-fixes, doesn't block). Don't rely on ktlint to catch a style issue — write clean code directly
-- **Spotless** only enforces line endings (`LineEnding.UNIX`) and formatting via `ktlint(...)` under the hood, same `ignoreFailures` caveat — configuration cache is explicitly disabled for it (`notCompatibleWithConfigurationCache`, diffplug/spotless#987)
+- **ktlint runs only through Spotless** (`ktlint(libs.versions.ktlint.get())` in root `build.gradle.kts`, on `.kt` and `.kts`) — there is no standalone ktlint Gradle plugin. Its rules are configured in `.editorconfig`. Spotless also enforces line endings (`LineEnding.UNIX`)
+- **Spotless blocks the commit**: `lefthook.yml` runs `scripts/spotless-pre-commit.sh` with `set -e`, so a ktlint rule that cannot be auto-corrected (`filename`, `property-naming`, `max-line-length`, `no-empty-file`) aborts it — write clean code directly rather than relying on the auto-fix
+- Configuration cache is disabled for Spotless tasks (`notCompatibleWithConfigurationCache`, diffplug/spotless#987); the Gradle daemon still caches ktlint's config in-process, so run `./gradlew --stop` after editing `.editorconfig`
 - The real gates are `./gradlew test`, `./gradlew lint`, `./gradlew assembleDebug` (all run at pre-push via lefthook) plus the two version-catalog tasks above
 
 ---

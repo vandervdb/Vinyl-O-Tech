@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.spotless)
-    alias(libs.plugins.ktlint.gradle)
 }
 
 subprojects {
@@ -18,23 +17,6 @@ subprojects {
             force("org.jetbrains.kotlin:kotlin-stdlib:2.4.0")
             force("org.jetbrains.kotlin:kotlin-stdlib-common:2.4.0")
         }
-    }
-    apply(plugin = "org.jlleitschuh.gradle.ktlint")
-
-    ktlint {
-        ignoreFailures.set(true)
-    }
-}
-
-ktlint {
-    verbose.set(true)
-    outputToConsole.set(true)
-    ignoreFailures.set(true) // ★★★★★ IMPORTANT ★★★★★
-    android.set(false)
-    filter {
-        exclude("**/build/**")
-        exclude("**/generated/**")
-        exclude("**/node_modules/**")
     }
 }
 
