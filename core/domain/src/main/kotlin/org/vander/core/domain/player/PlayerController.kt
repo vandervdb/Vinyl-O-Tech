@@ -1,7 +1,6 @@
-package org.vander.spotifyclient.domain.player
+package org.vander.core.domain.player
 
 import kotlinx.coroutines.flow.StateFlow
-import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.PlaybackState
 
 /**

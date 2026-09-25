@@ -35,8 +35,6 @@ internal object ArchitectureDebt {
         setOf(
             "$APP/di/SpotifySessionEntryPoint.kt",
             "$APP/feature/connection/ConnectionViewModelImpl.kt",
-            "$APP/feature/home/HomeViewModelImpl.kt",
-            "$APP/feature/library/UserViewModelImpl.kt",
             "$APP/feature/player/PlayerViewModelImpl.kt",
             "$APP/util/RememberSessionManager.kt",
         )
@@ -45,8 +43,6 @@ internal object ArchitectureDebt {
     val contractsToMoveToCoreDomain =
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.data.session.SpotifySessionManager",
-            "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerController",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.UserRepository",
         )
 
     val contractsToMakeInternal =
@@ -95,9 +91,7 @@ internal object ArchitectureDebt {
     val viewModelsDependingOnSpotifyLib =
         setOf(
             "ConnectionViewModelImpl",
-            "HomeViewModelImpl",
             "PlayerViewModelImpl",
-            "UserViewModelImpl",
         )
 
     val androidUtilLog =

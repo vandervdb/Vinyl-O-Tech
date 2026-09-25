@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.User
+import org.vander.core.domain.user.UserRepository
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.data.remote.mapper.toDomain
 import org.vander.spotifyclient.domain.datasource.IRemoteUserDataSource
-import org.vander.spotifyclient.domain.repository.UserRepository
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 

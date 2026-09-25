@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.player.PlayerController
 import org.vander.core.domain.playlist.PlaylistRepository
 import org.vander.core.domain.recent.RecentlyPlayedRepository
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.Logger
-import org.vander.spotifyclient.domain.player.PlayerController
 import javax.inject.Inject
 
 /**

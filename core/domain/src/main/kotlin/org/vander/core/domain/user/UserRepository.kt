@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.domain.repository
+package org.vander.core.domain.user
 
 import kotlinx.coroutines.flow.StateFlow
 import org.vander.core.domain.data.User

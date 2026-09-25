@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.vander.core.domain.data.CurrentlyPlaying
 import org.vander.core.domain.data.QueuedTrack
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.player.PlayerController
 import org.vander.core.domain.player.PlayerStateRepository
 import org.vander.core.domain.queue.QueueRepository
 import org.vander.core.domain.state.PlaybackState
@@ -22,7 +23,6 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.di.ApplicationScope
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import org.vander.spotifyclient.domain.player.PlayerClient
-import org.vander.spotifyclient.domain.player.PlayerController
 import org.vander.spotifyclient.domain.repository.LibraryRepository
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject

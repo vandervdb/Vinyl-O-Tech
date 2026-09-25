@@ -4,7 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.spotifyclient.domain.player.PlayerController
+import org.vander.core.domain.player.PlayerController
 import org.vander.spotifyclient.domain.usecase.PlayerUseCase
 import javax.inject.Singleton
 
