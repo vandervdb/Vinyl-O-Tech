@@ -133,7 +133,7 @@ cliquet.
 | Liste | `cda0099` | Maintenant | Identifiée par |
 |---|---|---|---|
 | `contractsToMakeInternal` | 14 | 12 | nom complet |
-| `classesWithImplSuffix` | 11 | 7 | nom complet |
+| `classesWithImplSuffix` | 11 | 2 | nom complet |
 | `interfacesWithIPrefix` | 10 | 10 | nom complet |
 | `spotifyLibDomainImpure` | 9 | 9 | chemin |
 | `appDependsOnSpotifyLibInternals` | 7 | 4 | chemin |
@@ -198,7 +198,7 @@ directement du port.
 3. **Adapters `internal`, et `PlayerUseCase` renommé** en `SpotifyPlayerController` dans
    `data/player/`. À vérifier sur un premier adapter : un module Hilt qui fait `@Binds` vers une
    classe `internal` doit être `internal` lui aussi (`SpotifyPlaylistModule` l'est déjà).
-4. ~~ViewModels sur les ports.~~ Fait : `HomeViewModelImpl` et `PlayListViewModelImpl` reçoivent
+4. ~~ViewModels sur les ports.~~ Fait : `SpotifyHomeViewModel` et `SpotifyPlaylistViewModel` reçoivent
    les repositories, appellent `refresh()` et loggent l'échec. Le flux ne passe pas par `null` :
    il démarre vide et garde sa dernière valeur en cas d'échec (voir le contrat plus haut).
 5. ~~Supprimer les use cases relais.~~ Fait : `PlaylistUseCase`, `RecentlyPlayedUseCase`,
@@ -210,9 +210,9 @@ directement du port.
 | Dette | Avant (`cda0099`) | Objectif | Maintenant |
 |---|---|---|---|
 | Contrats publics hors de `core:domain` | 5 | 1 | **1** (`SpotifySessionManager`) |
-| ViewModels dépendant de `spotify-lib` | 5 | 2 | **2** (`ConnectionViewModelImpl`, `PlayerViewModelImpl`) |
+| ViewModels dépendant de `spotify-lib` | 5 | 2 | **2** (`SpotifyConnectionViewModel`, `SpotifyPlayerViewModel`) |
 | `app` → intérieur de `spotify-lib` | 7 | 4 | **4** |
-| Suffixe `Impl` | 11 | 8 | **7** |
+| Suffixe `Impl` | 11 | 8 | **2** (`KermitLoggerImpl`, `SpotifySessionManagerImpl`) |
 | Direction des couches | 1 | 0 | 1 (`PlayerUseCase`, étape 3) |
 
 Critères de réussite, vérifiés : `assembleDebug`, et les tests de tous les modules, Konsist compris,
@@ -231,14 +231,15 @@ passent. Chaque liste de dette a diminué ou est restée stable, aucune entrée 
 
 ## Décisions ouvertes
 
-- **Section « écoutés récemment » de l'accueil** : `HomeViewModelImpl` rafraîchit
+- **Section « écoutés récemment » de l'accueil** : `SpotifyHomeViewModel` rafraîchit
   `RecentlyPlayedRepository` et combine son flux, mais `HomeUiState` n'a pas encore de champ pour
   lui (le paramètre est ignoré par `_`). Soit on ajoute le champ, soit on retire le flux tant que la
   section n'est pas branchée. Le bug de `a9254d9` (l'identifiant d'un morceau dans
   `playingPlaylistId`) est corrigé dans `43ba151` : le champ vient à nouveau du contexte de lecture.
-- **Le nom des ViewModels `*Impl`** : ils implémentent les contrats de `core:ui`, tout comme ceux
-  de `fake`. Or `ui.md` réserve `<Feature>ViewModel`, déjà pris par l'interface. Il faudra
-  trancher. En attendant, ils restent dans la dette.
+- ~~**Le nom des ViewModels `*Impl`**~~ Tranché : `Spotify<Feature>ViewModel`, sur le modèle des
+  repositories. Le contrat (`core:ui`) nomme le rôle (`PlayerViewModel`), l'implémentation réelle
+  sa source (`SpotifyPlayerViewModel`), le faux de `fake` le reste (`FakePlayerViewModel`).
+  `classesWithImplSuffix` passe de 7 à 2. La règle est reportée dans `ui.md` et `architecture.md`.
 - **Hooks et CI** : Spotless ne passe plus que sur les fichiers indexés, et le plugin ktlint
   autonome est retiré (`ab10834`) : les commits et le push de `43ba151` sont passés par tous les
   hooks, sans `--no-verify`. Reste la piste d'un pre-push plus léger, avec tous les contrôles en CI

@@ -31,7 +31,7 @@ import javax.inject.Inject
  * read, and the session's teardown belongs to `AppRoot`, on the Activity's `onStop`.
  */
 @HiltViewModel
-open class PlayerViewModelImpl
+open class SpotifyPlayerViewModel
     @Inject
     constructor(
         private val controller: PlayerController,

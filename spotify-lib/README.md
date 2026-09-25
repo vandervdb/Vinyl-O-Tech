@@ -91,7 +91,7 @@ AppRoot (Compose)          SpotifySessionManager        Spotify app / accounts A
      │ ◄───── ActivityResult ────────────────────────────────────────┘
      │
      │ handleAuthResult(ctx, result, scope)
-     ├──────────────────────────►│  code ─► AuthRemoteDataSource.fetchAccessToken()
+     ├──────────────────────────►│  code ─► SpotifyRemoteAuthDataSource.fetchAccessToken()
      │                           │       ─► DataStoreManager.saveAccessToken()
      │                           │  state = ConnectingRemote
      │                           │  remoteProvider.connect(ctx)
@@ -203,7 +203,7 @@ qualifiers pick which one you get:
 
 | Qualifier | Base URL | Bearer plugin | Used by |
 |---|---|---|---|
-| `AuthHttpClient` | `accounts.spotify.com/api/` | no (Basic header) | `AuthRemoteDataSource` |
+| `AuthHttpClient` | `accounts.spotify.com/api/` | no (Basic header) | `SpotifyRemoteAuthDataSource` |
 | `auth_api_v1_client` | `api.spotify.com/v1/` | yes | the four `Remote*DataSource` |
 | `public_api_v1_client` | `api.spotify.com/v1/` | no | **nothing — declared, never injected** |
 
@@ -221,8 +221,8 @@ consumer configures the library through `AuthConfigK`, not by reading its endpoi
 
 | Type | Where it is used in `:app` |
 |---|---|
-| `SpotifySessionManager` | injected into `ConnectionViewModelImpl` / `PlayerViewModelImpl`; reached from `AppRoot` through `SpotifySessionEntryPoint` |
-| `PlayerUseCase`, `PlaylistUseCase` | `PlayerViewModelImpl`, `PlayListViewModelImpl` |
+| `SpotifySessionManager` | injected into `SpotifyConnectionViewModel` / `SpotifyPlayerViewModel`; reached from `AppRoot` through `SpotifySessionEntryPoint` |
+| `PlayerUseCase`, `PlaylistUseCase` | `SpotifyPlayerViewModel`, `SpotifyPlaylistViewModel` |
 | `LibraryRepository`, `UserRepository` | ViewModels, by constructor injection |
 | `SpotifyAuthorizationActivity` | `MainActivity` extends it |
 
@@ -318,7 +318,7 @@ back a plain object where production hands back a `SpotifyAppRemote`.
 - `model/api/NowPlaying.kt` is referenced nowhere
 - `DataStoreManager` declares the `Context.dataStore` delegate twice on the same
   `spotify_prefs` file (file level + class level); only the class-level one is reachable
-- **Secrets in logcat on debug builds**: `AuthRemoteDataSource` logs the Base64
+- **Secrets in logcat on debug builds**: `SpotifyRemoteAuthDataSource` logs the Base64
   credentials and the raw token response, `DataStoreManager.saveAccessToken` logs the
   token, `parseSpotifyResult` logs raw bodies including the `me` endpoints
 - `PlayerClient.playerConnectionState` and `lastState` are written but never collected —

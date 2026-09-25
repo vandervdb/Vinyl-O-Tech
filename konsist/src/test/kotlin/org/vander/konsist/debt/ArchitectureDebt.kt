@@ -26,8 +26,8 @@ internal object ArchitectureDebt {
     val appDependsOnSpotifyLibInternals =
         setOf(
             "$APP/di/SpotifySessionEntryPoint.kt",
-            "$APP/feature/connection/ConnectionViewModelImpl.kt",
-            "$APP/feature/player/PlayerViewModelImpl.kt",
+            "$APP/feature/connection/SpotifyConnectionViewModel.kt",
+            "$APP/feature/player/SpotifyPlayerViewModel.kt",
             "$APP/util/RememberSessionManager.kt",
         )
 
@@ -56,11 +56,6 @@ internal object ArchitectureDebt {
 
     val classesWithImplSuffix =
         setOf(
-            "org.vander.android.vinylotech.feature.connection.ConnectionViewModelImpl",
-            "org.vander.android.vinylotech.feature.home.HomeViewModelImpl",
-            "org.vander.android.vinylotech.feature.library.PlayListViewModelImpl",
-            "org.vander.android.vinylotech.feature.library.UserViewModelImpl",
-            "org.vander.android.vinylotech.feature.player.PlayerViewModelImpl",
             "org.vander.core.logger.KermitLoggerImpl",
             "org.vander.spotifyclient.data.session.SpotifySessionManagerImpl",
         )
@@ -68,8 +63,8 @@ internal object ArchitectureDebt {
     // Declaration-level rule: entries are class names, not paths.
     val viewModelsDependingOnSpotifyLib =
         setOf(
-            "ConnectionViewModelImpl",
-            "PlayerViewModelImpl",
+            "SpotifyConnectionViewModel",
+            "SpotifyPlayerViewModel",
         )
 
     val androidUtilLog =

@@ -9,7 +9,7 @@ import org.vander.core.ui.presentation.viewmodel.UserViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-open class UserViewModelImpl
+open class SpotifyUserViewModel
     @Inject
     constructor(
         private val userRepository: UserRepository,

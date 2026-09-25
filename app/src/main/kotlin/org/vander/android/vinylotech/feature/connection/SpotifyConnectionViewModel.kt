@@ -8,7 +8,7 @@ import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import javax.inject.Inject
 
 @HiltViewModel
-open class ConnectionViewModelImpl
+open class SpotifyConnectionViewModel
     @Inject
     constructor(
         sessionManager: SpotifySessionManager,

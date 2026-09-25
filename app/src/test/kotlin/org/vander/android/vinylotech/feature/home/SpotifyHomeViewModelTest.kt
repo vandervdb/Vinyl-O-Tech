@@ -22,7 +22,7 @@ import org.vander.core.domain.recent.RecentlyPlayedRepository
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.test.FakeLogger
 
-class HomeViewModelImplTest {
+class SpotifyHomeViewModelTest {
     @get:Rule
     val main = MainDispatcherRule()
 
@@ -31,7 +31,7 @@ class HomeViewModelImplTest {
     private val playlists = PlaylistCollection(listOf(Playlist(id = PLAYLIST_ID, name = "Sillons", coverUrl = "")))
 
     private fun viewModel() =
-        HomeViewModelImpl(
+        SpotifyHomeViewModel(
             playlistRepository = FakePlaylistRepository(playlists),
             recentlyPlayedRepository = FakeRecentlyPlayedRepository(RecentlyPlayed.empty()),
             controller = controller,

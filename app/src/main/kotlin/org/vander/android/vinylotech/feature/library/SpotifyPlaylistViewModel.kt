@@ -16,7 +16,7 @@ import javax.inject.Inject
  * rather than the injected logger.
  */
 @HiltViewModel
-open class PlayListViewModelImpl
+open class SpotifyPlaylistViewModel
     @Inject
     constructor(
         private val repository: PlaylistRepository,

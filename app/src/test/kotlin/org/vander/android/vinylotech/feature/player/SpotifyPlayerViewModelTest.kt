@@ -18,7 +18,7 @@ import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SessionState
 import org.vander.core.ui.domain.UIQueueItem
 
-class PlayerViewModelImplTest {
+class SpotifyPlayerViewModelTest {
     @get:Rule
     val main = MainDispatcherRule()
 
@@ -28,7 +28,7 @@ class PlayerViewModelImplTest {
 
     @Test
     fun `creating the ViewModel starts the controller`() {
-        PlayerViewModelImpl(controller, session)
+        SpotifyPlayerViewModel(controller, session)
 
         assertEquals(1, controller.startCount)
     }
@@ -36,7 +36,7 @@ class PlayerViewModelImplTest {
     @Test
     fun `the state combines the session and the controller's state`() =
         runTest {
-            val viewModel = PlayerViewModelImpl(controller, session)
+            val viewModel = SpotifyPlayerViewModel(controller, session)
             val context = PlaybackContext(uri = SpotifyUri.playlist("p1"))
 
             controller.emit(
@@ -58,7 +58,7 @@ class PlayerViewModelImplTest {
     @Test
     fun `the queue is mapped to UI items on the app side`() =
         runTest {
-            val viewModel = PlayerViewModelImpl(controller, session)
+            val viewModel = SpotifyPlayerViewModel(controller, session)
 
             controller.emit(PlaybackState(queue = listOf(QueuedTrack("t1", "Nuits blanches", "Elia Faure"))))
 
@@ -73,7 +73,7 @@ class PlayerViewModelImplTest {
     @Test
     fun `a session change reaches the state`() =
         runTest {
-            val viewModel = PlayerViewModelImpl(controller, session)
+            val viewModel = SpotifyPlayerViewModel(controller, session)
 
             session.sessionState.value = SessionState.Idle
 
@@ -82,7 +82,7 @@ class PlayerViewModelImplTest {
 
     @Test
     fun `commands are forwarded to the controller untouched`() {
-        val viewModel = PlayerViewModelImpl(controller, session)
+        val viewModel = SpotifyPlayerViewModel(controller, session)
 
         viewModel.onCommand(PlayerCommand.ToggleSave)
         viewModel.onCommand(PlayerCommand.SeekTo(4_200))

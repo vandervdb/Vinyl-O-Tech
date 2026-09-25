@@ -43,7 +43,7 @@ import org.vander.android.vinylotech.designsystem.component.VinylSnackbarHostSta
 import org.vander.android.vinylotech.designsystem.component.rememberVinylSnackbarHostState
 import org.vander.android.vinylotech.designsystem.modifier.drawGrainOverlay
 import org.vander.android.vinylotech.feature.player.MiniPlayer
-import org.vander.android.vinylotech.feature.player.PlayerViewModelImpl
+import org.vander.android.vinylotech.feature.player.SpotifyPlayerViewModel
 import org.vander.android.vinylotech.navigation.AppNavHost
 import org.vander.android.vinylotech.navigation.BottomBar
 import org.vander.android.vinylotech.navigation.MainGraph
@@ -140,7 +140,7 @@ fun AppRoot() {
             // Scoped to the graph entry, not to the current destination: a destination-scoped
             // ViewModel would be cleared on every tab change, restarting the queue and the
             // spinning disc.
-            val playerViewModel = hiltViewModel<PlayerViewModelImpl>(parentEntry)
+            val playerViewModel = hiltViewModel<SpotifyPlayerViewModel>(parentEntry)
             MiniPlayer(viewModel = playerViewModel, logger = logger)
         },
     ) { padding ->

@@ -25,7 +25,7 @@ import javax.inject.Inject
  * is why the grid was given `null` until now.
  */
 @HiltViewModel
-class HomeViewModelImpl
+class SpotifyHomeViewModel
     @Inject
     constructor(
         private val playlistRepository: PlaylistRepository,
@@ -66,7 +66,7 @@ class HomeViewModelImpl
         }
 
         private companion object {
-            const val TAG = "HomeViewModelImpl"
+            const val TAG = "SpotifyHomeViewModel"
 
             const val STOP_TIMEOUT_MS = 5_000L
         }

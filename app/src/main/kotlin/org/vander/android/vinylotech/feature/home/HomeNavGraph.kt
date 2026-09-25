@@ -10,7 +10,7 @@ object HomeRoute
 
 fun NavGraphBuilder.homeNavGraph() {
     composable<HomeRoute> {
-        val viewModel = hiltViewModel<HomeViewModelImpl>()
+        val viewModel = hiltViewModel<SpotifyHomeViewModel>()
         HomeScreen(viewModel)
     }
 }

@@ -6,7 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import org.vander.android.vinylotech.feature.player.PlayerViewModelImpl
+import org.vander.android.vinylotech.feature.player.SpotifyPlayerViewModel
 import org.vander.android.vinylotech.navigation.MainGraph
 import org.vander.core.logger.Logger
 
@@ -19,12 +19,12 @@ fun NavGraphBuilder.libraryNavGraph(
 ) {
     composable<SpotifyRoute> { entry ->
         // Scoped to MainGraph, like the MiniPlayer's in AppRoot: both resolve the same
-        // instance. Scoped to this destination, it was a second PlayerViewModelImpl, cleared on
+        // instance. Scoped to this destination, it was a second SpotifyPlayerViewModel, cleared on
         // every tab change.
         val graphEntry = remember(entry) { navController.getBackStackEntry<MainGraph>() }
-        val playerViewModel = hiltViewModel<PlayerViewModelImpl>(graphEntry)
-        val playlistViewModel = hiltViewModel<PlayListViewModelImpl>()
-        val userViewModel = hiltViewModel<UserViewModelImpl>()
+        val playerViewModel = hiltViewModel<SpotifyPlayerViewModel>(graphEntry)
+        val playlistViewModel = hiltViewModel<SpotifyPlaylistViewModel>()
+        val userViewModel = hiltViewModel<SpotifyUserViewModel>()
 
         SpotifyScreen(
             playerViewModel = playerViewModel,
