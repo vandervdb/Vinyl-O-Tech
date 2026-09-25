@@ -5,8 +5,8 @@ Ce document rassemble les décisions, les règles et l'état du chantier mené s
 conversation qui l'a produit. Les constats ont été vérifiés dans le code ou par l'exécution des
 tests, rien n'est supposé.
 
-État après `43ba151` : 15 tests Konsist verts, dette suivie par un cliquet. Option C faite
-aux étapes 1, 2, 4, 5 et 6 ; reste l'étape 3.
+État après `62e30b3` : 15 tests Konsist verts, dette suivie par un cliquet. Option C terminée
+(étapes 1 à 6), contrats des data sources passés en `internal` dans `data/`, ViewModels renommés.
 
 ---
 
@@ -58,7 +58,7 @@ Un use case se justifie quand il porte une règle métier réutilisée ou comple
 `RecentlyPlayedUseCase` et `SpotifyRemoteUseCase` recopiaient dans leur propre `StateFlow` un
 résultat que le repository gardait déjà : ils sont supprimés (`43ba151`), et les ViewModels
 dépendent directement des ports. `PlayerUseCase` n'est pas un use case mais l'adapter Spotify du
-port `PlayerController` : il sera renommé et déplacé, pas supprimé.
+port `PlayerController` : il est devenu `SpotifyPlayerController` dans `data/player/` (`f6ec31a`).
 
 ### Le contrat d'un repository qui garde un état
 
@@ -85,6 +85,32 @@ interface PlaylistRepository {
 - **L'appelant logge l'échec** (`.onFailure { logger.e(...) }`), puisque l'adapter ne le fait pas.
   Un `getOrThrow()` dans un `collect {}` est interdit : l'exception tue le collecteur pour le
   reste de la session.
+
+### Les contrats techniques restent dans leur module
+
+Les contrats des data sources exposent des DTO et ne servent qu'à l'intérieur de `spotify-lib`.
+Ils sont dans `data/remote/datasource/`, à côté de leurs implémentations, en `internal` et sans
+préfixe `I` (`f6ec31a`).
+
+| Contrat · `internal` | Implémentation · `internal` | Forme |
+|---|---|---|
+| `RemotePlaylistDataSource` | `SpotifyRemotePlaylistDataSource` | `fun interface` |
+| `RemoteQueueDataSource` | `SpotifyRemoteQueueDataSource` | `fun interface` |
+| `RemoteRecentlyPlayedDataSource` | `SpotifyRemoteRecentlyPlayedDataSource` | `fun interface` |
+| `RemoteUserDataSource` | `SpotifyRemoteUserDataSource` | `fun interface` |
+| `RemoteLibraryDataSource` | `SpotifyRemoteLibraryDataSource` | 3 méthodes |
+| `RemoteAuthDataSource` | `SpotifyRemoteAuthDataSource` | interface |
+
+- **Un ordre de mots unique** : `Remote<Sujet>DataSource` pour le contrat,
+  `SpotifyRemote<Sujet>DataSource` pour l'implémentation, avec un `S` majuscule à `DataSource`.
+- **Passer un contrat en `internal` entraîne tout ce qui l'expose** (règle « exposed visibility »
+  de Kotlin) : un type public ne peut ni l'implémenter, ni le recevoir dans un constructeur public.
+  Implémentations, repositories et modules Hilt ont suivi. Hilt l'accepte : `internal` n'existe que
+  pour le compilateur Kotlin, la classe reste publique dans le bytecode.
+- **`fun interface` quand le contrat n'a qu'une méthode** : les tests passent une lambda au lieu
+  d'un mock (`SpotifyQueueRepository { Result.success(queueDto()) }`).
+- **Un module qui lie et construit** met `@Binds` dans une `abstract class` et `@Provides` dans son
+  `companion object` (`RemoteAuthModule`) : un `object` ne peut pas porter de fonction abstraite.
 
 ### Nettoyages faits
 
@@ -130,17 +156,17 @@ diminuer :
 On retire l'entrée dans le commit qui corrige la violation. Il suffit de suivre les messages du
 cliquet.
 
-| Liste | `cda0099` | Maintenant | Identifiée par |
-|---|---|---|---|
-| `contractsToMakeInternal` | 14 | 12 | nom complet |
-| `classesWithImplSuffix` | 11 | 2 | nom complet |
-| `interfacesWithIPrefix` | 10 | 10 | nom complet |
-| `spotifyLibDomainImpure` | 9 | 9 | chemin |
-| `appDependsOnSpotifyLibInternals` | 7 | 4 | chemin |
-| `contractsToMoveToCoreDomain` | 5 | 1 | nom complet |
-| `viewModelsDependingOnSpotifyLib` | 5 | 2 | nom de classe |
-| `androidUtilLog` | 2 | 2 | chemin |
-| `spotifyLibDomainWrongDirection` | 1 | 1 | chemin |
+| Liste | `cda0099` | `62e30b3` | Ce qui reste | Identifiée par |
+|---|---|---|---|---|
+| `contractsToMakeInternal` | 14 | 5 | `AppRemoteProvider`, `RemoteConnector`, `IDataStoreManager`, `AuthClient`, `PlayerClient` | nom complet |
+| `classesWithImplSuffix` | 11 | 2 | `KermitLoggerImpl`, `SpotifySessionManagerImpl` | nom complet |
+| `interfacesWithIPrefix` | 10 | 3 | `IAuthRepository`, `ITokenProvider`, `IDataStoreManager` | nom complet |
+| `spotifyLibDomainImpure` | 9 | 4 | `AppRemoteProvider`, `RemoteConnector`, `AuthClient`, `SpotifySessionManager` | chemin |
+| `appDependsOnSpotifyLibInternals` | 7 | 4 | la session : `SpotifySessionEntryPoint`, deux ViewModels, `RememberSessionManager` | chemin |
+| `contractsToMoveToCoreDomain` | 5 | 1 | `SpotifySessionManager` | nom complet |
+| `viewModelsDependingOnSpotifyLib` | 5 | 2 | `SpotifyConnectionViewModel`, `SpotifyPlayerViewModel` | nom de classe |
+| `androidUtilLog` | 2 | 2 | `PlaylistGrid`, `LifecycleObserverComponent` | chemin |
+| `spotifyLibDomainWrongDirection` | 1 | 0 | — | chemin |
 
 ### Pièges rencontrés
 
@@ -168,81 +194,98 @@ cliquet.
   compilateur Gradle fait foi.
 - **« Apply Changes » après un déplacement de classes** laisse des dex incohérents dans
   `code_cache/.overlay` (`NoClassDefFoundError` au démarrage). Désinstaller et réinstaller.
+- **Un import vers une classe déplacée** ne donne pas « unresolved reference » mais une erreur kapt
+  sur le `@Binds` (« parameter type must be assignable to the return type ») : kapt remplace la
+  classe introuvable par un type d'erreur. Même remède : relire les modules DI.
+- **Le dossier n'est pas le package.** Un fichier glissé dans un autre dossier garde sa ligne
+  `package`, et Kotlin l'accepte. Konsist sélectionne par package : les data sources déplacées
+  comptaient encore comme du domaine. Utiliser *Refactor → Move*, ou Alt+Entrée sur la ligne
+  `package` soulignée.
+- **Le cliquet suit les noms.** Un renommage fait réapparaître la dette comme une violation
+  nouvelle, et l'ancienne entrée comme `not found`. On choisit : reporter l'entrée sous le nouveau
+  nom, ou supprimer la dette. Chaque test du cliquet s'arrête à la première entrée introuvable.
+- **Le hook pre-push teste le répertoire de travail**, pas seulement les commits : un fichier en
+  cours d'édition peut faire échouer un push sans rapport avec lui.
 
 ---
 
 ## Option C : ports dans `core:domain`, adapters dans `spotify-lib`
 
-Étapes 1, 2, 4, 5 et 6 faites. Reste l'étape 3 : passer les adapters en `internal` et renommer
-`PlayerUseCase`.
+Terminée.
 
-| Port · `core:domain` | Adapter · `spotify-lib` | État |
+| Port · `core:domain` | Adapter · `spotify-lib` | Visibilité |
 |---|---|---|
-| `playlist.PlaylistRepository` | `data.repository.SpotifyPlaylistRepository` | déplacé, renommé, pas `internal` |
-| `recent.RecentlyPlayedRepository` | `data.repository.SpotifyRecentlyPlayedRepository` | déplacé, renommé, pas `internal` |
-| `queue.QueueRepository` | `data.repository.SpotifyQueueRepository` | déplacé, renommé, pas `internal` |
-| `user.UserRepository` | `data.repository.SpotifyUserRepository` | déplacé, pas `internal` |
-| `player.PlayerController` | `domain.usecase.PlayerUseCase` → `SpotifyPlayerController` dans `data/player/` | port déplacé, adapter à renommer |
+| `playlist.PlaylistRepository` | `data.repository.SpotifyPlaylistRepository` | `internal` |
+| `recent.RecentlyPlayedRepository` | `data.repository.SpotifyRecentlyPlayedRepository` | `internal` |
+| `queue.QueueRepository` | `data.repository.SpotifyQueueRepository` | `internal` |
+| `library.LibraryRepository` | `data.repository.SpotifyLibraryRepository` | `internal` |
+| `user.UserRepository` | `data.repository.SpotifyUserRepository` | `internal` |
+| `player.PlayerController` | `data.player.SpotifyPlayerController` | public |
 
 Les ports sont rangés par feature (`org.vander.core.domain.<feature>`), à côté de leurs modèles,
 et non dans un paquet `repository` commun : c'est déjà l'organisation de `core:domain`
-(`player`, `state`, `auth`…).
-
-`QueueRepository` a rejoint la liste : `SpotifyRemoteUseCase` supprimé, `PlayerUseCase` dépend
-directement du port.
+(`player`, `state`, `auth`…). `QueueRepository` et `LibraryRepository` ont rejoint la liste en
+cours de route.
 
 1. ~~Règle de nommage dans Konsist.~~ Fait (`cda0099`).
-2. ~~Déplacer les ports dans `core:domain`.~~ Fait : les trois premiers dans `43ba151`,
-   `UserRepository` et `PlayerController` ensuite. `UserRepository` garde pour l'instant
-   `fetchCurrentUser(): Unit`, qui perd l'erreur : il reste à l'aligner sur `refresh(): Result<Unit>`.
-3. **Adapters `internal`, et `PlayerUseCase` renommé** en `SpotifyPlayerController` dans
-   `data/player/`. À vérifier sur un premier adapter : un module Hilt qui fait `@Binds` vers une
-   classe `internal` doit être `internal` lui aussi (`SpotifyPlaylistModule` l'est déjà).
-4. ~~ViewModels sur les ports.~~ Fait : `SpotifyHomeViewModel` et `SpotifyPlaylistViewModel` reçoivent
-   les repositories, appellent `refresh()` et loggent l'échec. Le flux ne passe pas par `null` :
-   il démarre vide et garde sa dernière valeur en cas d'échec (voir le contrat plus haut).
+2. ~~Déplacer les ports dans `core:domain`.~~ Fait : Playlist, RecentlyPlayed et Queue dans
+   `43ba151`, `UserRepository` et `PlayerController` dans `8136ada`, `LibraryRepository` dans
+   `f6ec31a`.
+3. ~~Adapters `internal`, `PlayerUseCase` renommé.~~ Fait dans `f6ec31a` : repositories, data
+   sources et leurs modules Hilt sont `internal`, `PlayerUseCase` est devenu
+   `SpotifyPlayerController` dans `data/player/`. Un module Hilt qui fait `@Binds` vers une classe
+   `internal` doit bien être `internal` lui aussi : le compilateur l'impose. `SpotifyPlayerController`
+   est resté public.
+4. ~~ViewModels sur les ports.~~ Fait : `SpotifyHomeViewModel` et `SpotifyPlaylistViewModel`
+   reçoivent les repositories, appellent `refresh()` et loggent l'échec. Le flux ne passe pas par
+   `null` : il démarre vide et garde sa dernière valeur en cas d'échec (voir le contrat plus haut).
 5. ~~Supprimer les use cases relais.~~ Fait : `PlaylistUseCase`, `RecentlyPlayedUseCase`,
    `SpotifyRemoteUseCase`, `UseCaseModule` et leurs tests. Ce qu'ils couvraient est repris par
    `PlaylistRepositoryTest`, `RecentlyPlayedRepositoryTest` et `SpotifyQueueRepositoryTest`,
    à travers le port. Le log d'erreur est passé chez l'appelant.
-6. ~~Mettre la dette à jour.~~ Fait, en suivant le cliquet.
+6. ~~Mettre la dette à jour.~~ Fait à chaque commit, en suivant le cliquet.
 
-| Dette | Avant (`cda0099`) | Objectif | Maintenant |
+| Dette | Avant (`cda0099`) | Objectif | Obtenu |
 |---|---|---|---|
 | Contrats publics hors de `core:domain` | 5 | 1 | **1** (`SpotifySessionManager`) |
 | ViewModels dépendant de `spotify-lib` | 5 | 2 | **2** (`SpotifyConnectionViewModel`, `SpotifyPlayerViewModel`) |
 | `app` → intérieur de `spotify-lib` | 7 | 4 | **4** |
 | Suffixe `Impl` | 11 | 8 | **2** (`KermitLoggerImpl`, `SpotifySessionManagerImpl`) |
-| Direction des couches | 1 | 0 | 1 (`PlayerUseCase`, étape 3) |
+| Direction des couches | 1 | 0 | **0** |
 
 Critères de réussite, vérifiés : `assembleDebug`, et les tests de tous les modules, Konsist compris,
-passent. Chaque liste de dette a diminué ou est restée stable, aucune entrée n'a été ajoutée.
+passent. Chaque liste de dette a diminué, aucune entrée n'a été ajoutée.
 
 ## Ensuite
 
-1. **Finir l'étape 3** de l'option C.
-2. **Couche anti-corruption** : `SpotifySessionManager` expose `Activity`, `Context` et
-   `ActivityResultLauncher`. C'est le dernier contrat public à nettoyer avant qu'il aille dans
-   `core:domain`.
-3. **Erreurs typées** : `refresh()` renvoie déjà un `Result<Unit>` ; l'étape suivante est une
+1. **Couche anti-corruption** pour `SpotifySessionManager` et `AuthClient`, qui exposent
+   `Activity`, `Context` et `ActivityResultLauncher`. C'est ce qui garde deux ViewModels et quatre
+   fichiers de `app` dans la dette, et le dernier contrat public hors de `core:domain`.
+2. **Finir les contrats techniques** : `AppRemoteProvider`, `RemoteConnector`, `PlayerClient` et
+   `IDataStoreManager` en `internal`, et `SpotifyPlayerController` aussi.
+3. **Aligner `UserRepository`** sur `refresh(): Result<Unit>` : `fetchCurrentUser(): Unit` ne laisse
+   voir un échec que dans les logs.
+4. **Erreurs typées** : `refresh()` renvoie déjà un `Result<Unit>` ; l'étape suivante est une
    erreur `sealed` (réseau, session expirée, compte gratuit…) plutôt qu'une `Exception`.
-4. **Contrats techniques** dans `data/` en `internal`, avec renommage des `I*` au passage.
-5. **Modularisation par feature**, plus tard.
+5. **Préfixe `I` dans `core:domain`** : `IAuthRepository`, `ITokenProvider`.
+6. **Modularisation par feature**, plus tard.
 
 ## Décisions ouvertes
 
-- **Section « écoutés récemment » de l'accueil** : `SpotifyHomeViewModel` rafraîchit
-  `RecentlyPlayedRepository` et combine son flux, mais `HomeUiState` n'a pas encore de champ pour
-  lui (le paramètre est ignoré par `_`). Soit on ajoute le champ, soit on retire le flux tant que la
-  section n'est pas branchée. Le bug de `a9254d9` (l'identifiant d'un morceau dans
-  `playingPlaylistId`) est corrigé dans `43ba151` : le champ vient à nouveau du contexte de lecture.
+- **Section « écoutés récemment » de l'accueil** : `HomeUiState` reçoit un champ `recentlyPlayed`,
+  alimenté par `RecentlyPlayedRepository` dans `SpotifyHomeViewModel`. En cours, pas encore
+  commité. Le bug de `a9254d9` (l'identifiant d'un morceau dans `playingPlaylistId`) est corrigé
+  dans `43ba151` : le champ vient à nouveau du contexte de lecture.
+- **Secret dans logcat** : `SpotifyRemoteAuthDataSource` logge en debug le Base64 de
+  `CLIENT_ID:CLIENT_SECRET`, qui se décode directement. Masquer `CLIENT_SECRET` plus loin ne
+  protège rien tant que cette ligne reste.
 - ~~**Le nom des ViewModels `*Impl`**~~ Tranché : `Spotify<Feature>ViewModel`, sur le modèle des
-  repositories. Le contrat (`core:ui`) nomme le rôle (`PlayerViewModel`), l'implémentation réelle
-  sa source (`SpotifyPlayerViewModel`), le faux de `fake` le reste (`FakePlayerViewModel`).
-  `classesWithImplSuffix` passe de 7 à 2. La règle est reportée dans `ui.md` et `architecture.md`.
-- **Hooks et CI** : Spotless ne passe plus que sur les fichiers indexés, et le plugin ktlint
-  autonome est retiré (`ab10834`) : les commits et le push de `43ba151` sont passés par tous les
-  hooks, sans `--no-verify`. Reste la piste d'un pre-push plus léger, avec tous les contrôles en CI
-  sur les pull requests vers `main`.
+  repositories (`62e30b3`). Le contrat (`core:ui`) nomme le rôle (`PlayerViewModel`),
+  l'implémentation réelle sa source (`SpotifyPlayerViewModel`), le faux de `fake` le reste
+  (`FakePlayerViewModel`). La règle est reportée dans `ui.md` et `architecture.md`.
+- ~~**Hooks**~~ Résolu : Spotless ne passe que sur les fichiers indexés, le plugin ktlint autonome
+  est retiré (`ab10834`), et les commits de la branche passent tous les hooks sans `--no-verify`.
+  Reste la piste d'un pre-push plus léger, avec tous les contrôles en CI sur les pull requests
+  vers `main`.
 - **`.claude/rules/architecture.md`** : il décrit encore `core:security` comme non branché, et ne
   mentionne pas encore les règles Konsist.
