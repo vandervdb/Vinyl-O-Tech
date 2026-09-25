@@ -112,7 +112,7 @@ class RemoteLibraryDataSourceTest {
         runTest {
             // Ktor's `expectSuccess` is false by default, so a refusal never throws and the
             // try/catch has nothing to catch — the status has to be inspected. Without it,
-            // PlayerViewModelImpl.saveTrack flips the local heart on `onSuccess` and the UI
+            // SpotifyPlayerViewModel.saveTrack flips the local heart on `onSuccess` and the UI
             // claims the track was saved when Spotify refused.
             val engine =
                 MockEngine {
@@ -177,7 +177,7 @@ class RemoteLibraryDataSourceTest {
     private fun dataSource(
         engine: MockEngine,
         logger: FakeLogger = FakeLogger(),
-    ) = RemoteLibraryDataSource(
+    ) = SpotifyRemoteLibraryDataSource(
         httpClient = HttpClient(engine) { defaultRequest { url(BASE_URL) } },
         logger = logger,
     )
@@ -187,6 +187,6 @@ class RemoteLibraryDataSourceTest {
 
         const val TRACK_ID = "4cOdK2wGLETKBW3PvgPWqT"
 
-        const val TAG = "RemoteLibraryDataSource"
+        const val TAG = "SpotifyRemoteLibraryDataSource"
     }
 }

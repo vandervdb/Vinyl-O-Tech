@@ -17,19 +17,11 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB/domain/appremote/AppRemoteProvider.kt",
             "$SPOTIFY_LIB/domain/appremote/RemoteConnector.kt",
-            "$SPOTIFY_LIB/domain/auth/IAuthRemoteDatasource.kt",
-            "$SPOTIFY_LIB/domain/auth/ISpotifyAuthClient.kt",
+            "$SPOTIFY_LIB/domain/auth/AuthClient.kt",
             "$SPOTIFY_LIB/domain/data/session/SpotifySessionManager.kt",
-            "$SPOTIFY_LIB/domain/datasource/IRemotePlaylistDataSource.kt",
-            "$SPOTIFY_LIB/domain/datasource/IRemoteQueueDataSource.kt",
-            "$SPOTIFY_LIB/domain/datasource/IRemoteRecentlyPlayedDataSource.kt",
-            "$SPOTIFY_LIB/domain/datasource/IRemoteUserDataSource.kt",
         )
 
-    val spotifyLibDomainWrongDirection =
-        setOf(
-            "$SPOTIFY_LIB/domain/usecase/PlayerUseCase.kt",
-        )
+    val spotifyLibDomainWrongDirection = emptySet<String>()
 
     val appDependsOnSpotifyLibInternals =
         setOf(
@@ -49,16 +41,9 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.AppRemoteProvider",
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.RemoteConnector",
-            "$SPOTIFY_LIB_PACKAGE.domain.auth.IAuthRemoteDatasource",
             "$SPOTIFY_LIB_PACKAGE.domain.auth.IDataStoreManager",
-            "$SPOTIFY_LIB_PACKAGE.domain.auth.ISpotifyAuthClient",
-            "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteLibraryDataSource",
-            "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemotePlaylistDataSource",
-            "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteQueueDataSource",
-            "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteRecentlyPlayedDataSource",
-            "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteUserDataSource",
+            "$SPOTIFY_LIB_PACKAGE.domain.auth.AuthClient",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerClient",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.LibraryRepository",
         )
 
     // Naming rules span every module, so entries spell out the full package.
@@ -66,14 +51,7 @@ internal object ArchitectureDebt {
         setOf(
             "org.vander.core.domain.auth.IAuthRepository",
             "org.vander.core.domain.auth.ITokenProvider",
-            "org.vander.spotifyclient.domain.auth.IAuthRemoteDatasource",
             "org.vander.spotifyclient.domain.auth.IDataStoreManager",
-            "org.vander.spotifyclient.domain.auth.ISpotifyAuthClient",
-            "org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource",
-            "org.vander.spotifyclient.domain.datasource.IRemotePlaylistDataSource",
-            "org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource",
-            "org.vander.spotifyclient.domain.datasource.IRemoteRecentlyPlayedDataSource",
-            "org.vander.spotifyclient.domain.datasource.IRemoteUserDataSource",
         )
 
     val classesWithImplSuffix =

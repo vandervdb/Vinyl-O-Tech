@@ -12,7 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.vander.core.dto.UserDto
 import org.vander.core.logger.test.FakeLogger
-import org.vander.spotifyclient.domain.datasource.IRemoteUserDataSource
+import org.vander.spotifyclient.data.remote.datasource.RemoteUserDataSource
 import org.vander.spotifyclient.fixtures.userDto
 import java.io.IOException
 
@@ -59,7 +59,7 @@ class SpotifyUserRepositoryTest {
         runTest {
             // Unlike the playlist and queue repositories, this one resets its state on
             // failure rather than keeping the last value it had.
-            val api = mockk<IRemoteUserDataSource>()
+            val api = mockk<RemoteUserDataSource>()
             coEvery { api.fetchUser() } returnsMany
                 listOf(Result.success(userDto()), Result.failure(IOException("offline")))
             val repository = SpotifyUserRepository(api, FakeLogger())
@@ -75,7 +75,7 @@ class SpotifyUserRepositoryTest {
         runTest {
             // Catching CancellationException would break structured concurrency: it is how
             // cancellation propagates, not a failure to report.
-            val api = mockk<IRemoteUserDataSource>()
+            val api = mockk<RemoteUserDataSource>()
             coEvery { api.fetchUser() } throws CancellationException("cancelled")
 
             val thrown = runCatching { SpotifyUserRepository(api, FakeLogger()).fetchCurrentUser() }.exceptionOrNull()
@@ -87,7 +87,7 @@ class SpotifyUserRepositoryTest {
     fun `a cancellation is not logged as an error`() =
         runTest {
             val logger = FakeLogger()
-            val api = mockk<IRemoteUserDataSource>()
+            val api = mockk<RemoteUserDataSource>()
             coEvery { api.fetchUser() } throws CancellationException("cancelled")
 
             runCatching { SpotifyUserRepository(api, logger).fetchCurrentUser() }
@@ -99,7 +99,7 @@ class SpotifyUserRepositoryTest {
         result: Result<UserDto>,
         logger: FakeLogger = FakeLogger(),
     ): SpotifyUserRepository {
-        val api = mockk<IRemoteUserDataSource>()
+        val api = mockk<RemoteUserDataSource>()
         coEvery { api.fetchUser() } returns result
         return SpotifyUserRepository(api, logger)
     }

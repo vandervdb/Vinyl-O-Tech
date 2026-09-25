@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SpotifyQueueModule {
+internal abstract class SpotifyQueueModule {
     @Binds
     @Singleton
     abstract fun bindQueueRepository(impl: SpotifyQueueRepository): QueueRepository

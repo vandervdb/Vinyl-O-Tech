@@ -10,7 +10,6 @@ import org.vander.core.dto.TokenResponseDto
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.BuildConfig.CLIENT_ID
 import org.vander.spotifyclient.BuildConfig.CLIENT_SECRET
-import org.vander.spotifyclient.domain.auth.IAuthRemoteDatasource
 import org.vander.spotifyclient.utils.REDIRECT_URI
 import org.vander.spotifyclient.utils.spotifyJson
 import javax.inject.Inject
@@ -28,26 +27,26 @@ import kotlin.io.encoding.ExperimentalEncodingApi
  * Warning: this method logs the raw response body and the Base64 credentials at debug level,
  * so an access token and the client secret end up in logcat on a debug build.
  */
-class AuthRemoteDataSource
+internal class SpotifyRemoteAuthDataSource
     @Inject
     constructor(
         @param:Named("AuthHttpClient") val httpClient: HttpClient,
         private val logger: Logger,
-    ) : IAuthRemoteDatasource {
+    ) : RemoteAuthDataSource {
         @OptIn(ExperimentalEncodingApi::class)
         override suspend fun fetchAccessToken(code: String): Result<TokenResponseDto> {
             return try {
                 val credentials = "$CLIENT_ID:$CLIENT_SECRET"
                 val encodedCredentials = Base64.encode(credentials.toByteArray())
-                logger.d("AuthRemoteDataSource", "encodedCredentials: $encodedCredentials")
-                logger.d("AuthRemoteDataSource", "CLIENT_ID: $CLIENT_ID")
+                logger.d("SpotifyRemoteAuthDataSource", "encodedCredentials: $encodedCredentials")
+                logger.d("SpotifyRemoteAuthDataSource", "CLIENT_ID: $CLIENT_ID")
                 val maskedSecret =
                     if (CLIENT_SECRET.length > 4) {
                         CLIENT_SECRET.substring(0, 2) + "****" + CLIENT_SECRET.substring(CLIENT_SECRET.length - 2)
                     } else {
                         "****"
                     }
-                logger.d("AuthRemoteDataSource", "CLIENT_SECRET: $maskedSecret")
+                logger.d("SpotifyRemoteAuthDataSource", "CLIENT_SECRET: $maskedSecret")
                 val response =
                     httpClient.submitForm(
                         url = "token",
@@ -64,18 +63,18 @@ class AuthRemoteDataSource
                     }
 
                 val rawBody = response.bodyAsText()
-                logger.d("AuthRemoteDataSource", "Raw body: $rawBody")
+                logger.d("SpotifyRemoteAuthDataSource", "Raw body: $rawBody")
 
                 if (response.status.value in 400..499) {
                     try {
                         val errorObj = spotifyJson.parseToJsonElement(rawBody).jsonObject
                         if (errorObj.containsKey("error_description")) {
                             val description = errorObj["error_description"].toString()
-                            logger.e("AuthRemoteDataSource", "Spotify error description: $description")
+                            logger.e("SpotifyRemoteAuthDataSource", "Spotify error description: $description")
                         }
                         if (errorObj.containsKey("error")) {
                             val error = errorObj["error"].toString()
-                            logger.e("AuthRemoteDataSource", "Spotify error code: $error")
+                            logger.e("SpotifyRemoteAuthDataSource", "Spotify error code: $error")
                         }
                     } catch (e: Exception) {
                         // ignore parsing error for description
@@ -88,7 +87,7 @@ class AuthRemoteDataSource
                     return Result.failure(Exception("Spotify error ${response.status.value}: $rawBody"))
                 }
             } catch (e: Exception) {
-                logger.e("AuthRemoteDataSource", "Error fetching token", e)
+                logger.e("SpotifyRemoteAuthDataSource", "Error fetching token", e)
                 Result.failure(e)
             }
         }

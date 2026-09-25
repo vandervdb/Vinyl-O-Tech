@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.domain.auth
+package org.vander.spotifyclient.data.remote.datasource
 
 import org.vander.core.dto.TokenResponseDto
 
@@ -8,7 +8,7 @@ import org.vander.core.dto.TokenResponseDto
  * The only call in the app that authenticates with the client secret rather than a bearer
  * token, which is why it sits apart from the other data sources.
  */
-interface IAuthRemoteDatasource {
+internal interface RemoteAuthDataSource {
     /**
      * @param code the authorization code from the login flow, usable once.
      * @return failure carrying the API's message on a non-200, including an expired or replayed

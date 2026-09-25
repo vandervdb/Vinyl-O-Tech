@@ -7,7 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource
+import org.vander.spotifyclient.data.remote.datasource.RemoteLibraryDataSource
 import java.io.IOException
 
 /**
@@ -17,7 +17,7 @@ import java.io.IOException
  * default value.
  */
 class SpotifyLibraryRepositoryTest {
-    private val api = mockk<IRemoteLibraryDataSource>()
+    private val api = mockk<RemoteLibraryDataSource>()
 
     private val repository = SpotifyLibraryRepository(api)
 

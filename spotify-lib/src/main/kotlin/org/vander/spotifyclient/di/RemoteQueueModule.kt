@@ -5,11 +5,11 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.vander.spotifyclient.data.remote.datasource.RemoteQueueDataSource
-import org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource
+import org.vander.spotifyclient.data.remote.datasource.SpotifyRemoteQueueDataSource
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RemoteQueueModule {
+internal abstract class RemoteQueueModule {
     @Binds
-    abstract fun bindRemotePlaylistDataSource(impl: RemoteQueueDataSource): IRemoteQueueDataSource
+    abstract fun bindRemotePlaylistDataSource(impl: SpotifyRemoteQueueDataSource): RemoteQueueDataSource
 }

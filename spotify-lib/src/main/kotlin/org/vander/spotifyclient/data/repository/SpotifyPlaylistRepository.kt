@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.PlaylistCollection
 import org.vander.core.domain.playlist.PlaylistRepository
 import org.vander.spotifyclient.data.playlist.mapper.toDomain
-import org.vander.spotifyclient.domain.datasource.IRemotePlaylistDataSource
+import org.vander.spotifyclient.data.remote.datasource.RemotePlaylistDataSource
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -17,10 +17,10 @@ import kotlin.coroutines.cancellation.CancellationException
  * `getOrThrow()` inside a `try` is how the data source's [Result] is re-wrapped into this
  * one: a mapping failure and a network failure then come out the same way.
  */
-class SpotifyPlaylistRepository
+internal class SpotifyPlaylistRepository
     @Inject
     constructor(
-        private val api: IRemotePlaylistDataSource,
+        private val api: RemotePlaylistDataSource,
     ) : PlaylistRepository {
         private val _playlists = MutableStateFlow(PlaylistCollection.empty())
         override val playlists: StateFlow<PlaylistCollection> = _playlists.asStateFlow()

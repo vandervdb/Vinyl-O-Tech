@@ -10,8 +10,8 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.BuildConfig
+import org.vander.spotifyclient.domain.auth.AuthClient
 import org.vander.spotifyclient.domain.auth.AuthConfigK
-import org.vander.spotifyclient.domain.auth.ISpotifyAuthClient
 import org.vander.spotifyclient.utils.REDIRECT_URI
 import org.vander.spotifyclient.utils.SCOPE_STREAMING
 import org.vander.spotifyclient.utils.USER_LIBRARY_MODIFY
@@ -27,7 +27,7 @@ open class SpotifyAuthClient
     @Inject
     constructor(
         private val logger: Logger,
-    ) : ISpotifyAuthClient {
+    ) : AuthClient {
         companion object {
             private const val TAG = "SpotifyClient"
         }

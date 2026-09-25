@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.CurrentlyPlaying
 import org.vander.core.domain.queue.QueueRepository
+import org.vander.spotifyclient.data.remote.datasource.RemoteQueueDataSource
 import org.vander.spotifyclient.data.remote.mapper.toDomain
-import org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -16,10 +16,10 @@ import kotlin.coroutines.cancellation.CancellationException
  *
  * Same shape as [SpotifyPlaylistRepository]; the cached value survives a failed refresh.
  */
-class SpotifyQueueRepository
+internal class SpotifyQueueRepository
     @Inject
     constructor(
-        private val api: IRemoteQueueDataSource,
+        private val api: RemoteQueueDataSource,
     ) : QueueRepository {
         private val _currentQueue = MutableStateFlow<CurrentlyPlaying?>(null)
         override val currentQueue: StateFlow<CurrentlyPlaying?> = _currentQueue.asStateFlow()

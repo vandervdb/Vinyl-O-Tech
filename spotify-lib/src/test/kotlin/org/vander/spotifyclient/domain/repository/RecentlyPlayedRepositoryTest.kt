@@ -10,8 +10,8 @@ import org.vander.core.domain.recent.RecentlyPlayedRepository
 import org.vander.core.dto.PlayContextDto
 import org.vander.core.dto.PlayHistoryDto
 import org.vander.core.dto.RecentlyPlayedResponseDto
+import org.vander.spotifyclient.data.remote.datasource.RemoteRecentlyPlayedDataSource
 import org.vander.spotifyclient.data.repository.SpotifyRecentlyPlayedRepository
-import org.vander.spotifyclient.domain.datasource.IRemoteRecentlyPlayedDataSource
 import org.vander.spotifyclient.fixtures.trackDto
 import java.io.IOException
 import kotlin.test.assertEquals
@@ -66,7 +66,7 @@ class RecentlyPlayedRepositoryTest {
     @Test
     fun `a second successful refresh replaces the first one`() =
         runTest {
-            val api = mockk<IRemoteRecentlyPlayedDataSource>()
+            val api = mockk<RemoteRecentlyPlayedDataSource>()
             coEvery { api.fetchRecentlyPlayed() } returnsMany
                 listOf(Result.success(page("t1", "t2")), Result.success(page("t3")))
             val repository = repository(api)
@@ -123,7 +123,7 @@ class RecentlyPlayedRepositoryTest {
         runTest {
             // Unlike the profile, the history is not reset on failure: offline, the screen
             // keeps showing what it last had instead of going blank.
-            val api = mockk<IRemoteRecentlyPlayedDataSource>()
+            val api = mockk<RemoteRecentlyPlayedDataSource>()
             coEvery { api.fetchRecentlyPlayed() } returnsMany
                 listOf(Result.success(page("t1", "t2")), Result.failure(IOException("offline")))
             val repository = repository(api)
@@ -198,11 +198,11 @@ class RecentlyPlayedRepositoryTest {
             assertNull(repository.recentlyPlayed.value.lastResumable)
         }
 
-    private fun repository(api: IRemoteRecentlyPlayedDataSource): RecentlyPlayedRepository =
+    private fun repository(api: RemoteRecentlyPlayedDataSource): RecentlyPlayedRepository =
         SpotifyRecentlyPlayedRepository(api)
 
-    private fun dataSourceReturning(result: Result<RecentlyPlayedResponseDto>): IRemoteRecentlyPlayedDataSource {
-        val api = mockk<IRemoteRecentlyPlayedDataSource>()
+    private fun dataSourceReturning(result: Result<RecentlyPlayedResponseDto>): RemoteRecentlyPlayedDataSource {
+        val api = mockk<RemoteRecentlyPlayedDataSource>()
         coEvery { api.fetchRecentlyPlayed() } returns result
         return api
     }

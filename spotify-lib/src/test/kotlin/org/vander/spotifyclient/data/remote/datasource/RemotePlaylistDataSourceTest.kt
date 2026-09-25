@@ -30,7 +30,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
 
-            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            val result = SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isSuccess)
             assertEquals(listOf("Sillons"), result.getOrThrow().items.map { it.name })
@@ -41,7 +41,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
 
-            RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertEquals(
                 "/v1/me/playlists",
@@ -61,7 +61,7 @@ class RemotePlaylistDataSourceTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
             val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(TOKEN) } }
 
-            RemotePlaylistDataSource(client).fetchUserPlaylists()
+            SpotifyRemotePlaylistDataSource(client).fetchUserPlaylists()
 
             assertEquals("Bearer $TOKEN", engine.requestHistory.single().headers[HttpHeaders.Authorization])
         }
@@ -74,7 +74,7 @@ class RemotePlaylistDataSourceTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
             val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(TOKEN) } }
 
-            RemotePlaylistDataSource(client).fetchUserPlaylists()
+            SpotifyRemotePlaylistDataSource(client).fetchUserPlaylists()
 
             assertEquals(
                 listOf("Bearer $TOKEN"),
@@ -92,7 +92,7 @@ class RemotePlaylistDataSourceTest {
             // that installs the plugin, i.e. the `auth_api_v1_client`.
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
 
-            RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
         }
@@ -104,7 +104,7 @@ class RemotePlaylistDataSourceTest {
             val engine = jsonEngine(PLAYLIST_PAGE_JSON)
             val client = clientOf(engine) { install(AuthHeaderPlugin) { tokenProvider = FakeTokenProvider(null) } }
 
-            val result = RemotePlaylistDataSource(client).fetchUserPlaylists()
+            val result = SpotifyRemotePlaylistDataSource(client).fetchUserPlaylists()
 
             assertNull(engine.requestHistory.single().headers[HttpHeaders.Authorization])
             assertTrue(result.isSuccess)
@@ -115,7 +115,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":401,"message":"The access token expired"}}""")
 
-            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            val result = SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
             assertTrue(
@@ -132,7 +132,7 @@ class RemotePlaylistDataSourceTest {
         runTest {
             val engine = jsonEngine("{ not json")
 
-            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            val result = SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
         }
@@ -144,7 +144,7 @@ class RemotePlaylistDataSourceTest {
             // data-source boundary, as the error-handling rule requires.
             val engine = MockEngine { respondError(HttpStatusCode.InternalServerError) }
 
-            val result = RemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
+            val result = SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
         }

@@ -2,8 +2,8 @@ package org.vander.spotifyclient.domain.repository
 import app.cash.turbine.test
 import kotlinx.coroutines.test.runTest
 import org.vander.core.domain.playlist.PlaylistRepository
+import org.vander.spotifyclient.data.remote.datasource.RemotePlaylistDataSource
 import org.vander.spotifyclient.data.repository.SpotifyPlaylistRepository
-import org.vander.spotifyclient.domain.datasource.IRemotePlaylistDataSource
 import org.vander.spotifyclient.fixtures.playlistDto
 import org.vander.spotifyclient.fixtures.playlistPageDto
 import java.io.IOException
@@ -97,6 +97,6 @@ class PlaylistRepositoryTest {
             )
         }
 
-    private fun repository(dataSource: IRemotePlaylistDataSource): PlaylistRepository =
+    private fun repository(dataSource: RemotePlaylistDataSource): PlaylistRepository =
         SpotifyPlaylistRepository(dataSource)
 }

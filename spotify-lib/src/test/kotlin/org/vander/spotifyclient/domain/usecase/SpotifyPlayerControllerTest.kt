@@ -20,6 +20,7 @@ import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SavedRemotelyChangedState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.test.FakeLogger
+import org.vander.spotifyclient.data.player.SpotifyPlayerController
 import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
 import org.vander.spotifyclient.domain.player.session.FakeSpotifySessionManager
@@ -33,7 +34,7 @@ import java.io.IOException
  * test ends — the same injection that lets production hand it a process-wide scope.
  */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class PlayerUseCaseTest {
+class SpotifyPlayerControllerTest {
     // --- dispatch: transport
 
     @Test
@@ -381,7 +382,7 @@ class PlayerUseCaseTest {
         val client = FakeSpotifyPlayerClient()
 
         val controller =
-            PlayerUseCase(
+            SpotifyPlayerController(
                 sessionManager = session,
                 queueRepository = queueRepository,
                 playerStateRepository = stateRepository,

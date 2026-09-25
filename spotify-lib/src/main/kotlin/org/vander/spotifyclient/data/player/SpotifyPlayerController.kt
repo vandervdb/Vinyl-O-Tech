@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.domain.usecase
+package org.vander.spotifyclient.data.player
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.CurrentlyPlaying
 import org.vander.core.domain.data.QueuedTrack
+import org.vander.core.domain.library.LibraryRepository
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerController
 import org.vander.core.domain.player.PlayerStateRepository
@@ -23,14 +24,13 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.di.ApplicationScope
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import org.vander.spotifyclient.domain.player.PlayerClient
-import org.vander.spotifyclient.domain.repository.LibraryRepository
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /**
- * [PlayerController] over the App Remote and the Web API.
+ * [org.vander.core.domain.player.PlayerController] over the App Remote and the Web API.
  *
- * It merges three sources that move at different rhythms into one [PlaybackState]: the App
+ * It merges three sources that move at different rhythms into one [org.vander.core.domain.state.PlaybackState]: the App
  * Remote pushes a snapshot on every tick and a context on its own channel, while the queue and
  * the saved flag are Web API snapshots that have to be fetched. Each source has its own
  * collector, launched once by [start] in the injected [scope] — a process-wide scope in
@@ -41,7 +41,7 @@ import javax.inject.Inject
  * - a queue that disagrees with the playing track is refetched once per track, since the Web
  *   API lags behind the App Remote after a skip and each refetch emits a new value.
  */
-class PlayerUseCase
+class SpotifyPlayerController
     @Inject
     constructor(
         private val sessionManager: SpotifySessionManager,
@@ -77,6 +77,7 @@ class PlayerUseCase
                         playerClient
                             .resume()
                     }
+
                 PlayerCommand.Pause -> playerClient.pause()
                 PlayerCommand.Resume -> playerClient.resume()
                 PlayerCommand.SkipNext -> playerClient.skipNext()
@@ -204,6 +205,6 @@ class PlayerUseCase
                 }
 
         private companion object {
-            const val TAG = "PlayerUseCase"
+            const val TAG = "SpotifyPlayerController"
         }
     }

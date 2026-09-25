@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SpotifyRecentlyPlayedModule {
+internal abstract class SpotifyRecentlyPlayedModule {
     @Binds
     @Singleton
     abstract fun bindRecentlyPlayedRepository(impl: SpotifyRecentlyPlayedRepository): RecentlyPlayedRepository

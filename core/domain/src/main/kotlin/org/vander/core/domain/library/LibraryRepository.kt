@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.domain.repository
+package org.vander.core.domain.library
 
 /**
  * The user's saved-tracks library, on the Web API side — the App Remote knows nothing

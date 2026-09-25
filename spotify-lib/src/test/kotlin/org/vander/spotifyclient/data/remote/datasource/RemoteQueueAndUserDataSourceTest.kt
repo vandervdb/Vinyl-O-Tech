@@ -16,7 +16,7 @@ import org.junit.Test
 
 /**
  * The two remaining `GET` data sources, which share their shape with
- * [RemotePlaylistDataSource]: one call, one delegation to `parseSpotifyResult`.
+ * [SpotifyRemotePlaylistDataSource]: one call, one delegation to `parseSpotifyResult`.
  */
 class RemoteQueueAndUserDataSourceTest {
     // --- Queue
@@ -26,7 +26,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine(QUEUE_JSON)
 
-            RemoteQueueDataSource(clientOf(engine)).fetchUserQueue()
+            SpotifyRemoteQueueDataSource(clientOf(engine)).fetchUserQueue()
 
             assertEquals(
                 "/v1/me/player/queue",
@@ -39,7 +39,7 @@ class RemoteQueueAndUserDataSourceTest {
     @Test
     fun `a queue payload is parsed, holes included`() =
         runTest {
-            val result = RemoteQueueDataSource(clientOf(jsonEngine(QUEUE_JSON))).fetchUserQueue()
+            val result = SpotifyRemoteQueueDataSource(clientOf(jsonEngine(QUEUE_JSON))).fetchUserQueue()
 
             val dto = result.getOrThrow()
             assertEquals("current", dto.currentlyPlaying?.id)
@@ -52,7 +52,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             // Both fields default on the DTO, so `{}` is a valid answer — which is what the
             // API returns when nothing is playing.
-            val result = RemoteQueueDataSource(clientOf(jsonEngine("{}"))).fetchUserQueue()
+            val result = SpotifyRemoteQueueDataSource(clientOf(jsonEngine("{}"))).fetchUserQueue()
 
             assertTrue(result.isSuccess)
             assertNull(result.getOrThrow().currentlyPlaying)
@@ -64,7 +64,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":401,"message":"expired"}}""")
 
-            assertTrue(RemoteQueueDataSource(clientOf(engine)).fetchUserQueue().isFailure)
+            assertTrue(SpotifyRemoteQueueDataSource(clientOf(engine)).fetchUserQueue().isFailure)
         }
 
     // --- User
@@ -74,7 +74,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine(USER_JSON)
 
-            RemoteUserDataSource(clientOf(engine)).fetchUser()
+            SpotifyRemoteUserDataSource(clientOf(engine)).fetchUser()
 
             assertEquals(
                 "/v1/me",
@@ -87,7 +87,7 @@ class RemoteQueueAndUserDataSourceTest {
     @Test
     fun `a user payload is parsed`() =
         runTest {
-            val result = RemoteUserDataSource(clientOf(jsonEngine(USER_JSON))).fetchUser()
+            val result = SpotifyRemoteUserDataSource(clientOf(jsonEngine(USER_JSON))).fetchUser()
 
             assertEquals("Vander", result.getOrThrow().displayName)
             assertEquals("premium", result.getOrThrow().product)
@@ -100,7 +100,7 @@ class RemoteQueueAndUserDataSourceTest {
             // makes the whole call fail rather than yield a partial user — documented on the DTO.
             val engine = jsonEngine("""{"display_name":"Vander"}""")
 
-            assertTrue(RemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
+            assertTrue(SpotifyRemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
         }
 
     @Test
@@ -108,7 +108,7 @@ class RemoteQueueAndUserDataSourceTest {
         runTest {
             val engine = jsonEngine("""{"error":{"status":403,"message":"forbidden"}}""")
 
-            assertTrue(RemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
+            assertTrue(SpotifyRemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
         }
 
     private fun jsonEngine(body: String) =

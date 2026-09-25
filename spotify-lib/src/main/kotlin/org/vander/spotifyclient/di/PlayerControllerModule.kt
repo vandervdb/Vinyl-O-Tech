@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.vander.core.domain.player.PlayerController
-import org.vander.spotifyclient.domain.usecase.PlayerUseCase
+import org.vander.spotifyclient.data.player.SpotifyPlayerController
 import javax.inject.Singleton
 
 /**
@@ -19,5 +19,5 @@ import javax.inject.Singleton
 abstract class PlayerControllerModule {
     @Binds
     @Singleton
-    abstract fun bindPlayerController(impl: PlayerUseCase): PlayerController
+    abstract fun bindPlayerController(impl: SpotifyPlayerController): PlayerController
 }

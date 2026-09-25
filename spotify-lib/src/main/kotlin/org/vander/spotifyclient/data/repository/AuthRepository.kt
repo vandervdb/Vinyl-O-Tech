@@ -5,7 +5,7 @@ import org.vander.core.domain.data.TokenResponse
 import org.vander.core.logger.Logger
 import org.vander.core.security.api.SecureTokenStorage
 import org.vander.core.security.api.StoredTokensResult
-import org.vander.spotifyclient.data.remote.datasource.AuthRemoteDataSource
+import org.vander.spotifyclient.data.remote.datasource.RemoteAuthDataSource
 import org.vander.spotifyclient.data.remote.mapper.toDomain
 import javax.inject.Inject
 
@@ -16,10 +16,10 @@ import javax.inject.Inject
  *
  * Reads and writes now go through the same store: a session written here is the one read back.
  */
-class AuthRepository
+internal class AuthRepository
     @Inject
     constructor(
-        private val authRemoteDataSource: AuthRemoteDataSource,
+        private val remoteAuthDataSource: RemoteAuthDataSource,
         private val secureTokenStorage: SecureTokenStorage,
         private val logger: Logger,
     ) : IAuthRepository {
@@ -28,7 +28,7 @@ class AuthRepository
         }
 
         override suspend fun fetchTokenResponse(authorizationCode: String): Result<TokenResponse> =
-            authRemoteDataSource
+            remoteAuthDataSource
                 .fetchAccessToken(authorizationCode)
                 .map { dto -> dto.toDomain() }
                 .onFailure { logger.e(TAG, "Error fetching the token response", it) }
@@ -53,6 +53,7 @@ class AuthRepository
                     logger.e(TAG, "Could not read the stored session", result.cause)
                     Result.failure(result.cause)
                 }
+
                 is StoredTokensResult.DecryptionFailed -> {
                     logger.e(TAG, "Stored session is unreadable, clearing it", result.cause)
                     secureTokenStorage.clear()

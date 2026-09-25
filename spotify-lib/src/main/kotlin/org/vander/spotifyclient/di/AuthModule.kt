@@ -5,11 +5,11 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.vander.spotifyclient.data.auth.SpotifyAuthClient
-import org.vander.spotifyclient.domain.auth.ISpotifyAuthClient
+import org.vander.spotifyclient.domain.auth.AuthClient
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AuthModule {
     @Binds
-    abstract fun bindSpotifyAuthClient(impl: SpotifyAuthClient): ISpotifyAuthClient
+    abstract fun bindSpotifyAuthClient(impl: SpotifyAuthClient): AuthClient
 }

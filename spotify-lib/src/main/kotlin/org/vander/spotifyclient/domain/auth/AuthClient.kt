@@ -16,7 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
  * [handleSpotifyAuthResult] reports through a callback rather than returning, because it is
  * called from the result callback itself, outside any coroutine.
  */
-interface ISpotifyAuthClient {
+interface AuthClient {
     /**
      * Launches the Spotify login screen through [launcher]. Returns immediately; the outcome
      * comes back to the Activity, which must forward it to [handleSpotifyAuthResult].
