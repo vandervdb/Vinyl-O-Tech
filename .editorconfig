@@ -49,8 +49,3 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 
 # Supprimer les erreurs concernant le naming des fun composables
 ktlint_standard_function-naming = disabled
-
-# Laisser `class X @Inject constructor(...)` sur la ligne de déclaration :
-# sans ça, `annotation` recasse @Inject sur sa propre ligne et `indent` décale tout le corps.
-ktlint_standard_annotation = disabled
-ktlint_standard_class-signature = disabled
