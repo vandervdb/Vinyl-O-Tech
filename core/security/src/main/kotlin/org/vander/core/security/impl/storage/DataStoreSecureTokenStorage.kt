@@ -94,15 +94,17 @@ class DataStoreSecureTokenStorage
                 StoredTokensResult.Found(
                     StoredTokens(
                         accessToken =
-                            cryptoEngine.decrypt(
-                                encryptedAccessToken.decodeBase64(),
-                                ACCESS_TOKEN_AAD,
-                            ).decodeUtf8(),
+                            cryptoEngine
+                                .decrypt(
+                                    encryptedAccessToken.decodeBase64(),
+                                    ACCESS_TOKEN_AAD,
+                                ).decodeUtf8(),
                         refreshToken =
-                            cryptoEngine.decrypt(
-                                encryptedRefreshToken.decodeBase64(),
-                                REFRESH_TOKEN_AAD,
-                            ).decodeUtf8(),
+                            cryptoEngine
+                                .decrypt(
+                                    encryptedRefreshToken.decodeBase64(),
+                                    REFRESH_TOKEN_AAD,
+                                ).decodeUtf8(),
                         expiresAt = expiresAt,
                     ),
                 )

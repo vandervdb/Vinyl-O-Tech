@@ -31,7 +31,11 @@ class RecentlyPlayedDtoTest {
         val play = json.decodeFromString<RecentlyPlayedResponseDto>(REFERENCE_PAYLOAD).items.single()
 
         assertEquals("2up3OPMp9Tb4dAKM2erWXQ", play.track.album.id)
-        assertEquals("market", play.track.album.restrictions?.reason)
+        assertEquals(
+            "market",
+            play.track.album.restrictions
+                ?.reason,
+        )
         assertEquals("string", play.context?.uri)
     }
 
@@ -48,7 +52,8 @@ class RecentlyPlayedDtoTest {
 
     @Test
     fun `a track played on its own has no context`() {
-        val body = """{"items":[{"track":""" + trackOf(REFERENCE_PAYLOAD) + ""","played_at":"2026-09-18T07:03:41.769Z"}]}"""
+        val body =
+            """{"items":[{"track":""" + trackOf(REFERENCE_PAYLOAD) + ""","played_at":"2026-09-18T07:03:41.769Z"}]}"""
 
         val play = json.decodeFromString<RecentlyPlayedResponseDto>(body).items.single()
 

@@ -75,7 +75,12 @@ class DataStoreSecureTokenStorageTest {
         runTest {
             storage.save("access-123", "refresh-456", expiresAt = 1L)
 
-            val stored = dataStore.data.first().asMap().values.filterIsInstance<String>()
+            val stored =
+                dataStore.data
+                    .first()
+                    .asMap()
+                    .values
+                    .filterIsInstance<String>()
             assertTrue(stored.isNotEmpty())
             assertTrue(stored.none { it.contains("access-123") || it.contains("refresh-456") })
         }
@@ -118,7 +123,13 @@ class DataStoreSecureTokenStorageTest {
             storage.get()
 
             // A read must not repair, purge or otherwise write: that is the caller's call.
-            assertEquals(before.keys, dataStore.data.first().asMap().keys)
+            assertEquals(
+                before.keys,
+                dataStore.data
+                    .first()
+                    .asMap()
+                    .keys,
+            )
         }
 
     @Test
@@ -129,6 +140,11 @@ class DataStoreSecureTokenStorageTest {
             assertTrue(storage.clear().isSuccess)
 
             assertIs<StoredTokensResult.Empty>(storage.get())
-            assertTrue(dataStore.data.first().asMap().isEmpty())
+            assertTrue(
+                dataStore.data
+                    .first()
+                    .asMap()
+                    .isEmpty(),
+            )
         }
 }

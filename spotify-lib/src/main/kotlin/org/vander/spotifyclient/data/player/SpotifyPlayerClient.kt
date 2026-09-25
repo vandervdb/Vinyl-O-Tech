@@ -121,11 +121,20 @@ class SpotifyPlayerClient
                 withTimeoutOrNull(COMMAND_TIMEOUT_MS.milliseconds) {
                     suspendCancellableCoroutine { continuation ->
                         val pending = api.call()
-                        pending.setResultCallback { if (continuation.isActive) continuation.resume(Result.success(Unit)) }
+                        pending.setResultCallback {
+                            if (continuation.isActive) {
+                                continuation.resume(
+                                    Result.success(Unit),
+                                )
+                            }
+                        }
                         pending.setErrorCallback { if (continuation.isActive) continuation.resume(Result.failure(it)) }
                         continuation.invokeOnCancellation { pending.cancel() }
                     }
-                } ?: Result.failure(TimeoutException("$name: no answer from the App Remote within ${COMMAND_TIMEOUT_MS}ms"))
+                }
+                    ?: Result.failure(
+                        TimeoutException("$name: no answer from the App Remote within ${COMMAND_TIMEOUT_MS}ms"),
+                    )
 
             outcome
                 .onSuccess { logger.d(TAG, "$name: accepted") }
