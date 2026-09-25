@@ -39,13 +39,18 @@ class SpotifyHomeViewModel
                 playlistRepository.playlists,
                 controller.state,
                 recentlyPlayedRepository.recentlyPlayed,
-            ) { playlists, playback, _ ->
+            ) { playlists, playback, recentlyPlayed ->
                 HomeUiState(
                     playlists = playlists,
                     resume = playback.toResume(),
                     playingPlaylistId = playback.context.playlistId,
+                    recentlyPlayed = recentlyPlayed.items,
                 )
-            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState())
+            }.stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                HomeUiState(),
+            )
 
         init {
             controller.start()
