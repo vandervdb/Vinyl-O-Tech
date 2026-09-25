@@ -1,5 +1,4 @@
-package org.vander.spotifyclient.domain.repository
-
+package org.vander.core.domain.playlist
 import kotlinx.coroutines.flow.StateFlow
 import org.vander.core.domain.data.PlaylistCollection
 
@@ -10,8 +9,8 @@ import org.vander.core.domain.data.PlaylistCollection
  * needs to react to the failure uses the [Result], one that only displays the data collects
  * the flow. `null` on the flow means "not loaded yet", distinct from an empty collection.
  */
-interface SpotifyPlaylistRepository {
-    val playlists: StateFlow<PlaylistCollection?>
+interface PlaylistRepository {
+    val playlists: StateFlow<PlaylistCollection>
 
-    suspend fun getUserPlaylists(): Result<PlaylistCollection>
+    suspend fun refresh(): Result<Unit>
 }

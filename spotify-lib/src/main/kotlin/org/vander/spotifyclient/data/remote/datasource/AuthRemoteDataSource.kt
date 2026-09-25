@@ -5,7 +5,6 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.headers
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Parameters
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import org.vander.core.dto.TokenResponseDto
 import org.vander.core.logger.Logger
@@ -13,6 +12,7 @@ import org.vander.spotifyclient.BuildConfig.CLIENT_ID
 import org.vander.spotifyclient.BuildConfig.CLIENT_SECRET
 import org.vander.spotifyclient.domain.auth.IAuthRemoteDatasource
 import org.vander.spotifyclient.utils.REDIRECT_URI
+import org.vander.spotifyclient.utils.spotifyJson
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.io.encoding.Base64
@@ -68,8 +68,7 @@ class AuthRemoteDataSource
 
                 if (response.status.value in 400..499) {
                     try {
-                        val json = Json { ignoreUnknownKeys = true }
-                        val errorObj = json.parseToJsonElement(rawBody).jsonObject
+                        val errorObj = spotifyJson.parseToJsonElement(rawBody).jsonObject
                         if (errorObj.containsKey("error_description")) {
                             val description = errorObj["error_description"].toString()
                             logger.e("AuthRemoteDataSource", "Spotify error description: $description")
@@ -84,8 +83,7 @@ class AuthRemoteDataSource
                 }
 
                 if (response.status.value == 200) {
-                    val json = Json { ignoreUnknownKeys = true }
-                    return Result.success(json.decodeFromString<TokenResponseDto>(rawBody))
+                    return Result.success(spotifyJson.decodeFromString<TokenResponseDto>(rawBody))
                 } else {
                     return Result.failure(Exception("Spotify error ${response.status.value}: $rawBody"))
                 }

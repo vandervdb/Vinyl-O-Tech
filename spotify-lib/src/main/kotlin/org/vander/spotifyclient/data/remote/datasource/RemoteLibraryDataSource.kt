@@ -7,9 +7,9 @@ import io.ktor.client.request.put
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import kotlinx.serialization.json.Json
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource
+import org.vander.spotifyclient.utils.spotifyJson
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -39,7 +39,7 @@ class RemoteLibraryDataSource
                         url { parameters.append("ids", trackId) }
                     }
                 val isSaved =
-                    Json { ignoreUnknownKeys = true }
+                    spotifyJson
                         .decodeFromString<List<Boolean>>(response.bodyAsText())
                         .firstOrNull() == true
                 Result.success(isSaved)

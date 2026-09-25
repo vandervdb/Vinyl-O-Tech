@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.spotifyclient.data.repository.SpotifyRecentlyPlayedRepositoryImpl
-import org.vander.spotifyclient.domain.repository.RecentlyPlayedRepository
+import org.vander.core.domain.recent.RecentlyPlayedRepository
+import org.vander.spotifyclient.data.repository.SpotifyRecentlyPlayedRepository
 import javax.inject.Singleton
 
 @Module
@@ -13,5 +13,5 @@ import javax.inject.Singleton
 abstract class SpotifyRecentlyPlayedModule {
     @Binds
     @Singleton
-    abstract fun bindRecentlyPlayedRepository(impl: SpotifyRecentlyPlayedRepositoryImpl): RecentlyPlayedRepository
+    abstract fun bindRecentlyPlayedRepository(impl: SpotifyRecentlyPlayedRepository): RecentlyPlayedRepository
 }

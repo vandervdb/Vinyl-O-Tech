@@ -5,30 +5,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import org.vander.core.domain.data.CurrentlyPlaying
+import org.vander.core.domain.queue.QueueRepository
 import org.vander.spotifyclient.data.remote.mapper.toDomain
 import org.vander.spotifyclient.domain.datasource.IRemoteQueueDataSource
-import org.vander.spotifyclient.domain.repository.SpotifyQueueRepository
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Fetches the playback queue, maps it to the domain model and caches the result in memory.
  *
- * Same shape as [SpotifyPlaylistRepositoryImpl]; the cached value survives a failed refresh.
+ * Same shape as [SpotifyPlaylistRepository]; the cached value survives a failed refresh.
  */
-class SpotifyQueueRepositoryImpl
+class SpotifyQueueRepository
     @Inject
     constructor(
         private val api: IRemoteQueueDataSource,
-    ) : SpotifyQueueRepository {
+    ) : QueueRepository {
         private val _currentQueue = MutableStateFlow<CurrentlyPlaying?>(null)
         override val currentQueue: StateFlow<CurrentlyPlaying?> = _currentQueue.asStateFlow()
 
-        override suspend fun getUserQueue(): Result<CurrentlyPlaying> =
+        override suspend fun refresh(): Result<Unit> =
             try {
                 val dto = api.fetchUserQueue().getOrThrow()
                 val result = dto.toDomain()
                 _currentQueue.update { result }
-                Result.success(result)
+                Result.success(Unit)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }

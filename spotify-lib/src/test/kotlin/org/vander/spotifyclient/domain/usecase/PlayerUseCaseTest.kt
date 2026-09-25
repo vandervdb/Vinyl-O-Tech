@@ -24,6 +24,7 @@ import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
 import org.vander.spotifyclient.domain.player.session.FakeSpotifySessionManager
 import org.vander.spotifyclient.domain.repository.FakeLibraryRepository
+import org.vander.spotifyclient.domain.repository.FakeQueueRepository
 import java.io.IOException
 
 /**
@@ -31,6 +32,7 @@ import java.io.IOException
  * scheduler, so `runCurrent()` settles them deterministically and they are cancelled when the
  * test ends — the same injection that lets production hand it a process-wide scope.
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class PlayerUseCaseTest {
     // --- dispatch: transport
 
@@ -173,7 +175,7 @@ class PlayerUseCaseTest {
             runCurrent()
 
             assertEquals(0, f.stateRepository.startListeningCount)
-            assertEquals(0, f.remote.fetchCount)
+            assertEquals(0, f.queueRepository.refreshCount)
         }
 
     @Test
@@ -185,7 +187,7 @@ class PlayerUseCaseTest {
             runCurrent()
 
             assertEquals(1, f.stateRepository.startListeningCount)
-            assertEquals(1, f.remote.fetchCount)
+            assertEquals(1, f.queueRepository.refreshCount)
         }
 
     @Test
@@ -278,7 +280,7 @@ class PlayerUseCaseTest {
     fun `the queue is published with the current track first`() =
         runTest {
             val f = Fixture(backgroundScope).started()
-            f.remote.nextQueue = queue(current = TRACK_ID, next = listOf("n1", "n2"))
+            f.queueRepository.nextQueue = queue(current = TRACK_ID, next = listOf("n1", "n2"))
             f.session.emit(SessionState.Ready)
             runCurrent()
 
@@ -296,7 +298,7 @@ class PlayerUseCaseTest {
             // Regression: `artists[0]` threw on Track.empty(), the stand-in for a null slot,
             // and the exception killed the collector for the rest of the session.
             val f = Fixture(backgroundScope).started()
-            f.remote.nextQueue =
+            f.queueRepository.nextQueue =
                 CurrentlyPlaying(
                     currentlyPlaying = track(TRACK_ID),
                     queue = Queue(listOf(track("n1"), Track.empty())),
@@ -318,7 +320,7 @@ class PlayerUseCaseTest {
             // The Web API lags behind the App Remote after a skip. Refetching on every
             // mismatch re-emitted the queue, which triggered another mismatch, and so on.
             val f = Fixture(backgroundScope).started()
-            f.remote.nextQueue = queue(current = "stale", next = listOf("n1"))
+            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
             f.session.emit(SessionState.Ready)
             runCurrent()
 
@@ -328,8 +330,11 @@ class PlayerUseCaseTest {
             runCurrent()
 
             // One fetch on Ready, one refetch for the mismatch — and no more.
-            assertEquals(2, f.remote.fetchCount)
-            assertTrue(f.controller.state.value.queue.isEmpty())
+            assertEquals(2, f.queueRepository.refreshCount)
+            assertTrue(
+                f.controller.state.value.queue
+                    .isEmpty(),
+            )
         }
 
     @Test
@@ -344,13 +349,33 @@ class PlayerUseCaseTest {
             assertEquals(PLAYLIST_ID, f.controller.state.value.context.playlistId)
         }
 
+    @Test
+    fun `a failed refetch does not kill the queue collector`() =
+        runTest {
+            val f = Fixture(backgroundScope).started()
+            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
+            f.session.emit(SessionState.Ready)
+            runCurrent()
+
+            f.queueRepository.nextQueue = null
+            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
+            runCurrent()
+
+            f.queueRepository.nextQueue = queue(current = "other", next = listOf("n2"))
+            f.stateRepository.emitState(snapshot(trackId = "other"))
+            runCurrent()
+
+            // Ready + failed refetch + refetch for the new track: the collector survived.
+            assertEquals(3, f.queueRepository.refreshCount)
+        }
+
     // --- fixtures
 
     private class Fixture(
         scope: CoroutineScope,
     ) {
         val session = FakeSpotifySessionManager()
-        val remote = FakeSpotifyRemoteUseCase()
+        val queueRepository = FakeQueueRepository()
         val stateRepository = FakePlayerStateRepository()
         val library = FakeLibraryRepository()
         val client = FakeSpotifyPlayerClient()
@@ -358,7 +383,7 @@ class PlayerUseCaseTest {
         val controller =
             PlayerUseCase(
                 sessionManager = session,
-                remoteUseCase = remote,
+                queueRepository = queueRepository,
                 playerStateRepository = stateRepository,
                 libraryRepository = library,
                 playerClient = client,

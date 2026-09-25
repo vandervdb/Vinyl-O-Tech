@@ -24,14 +24,14 @@ import javax.inject.Inject
  * `isListening` makes [startListening] idempotent. Note that [stopListening] only clears that
  * flag — it does not unsubscribe from the player, from either channel.
  */
-class DefaultPlayerStateRepository
+class SpotifyPlayerStateRepository
     @Inject
     constructor(
         private val playerClient: PlayerClient,
         private val logger: Logger,
     ) : PlayerStateRepository {
         companion object {
-            private const val TAG = "DefaultPlayerStateRepository"
+            private const val TAG = "SpotifyPlayerStateRepository"
         }
 
         private val _playerStateData = MutableStateFlow(PlayerStateData.Companion.empty())

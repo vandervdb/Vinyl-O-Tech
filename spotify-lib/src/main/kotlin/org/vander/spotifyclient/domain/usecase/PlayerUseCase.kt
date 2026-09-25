@@ -14,6 +14,7 @@ import org.vander.core.domain.data.CurrentlyPlaying
 import org.vander.core.domain.data.QueuedTrack
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerStateRepository
+import org.vander.core.domain.queue.QueueRepository
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SessionState
@@ -44,7 +45,7 @@ class PlayerUseCase
     @Inject
     constructor(
         private val sessionManager: SpotifySessionManager,
-        private val remoteUseCase: SpotifyRemoteUseCase,
+        private val queueRepository: QueueRepository,
         private val playerStateRepository: PlayerStateRepository,
         private val libraryRepository: LibraryRepository,
         private val playerClient: PlayerClient,
@@ -69,7 +70,13 @@ class PlayerUseCase
 
         override suspend fun dispatch(command: PlayerCommand): Result<Unit> =
             when (command) {
-                PlayerCommand.TogglePlayPause -> if (playerClient.isPlaying()) playerClient.pause() else playerClient.resume()
+                PlayerCommand.TogglePlayPause ->
+                    if (playerClient.isPlaying()) {
+                        playerClient.pause()
+                    } else {
+                        playerClient
+                            .resume()
+                    }
                 PlayerCommand.Pause -> playerClient.pause()
                 PlayerCommand.Resume -> playerClient.resume()
                 PlayerCommand.SkipNext -> playerClient.skipNext()
@@ -97,7 +104,9 @@ class PlayerUseCase
             sessionManager.sessionState.collect { session ->
                 if (session !is SessionState.Ready) return@collect
                 logger.d(TAG, "Session ready")
-                remoteUseCase.getAndEmitUserQueueFlow()
+                queueRepository
+                    .refresh()
+                    .onFailure { logger.e(TAG, "Queue refetch failed", it) }
                 playerStateRepository.startListening()
             }
         }
@@ -148,7 +157,7 @@ class PlayerUseCase
 
         private suspend fun observeQueue() {
             var refetchedFor: String? = null
-            combine(remoteUseCase.currentUserQueue, playerStateRepository.playerStateData, ::Pair)
+            combine(queueRepository.currentQueue, playerStateRepository.playerStateData, ::Pair)
                 .collect { (queue, snapshot) ->
                     if (queue == null || snapshot.trackId.isEmpty()) return@collect
 
@@ -160,7 +169,9 @@ class PlayerUseCase
                     if (refetchedFor == snapshot.trackId) return@collect
                     refetchedFor = snapshot.trackId
                     logger.d(TAG, "Queue out of step with ${snapshot.trackId}, refetching once")
-                    remoteUseCase.getAndEmitUserQueueFlow()
+                    queueRepository
+                        .refresh()
+                        .onFailure { logger.e(TAG, "Queue refetch failed", it) }
                 }
         }
 
@@ -184,7 +195,11 @@ class PlayerUseCase
                     QueuedTrack(
                         id = track.id,
                         name = track.name,
-                        artistName = track.artists.firstOrNull()?.name.orEmpty(),
+                        artistName =
+                            track.artists
+                                .firstOrNull()
+                                ?.name
+                                .orEmpty(),
                     )
                 }
 

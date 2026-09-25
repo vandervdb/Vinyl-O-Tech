@@ -17,8 +17,8 @@ import org.vander.core.domain.auth.IAuthRepository
 import org.vander.core.domain.error.SessionError
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
-import org.vander.spotifyclient.domain.auth.AuthConfigK
 import org.vander.spotifyclient.domain.appremote.AppRemoteProvider
+import org.vander.spotifyclient.domain.auth.AuthConfigK
 import org.vander.spotifyclient.domain.auth.ISpotifyAuthClient
 import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
 import javax.inject.Inject
@@ -70,19 +70,17 @@ class SpotifySessionManagerImpl
             launchAuthFlow = launchAuth
             _sessionState.update { SessionState.Authorizing }
 
-            val sessionDispatcher = dispatcher ?: Dispatchers.Main
-
             coroutineScope.launch {
-                authRepository.getAccessToken()
+                authRepository
+                    .getAccessToken()
                     .onSuccess { token ->
                         if (token.isNotBlank()) {
                             logger.d(TAG, "Access token stored, Connecting to remote...")
-                            connectRemote(context, coroutineScope, sessionDispatcher)
+                            connectRemote(context, coroutineScope, dispatcher)
                         } else {
                             launchAuthorizationFlow(activity, config)
                         }
-                    }
-                    .onFailure { error ->
+                    }.onFailure { error ->
                         logger.e(TAG, "Error checking access token", error)
                         launchAuthorizationFlow(activity, config)
                     }
@@ -193,7 +191,8 @@ class SpotifySessionManagerImpl
                 }
 
             logger.d(TAG, "Access token fetched successfully. Storing...")
-            return authRepository.storeTokenResponse(tokenResponse)
+            return authRepository
+                .storeTokenResponse(tokenResponse)
                 .onSuccess { logger.d(TAG, "Access token successfully stored.") }
         }
     }

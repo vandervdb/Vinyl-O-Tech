@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.playlist.PlaylistRepository
+import org.vander.core.domain.recent.RecentlyPlayedRepository
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.player.PlayerController
-import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
-import org.vander.spotifyclient.domain.usecase.RecentlyPlayedUseCase
 import javax.inject.Inject
 
 /**
@@ -28,29 +28,35 @@ import javax.inject.Inject
 class HomeViewModelImpl
     @Inject
     constructor(
-        private val playlistUseCase: PlaylistUseCase,
-        val recentlyPlayedUseCase: RecentlyPlayedUseCase,
+        private val playlistRepository: PlaylistRepository,
+        val recentlyPlayedRepository: RecentlyPlayedRepository,
         private val controller: PlayerController,
         private val logger: Logger,
     ) : ViewModel(),
         HomeViewModel {
         override val state: StateFlow<HomeUiState> =
             combine(
-                playlistUseCase.playlists,
+                playlistRepository.playlists,
                 controller.state,
-                recentlyPlayedUseCase.recentlyPlayed,
-            ) { playlists, playback, recentlyPlayed ->
+                recentlyPlayedRepository.recentlyPlayed,
+            ) { playlists, playback, _ ->
                 HomeUiState(
                     playlists = playlists,
                     resume = playback.toResume(),
-                    playingPlaylistId = recentlyPlayed.lastResumable?.track?.id,
+                    playingPlaylistId = playback.context.playlistId,
                 )
-            }
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState())
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HomeUiState())
 
         init {
             controller.start()
-            viewModelScope.launch { playlistUseCase.getAndUpdatePlaylistsFlow() }
+            viewModelScope.launch {
+                playlistRepository
+                    .refresh()
+                    .onFailure { logger.e(TAG, "Error refreshing playlists", it) }
+                recentlyPlayedRepository
+                    .refresh()
+                    .onFailure { logger.e(TAG, "Error refreshing recently played", it) }
+            }
         }
 
         override fun playPlaylist(playlistId: String) {

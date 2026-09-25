@@ -6,8 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.vander.core.domain.data.PlaylistCollection
+import org.vander.core.domain.playlist.PlaylistRepository
 import org.vander.core.ui.presentation.viewmodel.PlaylistViewModel
-import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
 import javax.inject.Inject
 
 /**
@@ -19,12 +19,12 @@ import javax.inject.Inject
 open class PlayListViewModelImpl
     @Inject
     constructor(
-        private val useCase: PlaylistUseCase,
+        private val repository: PlaylistRepository,
     ) : ViewModel(),
         PlaylistViewModel {
-        override val playlists: StateFlow<PlaylistCollection> = useCase.playlists
+        override val playlists: StateFlow<PlaylistCollection> = repository.playlists
 
         override fun refresh() {
-            viewModelScope.launch { useCase.getAndUpdatePlaylistsFlow() }
+            viewModelScope.launch { repository.refresh().onFailure { } }
         }
     }

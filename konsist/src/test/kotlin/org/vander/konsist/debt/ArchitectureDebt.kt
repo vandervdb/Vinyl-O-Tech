@@ -36,7 +36,6 @@ internal object ArchitectureDebt {
             "$APP/di/SpotifySessionEntryPoint.kt",
             "$APP/feature/connection/ConnectionViewModelImpl.kt",
             "$APP/feature/home/HomeViewModelImpl.kt",
-            "$APP/feature/library/PlayListViewModelImpl.kt",
             "$APP/feature/library/UserViewModelImpl.kt",
             "$APP/feature/player/PlayerViewModelImpl.kt",
             "$APP/util/RememberSessionManager.kt",
@@ -47,8 +46,6 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.data.session.SpotifySessionManager",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerController",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.RecentlyPlayedRepository",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.SpotifyPlaylistRepository",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.UserRepository",
         )
 
@@ -66,8 +63,6 @@ internal object ArchitectureDebt {
             "$SPOTIFY_LIB_PACKAGE.domain.datasource.IRemoteUserDataSource",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerClient",
             "$SPOTIFY_LIB_PACKAGE.domain.repository.LibraryRepository",
-            "$SPOTIFY_LIB_PACKAGE.domain.repository.SpotifyQueueRepository",
-            "$SPOTIFY_LIB_PACKAGE.domain.usecase.SpotifyRemoteUseCase",
         )
 
     // Naming rules span every module, so entries spell out the full package.
@@ -93,11 +88,7 @@ internal object ArchitectureDebt {
             "org.vander.android.vinylotech.feature.library.UserViewModelImpl",
             "org.vander.android.vinylotech.feature.player.PlayerViewModelImpl",
             "org.vander.core.logger.KermitLoggerImpl",
-            "org.vander.spotifyclient.data.repository.SpotifyPlaylistRepositoryImpl",
-            "org.vander.spotifyclient.data.repository.SpotifyQueueRepositoryImpl",
-            "org.vander.spotifyclient.data.repository.SpotifyRecentlyPlayedRepositoryImpl",
             "org.vander.spotifyclient.data.session.SpotifySessionManagerImpl",
-            "org.vander.spotifyclient.domain.usecase.SpotifyRemoteUseCaseImpl",
         )
 
     // Declaration-level rule: entries are class names, not paths.
@@ -105,7 +96,6 @@ internal object ArchitectureDebt {
         setOf(
             "ConnectionViewModelImpl",
             "HomeViewModelImpl",
-            "PlayListViewModelImpl",
             "PlayerViewModelImpl",
             "UserViewModelImpl",
         )

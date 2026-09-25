@@ -3,6 +3,7 @@ package org.vander.android.vinylotech.feature.home
 import app.cash.turbine.test
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -16,12 +17,10 @@ import org.vander.core.domain.data.PlaylistCollection
 import org.vander.core.domain.data.RecentlyPlayed
 import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.playlist.PlaylistRepository
+import org.vander.core.domain.recent.RecentlyPlayedRepository
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.logger.test.FakeLogger
-import org.vander.spotifyclient.domain.repository.RecentlyPlayedRepository
-import org.vander.spotifyclient.domain.repository.SpotifyPlaylistRepository
-import org.vander.spotifyclient.domain.usecase.PlaylistUseCase
-import org.vander.spotifyclient.domain.usecase.RecentlyPlayedUseCase
 
 class HomeViewModelImplTest {
     @get:Rule
@@ -33,8 +32,8 @@ class HomeViewModelImplTest {
 
     private fun viewModel() =
         HomeViewModelImpl(
-            playlistUseCase = PlaylistUseCase(FakePlaylistRepository(Result.success(playlists)), FakeLogger()),
-            recentlyPlayedUseCase = RecentlyPlayedUseCase(FakeRecentlyPlayedRepository(), FakeLogger()),
+            playlistRepository = FakePlaylistRepository(playlists),
+            recentlyPlayedRepository = FakeRecentlyPlayedRepository(RecentlyPlayed.empty()),
             controller = controller,
             logger = FakeLogger(),
         )
@@ -86,17 +85,27 @@ class HomeViewModelImplTest {
     }
 
     private class FakePlaylistRepository(
-        private val result: Result<PlaylistCollection>,
-    ) : SpotifyPlaylistRepository {
-        override val playlists: StateFlow<PlaylistCollection?> = MutableStateFlow(null)
+        private val result: PlaylistCollection,
+    ) : PlaylistRepository {
+        private val _playlists = MutableStateFlow(PlaylistCollection.empty())
+        override val playlists: StateFlow<PlaylistCollection> = _playlists
 
-        override suspend fun getUserPlaylists(): Result<PlaylistCollection> = result
+        override suspend fun refresh(): Result<Unit> {
+            _playlists.update { result }
+            return Result.success(Unit)
+        }
     }
 
-    private class FakeRecentlyPlayedRepository : RecentlyPlayedRepository {
-        override val recentlyPlayed: StateFlow<RecentlyPlayed?> = MutableStateFlow(null)
+    private class FakeRecentlyPlayedRepository(
+        private val result: RecentlyPlayed,
+    ) : RecentlyPlayedRepository {
+        private val _recentlyPlayed = MutableStateFlow(RecentlyPlayed.empty())
+        override val recentlyPlayed: StateFlow<RecentlyPlayed> = _recentlyPlayed
 
-        override suspend fun getRecentlyPlayed(): Result<RecentlyPlayed> = Result.success(RecentlyPlayed.empty())
+        override suspend fun refresh(): Result<Unit> {
+            _recentlyPlayed.update { result }
+            return Result.success(Unit)
+        }
     }
 
     private companion object {
