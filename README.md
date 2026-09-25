@@ -37,6 +37,16 @@ This repository is a deliberate playground. The goal is not only that the code r
 that it stays readable: patterns justified, trade-offs written down, and technical debt
 **documented rather than hidden** — see [Known debt](#known-debt).
 
+That framing has held since the start, but the repository around it hasn't stood still. What
+began as a small playground for the Spotify Web and App Remote APIs — a couple of screens, one
+module — grew feature by feature into a multi-module app with real dependency boundaries to keep
+straight. Architecture doesn't grow in step with the feature count on its own, and it didn't
+here either: layering got crossed, naming drifted, a contract ended up in the wrong module. That
+gap is the architectural debt this project treats as a first-class concern rather than a
+footnote — see [Known debt](#known-debt) for the itemised list, and
+[Architecture tests](#architecture-tests-konsist) for the Konsist suite added specifically to
+catch this class of drift and pay it down deliberately instead of letting it accumulate further.
+
 > Extracted from the `spotify-monorepo`, whose React Native tree weighed 7.7 GB. Kotlin
 > packages are unchanged since the extraction; only the module layout was flattened.
 
@@ -83,6 +93,8 @@ vinyl-otech/
 │  ├─ ui/                        # cross-module ViewModel contracts & UI state
 │  └─ security/                  # Tink + DataStore, api/ + impl/ split — orphan, WIP
 ├─ fake/                         # fake ViewModels for @Preview
+├─ konsist/                      # Konsist architecture tests — JVM-only, no Android, no module deps
+│  └─ src/test/kotlin/org/vander/konsist/
 ├─ config/detekt/detekt.yml
 ├─ docs/architecture/
 ├─ .claude/rules/                # repo conventions, enforced
@@ -151,6 +163,36 @@ The three verification tasks are written in the root `build.gradle.kts`.
 trailing `// vot_*` comment the token carries, and fails on any value mismatch or on a
 comment pointing at a missing `<color>`. XML-only tokens are reported, not failed.
 
+### Architecture tests (Konsist)
+
+```bash
+./gradlew :konsist:test
+```
+
+`konsist` is a JVM-only module — no Android, no dependency on the rest of the graph — that reads
+every module's production sources at test time and enforces the boundaries `.claude/rules/`
+describes in prose:
+
+| Test | Rule |
+|---|---|
+| `CoreArchitectureTest` | `core:domain` imports neither Android, the Spotify SDK, nor DTOs · `core:security`'s `api/` imports neither its own `impl/`, Tink, nor DataStore |
+| `SpotifyLibArchitectureTest` | `spotify-lib`'s domain layer is pure, and imports neither `data`, `bridge`, nor `di` |
+| `AppArchitectureTest` | `app` depends on none of `spotify-lib`'s `data`, `domain`, or `di` packages |
+| `AppViewModelTest` | a `@HiltViewModel` in `app` only receives types from `core:domain`, `core:logger`, or `core:ui` |
+| `ContractPlacementTest` | an interface of `spotify-lib` used elsewhere belongs in `core:domain`; one used only inside `spotify-lib` is `internal` |
+| `NamingConventionTest` | no `I` prefix, no `Impl` suffix |
+| `LoggingConventionTest` | no `android.util.Log` in production code |
+
+These rules didn't hold on the day they were added — a project that grew feature by feature for a
+while doesn't just happen to satisfy them. `debt/ArchitectureDebtTest` is the ratchet that made
+the rollout possible without a big-bang rewrite: `debt/ArchitectureDebt.kt` lists every violation
+that exists today, by name or by path, and each list can only shrink from there — an unlisted
+violation fails its rule immediately, and removing an entry that still violates its rule fails
+just as loudly. Paying down the debt is then just: fix one, delete its entry, and let the ratchet
+catch anything that regresses. See
+[`docs/architecture/contracts-cleanup.md`](docs/architecture/contracts-cleanup.md) for the full
+rationale and the current state of that cleanup.
+
 ### Git hooks (Lefthook)
 
 | Stage | Runs |
@@ -181,7 +223,8 @@ stops running.
 |---|---|
 | `CLAUDE.md`, `.claude/rules/` | repo conventions — architecture, Kotlin, UI, testing |
 | `docs/architecture/navigation-and-screen-chrome.md` | two-register navigation (push / modal), `ScreenChrome`, ViewModel scoping, design measurements |
-| `app/README.md`, `spotify-lib/README.md`, `fake/README.md` | per-module notes |
+| `docs/architecture/contracts-cleanup.md` | why contracts moved where they did, the Konsist rules, and the architecture debt ratchet |
+| `app/README.md`, `spotify-lib/README.md`, `fake/README.md`, `konsist/README.md` | per-module notes |
 
 ---
 
