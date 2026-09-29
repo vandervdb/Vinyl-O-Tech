@@ -23,7 +23,7 @@ import org.vander.core.logger.test.FakeLogger
 import org.vander.spotifyclient.data.player.SpotifyPlayerController
 import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
-import org.vander.spotifyclient.domain.player.session.FakeSpotifySessionManager
+import org.vander.spotifyclient.domain.player.session.FakeSessionManager
 import org.vander.spotifyclient.domain.repository.FakeLibraryRepository
 import org.vander.spotifyclient.domain.repository.FakeQueueRepository
 import java.io.IOException
@@ -375,7 +375,7 @@ class SpotifyPlayerControllerTest {
     private class Fixture(
         scope: CoroutineScope,
     ) {
-        val session = FakeSpotifySessionManager()
+        val session = FakeSessionManager()
         val queueRepository = FakeQueueRepository()
         val stateRepository = FakePlayerStateRepository()
         val library = FakeLibraryRepository()

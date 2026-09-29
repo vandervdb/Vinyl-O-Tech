@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.vander.core.domain.state.SessionState
 import org.vander.spotifyclient.domain.auth.AuthConfigK
-import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
+import org.vander.spotifyclient.domain.session.SessionManager
 
 /**
  * Only [sessionState] is meaningful. The authorization members take Android types that are
@@ -18,7 +18,7 @@ import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
  */
 class FakeSessionManager(
     initial: SessionState = SessionState.Idle,
-) : SpotifySessionManager {
+) : SessionManager {
     override val sessionState = MutableStateFlow(initial)
 
     override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) = Unit
@@ -41,7 +41,7 @@ class FakeSessionManager(
 
     override suspend fun shutDown() = Unit
 
-    override suspend fun signout() = Unit
+    override suspend fun signOut() = Unit
 
     override fun launchAuthorizationFlow(
         activity: Activity,

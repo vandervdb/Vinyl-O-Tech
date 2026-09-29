@@ -13,14 +13,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.vander.core.domain.auth.IAuthRepository
 import org.vander.core.domain.error.SessionError
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.domain.appremote.AppRemoteProvider
 import org.vander.spotifyclient.domain.auth.AuthClient
 import org.vander.spotifyclient.domain.auth.AuthConfigK
-import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
+import org.vander.spotifyclient.domain.auth.AuthRepository
+import org.vander.spotifyclient.domain.session.SessionManager
 import javax.inject.Inject
 
 /**
@@ -35,16 +35,16 @@ import javax.inject.Inject
  * The caller supplies the [CoroutineScope]: this manager is `@Singleton`-scoped and outlives
  * any screen, so it must not own the scope the work runs in.
  */
-class SpotifySessionManagerImpl
+internal class SpotifySessionManager
     @Inject
     constructor(
         private val authClient: AuthClient,
         private val remoteProvider: AppRemoteProvider,
-        private val authRepository: IAuthRepository,
+        private val authRepository: AuthRepository,
         private val logger: Logger,
-    ) : SpotifySessionManager {
+    ) : SessionManager {
         companion object {
-            private const val TAG = "SpotifySessionManagerImpl"
+            private const val TAG = "SpotifySessionManager"
         }
 
         private val _sessionState = MutableStateFlow<SessionState>(SessionState.Idle)
@@ -72,9 +72,9 @@ class SpotifySessionManagerImpl
 
             coroutineScope.launch {
                 authRepository
-                    .getAccessToken()
+                    .getTokens()
                     .onSuccess { token ->
-                        if (token.isNotBlank()) {
+                        if (token != null) {
                             logger.d(TAG, "Access token stored, Connecting to remote...")
                             connectRemote(context, coroutineScope, dispatcher)
                         } else {
@@ -156,8 +156,8 @@ class SpotifySessionManagerImpl
             _sessionState.update { SessionState.Idle }
         }
 
-        override suspend fun signout() {
-            authRepository.clearAccessToken()
+        override suspend fun signOut() {
+            authRepository.clearSessionTokens()
         }
 
         private fun connectRemote(

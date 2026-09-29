@@ -1,4 +1,4 @@
-package org.vander.spotifyclient.domain.data.session
+package org.vander.spotifyclient.domain.session
 
 import android.app.Activity
 import android.content.Context
@@ -21,7 +21,7 @@ import org.vander.spotifyclient.domain.auth.AuthConfigK
  * Activity-scoped launcher. The UI calls [requestAuthorization] and hands the result back
  * through [handleAuthResult], and observes the outcome on the flow rather than a return value.
  */
-interface SpotifySessionManager {
+interface SessionManager {
     val sessionState: StateFlow<SessionState>
 
     /**
@@ -60,11 +60,11 @@ interface SpotifySessionManager {
      * Disconnects the App Remote and returns [sessionState] to `Idle`.
      *
      * The stored token is left in place, so a later start-up can reconnect without sending
-     * the user back through the Spotify login screen. Use [signout] to drop it.
+     * the user back through the Spotify login screen. Use [signOut] to drop it.
      */
     suspend fun shutDown()
 
-    suspend fun signout()
+    suspend fun signOut()
 
     /**
      * Fires the launcher registered by [requestAuthorization]. Returns immediately; the result

@@ -5,10 +5,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import dagger.hilt.android.EntryPointAccessors
 import org.vander.android.vinylotech.di.SpotifySessionEntryPoint
-import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
+import org.vander.spotifyclient.domain.session.SessionManager
 
 @Composable
-fun rememberSpotifySessionManager(): SpotifySessionManager {
+fun rememberSpotifySessionManager(): SessionManager {
     val context = LocalContext.current
     return remember {
         EntryPointAccessors

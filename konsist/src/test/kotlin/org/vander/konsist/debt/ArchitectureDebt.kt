@@ -18,7 +18,7 @@ internal object ArchitectureDebt {
             "$SPOTIFY_LIB/domain/appremote/AppRemoteProvider.kt",
             "$SPOTIFY_LIB/domain/appremote/RemoteConnector.kt",
             "$SPOTIFY_LIB/domain/auth/AuthClient.kt",
-            "$SPOTIFY_LIB/domain/data/session/SpotifySessionManager.kt",
+            "$SPOTIFY_LIB/domain/session/SessionManager.kt",
         )
 
     val spotifyLibDomainWrongDirection = emptySet<String>()
@@ -34,14 +34,12 @@ internal object ArchitectureDebt {
     // Declaration-level rules: entries are fully qualified names, not paths.
     val contractsToMoveToCoreDomain =
         setOf(
-            "$SPOTIFY_LIB_PACKAGE.domain.data.session.SpotifySessionManager",
+            "$SPOTIFY_LIB_PACKAGE.domain.session.SessionManager",
         )
 
     // A core/domain contract that only spotify-lib uses: it is not a port and belongs in spotify-lib, internal.
     val coreDomainContractsUsedOnlyBySpotifyLib =
         setOf(
-            "org.vander.core.domain.auth.IAuthRepository",
-            "org.vander.core.domain.auth.ITokenProvider",
             "org.vander.core.domain.library.LibraryRepository",
             "org.vander.core.domain.player.PlayerStateRepository",
             "org.vander.core.domain.queue.QueueRepository",
@@ -51,30 +49,19 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.AppRemoteProvider",
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.RemoteConnector",
-            "$SPOTIFY_LIB_PACKAGE.domain.auth.IDataStoreManager",
             "$SPOTIFY_LIB_PACKAGE.domain.auth.AuthClient",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerClient",
         )
 
     // Naming rules span every module, so entries spell out the full package.
-    val interfacesWithIPrefix =
-        setOf(
-            "org.vander.core.domain.auth.IAuthRepository",
-            "org.vander.core.domain.auth.ITokenProvider",
-            "org.vander.spotifyclient.domain.auth.IDataStoreManager",
-        )
+    val interfacesWithIPrefix = emptySet<String>()
 
     val classesWithImplSuffix =
         setOf(
             "org.vander.core.logger.KermitLoggerImpl",
-            "org.vander.spotifyclient.data.session.SpotifySessionManagerImpl",
         )
 
-    val adaptersNotNamedAfterSpotify =
-        setOf(
-            "org.vander.spotifyclient.data.local.DataStoreTokenProvider",
-            "org.vander.spotifyclient.data.repository.AuthRepository",
-        )
+    val adaptersNotNamedAfterSpotify = emptySet<String>()
 
     // Declaration-level rule: entries are class names, not paths.
     val viewModelsDependingOnSpotifyLib =

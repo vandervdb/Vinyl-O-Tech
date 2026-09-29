@@ -1,19 +1,17 @@
 package org.vander.spotifyclient.di
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.core.domain.auth.ITokenProvider
-import org.vander.spotifyclient.data.local.DataStoreTokenProvider
-import org.vander.spotifyclient.domain.auth.IDataStoreManager
+import org.vander.spotifyclient.data.local.SpotifyTokenProvider
+import org.vander.spotifyclient.data.local.TokenProvider
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object TokenProviderModule {
-    @Provides
+internal abstract class TokenProviderModule {
+    @Binds
     @Singleton
-    fun provideDataStoreTokenProvider(dataStoreManager: IDataStoreManager): ITokenProvider =
-        DataStoreTokenProvider(dataStoreManager)
+    abstract fun bindTokenProvider(impl: SpotifyTokenProvider): TokenProvider
 }

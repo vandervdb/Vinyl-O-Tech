@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.vander.core.domain.state.SessionState
 import org.vander.spotifyclient.domain.auth.AuthConfigK
-import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
+import org.vander.spotifyclient.domain.session.SessionManager
 
-class FakeSpotifySessionManager : SpotifySessionManager {
+class FakeSessionManager : SessionManager {
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Idle)
     override val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
 
@@ -51,7 +51,7 @@ class FakeSpotifySessionManager : SpotifySessionManager {
         _sessionState.value = SessionState.Idle
     }
 
-    override suspend fun signout() {
+    override suspend fun signOut() {
         TODO("Not yet implemented")
     }
 

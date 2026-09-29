@@ -16,7 +16,7 @@ import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
 import org.vander.core.ui.state.PlayerUiState
 import org.vander.core.ui.state.UIQueueState
-import org.vander.spotifyclient.domain.data.session.SpotifySessionManager
+import org.vander.spotifyclient.domain.session.SessionManager
 import javax.inject.Inject
 
 /**
@@ -35,7 +35,7 @@ open class SpotifyPlayerViewModel
     @Inject
     constructor(
         private val controller: PlayerController,
-        sessionManager: SpotifySessionManager,
+        sessionManager: SessionManager,
     ) : ViewModel(),
         PlayerViewModel {
         override val state: StateFlow<PlayerUiState> =

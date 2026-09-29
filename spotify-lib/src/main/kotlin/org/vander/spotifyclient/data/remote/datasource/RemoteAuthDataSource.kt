@@ -15,4 +15,6 @@ internal interface RemoteAuthDataSource {
      *   code.
      */
     suspend fun fetchAccessToken(code: String): Result<TokenResponseDto>
+
+    suspend fun refreshAccessToken(refreshToken: String): Result<TokenResponseDto>
 }

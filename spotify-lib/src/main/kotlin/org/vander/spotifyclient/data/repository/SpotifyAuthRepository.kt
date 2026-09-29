@@ -1,12 +1,13 @@
 package org.vander.spotifyclient.data.repository
 
-import org.vander.core.domain.auth.IAuthRepository
 import org.vander.core.domain.data.TokenResponse
 import org.vander.core.logger.Logger
 import org.vander.core.security.api.SecureTokenStorage
 import org.vander.core.security.api.StoredTokensResult
 import org.vander.spotifyclient.data.remote.datasource.RemoteAuthDataSource
 import org.vander.spotifyclient.data.remote.mapper.toDomain
+import org.vander.spotifyclient.domain.auth.AuthRepository
+import org.vander.spotifyclient.domain.auth.SessionTokens
 import javax.inject.Inject
 
 /**
@@ -16,15 +17,15 @@ import javax.inject.Inject
  *
  * Reads and writes now go through the same store: a session written here is the one read back.
  */
-internal class AuthRepository
+internal class SpotifyAuthRepository
     @Inject
     constructor(
         private val remoteAuthDataSource: RemoteAuthDataSource,
         private val secureTokenStorage: SecureTokenStorage,
         private val logger: Logger,
-    ) : IAuthRepository {
+    ) : AuthRepository {
         companion object Companion {
-            private const val TAG = "AuthRepository"
+            private const val TAG = "SpotifyAuthRepository"
         }
 
         override suspend fun fetchTokenResponse(authorizationCode: String): Result<TokenResponse> =
@@ -32,6 +33,12 @@ internal class AuthRepository
                 .fetchAccessToken(authorizationCode)
                 .map { dto -> dto.toDomain() }
                 .onFailure { logger.e(TAG, "Error fetching the token response", it) }
+
+        override suspend fun fetchRefreshedTokenResponse(refreshToken: String): Result<TokenResponse> =
+            remoteAuthDataSource
+                .refreshAccessToken(refreshToken)
+                .map { dto -> dto.toDomain() }
+                .onFailure { logger.e(TAG, "Error fetching the refreshed token response", it) }
 
         override suspend fun storeTokenResponse(tokenResponse: TokenResponse): Result<Unit> {
             val refreshToken = tokenResponse.refreshToken ?: storedRefreshToken()
@@ -45,10 +52,13 @@ internal class AuthRepository
                 .onFailure { logger.e(TAG, "Error saving the tokens", it) }
         }
 
-        override suspend fun getAccessToken(): Result<String> =
+        override suspend fun getTokens(): Result<SessionTokens?> =
             when (val result = secureTokenStorage.get()) {
-                is StoredTokensResult.Found -> Result.success(result.tokens.accessToken)
-                StoredTokensResult.Empty -> Result.success("")
+                is StoredTokensResult.Found ->
+                    Result.success(
+                        SessionTokens(result.tokens.accessToken, result.tokens.refreshToken, result.tokens.expiresAt),
+                    )
+                StoredTokensResult.Empty -> Result.success(null)
                 is StoredTokensResult.ReadFailed -> {
                     logger.e(TAG, "Could not read the stored session", result.cause)
                     Result.failure(result.cause)
@@ -61,7 +71,7 @@ internal class AuthRepository
                 }
             }
 
-        override suspend fun clearAccessToken(): Result<Unit> = secureTokenStorage.clear()
+        override suspend fun clearSessionTokens(): Result<Unit> = secureTokenStorage.clear()
 
         private suspend fun storedRefreshToken(): String? =
             (secureTokenStorage.get() as? StoredTokensResult.Found)?.tokens?.refreshToken

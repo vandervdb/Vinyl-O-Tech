@@ -1,4 +1,4 @@
-package org.vander.core.domain.auth
+package org.vander.spotifyclient.domain.auth
 
 import org.vander.core.domain.data.TokenResponse
 
@@ -11,13 +11,15 @@ import org.vander.core.domain.data.TokenResponse
  *
  * Implementations live in the `spotify-lib` data layer; consumers depend on this interface only.
  */
-interface IAuthRepository {
+internal interface AuthRepository {
     /**
      * Exchanges an authorization code against the accounts service. Stores nothing.
      *
      * @param authorizationCode the **code** returned by the Spotify login flow, not a token.
      */
     suspend fun fetchTokenResponse(authorizationCode: String): Result<TokenResponse>
+
+    suspend fun fetchRefreshedTokenResponse(refreshToken: String): Result<TokenResponse>
 
     /**
      * Persists a token pair.
@@ -32,7 +34,7 @@ interface IAuthRepository {
      *   failure. A failure means the store could not be read or its content could not be
      *   decrypted, and the error is logged either way.
      */
-    suspend fun getAccessToken(): Result<String>
+    suspend fun getTokens(): Result<SessionTokens?>
 
-    suspend fun clearAccessToken(): Result<Unit>
+    suspend fun clearSessionTokens(): Result<Unit>
 }
