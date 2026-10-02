@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Android Spotify</string>
+    <string name="app_name">VinylO\'Tech</string>
 
     <!-- HomeScreen (screen 01 "Connexion Spotify") -->
     <string name="home_headline">Ta discothèque,\nà ta façon.</string>

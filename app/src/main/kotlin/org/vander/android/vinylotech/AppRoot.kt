@@ -1,8 +1,5 @@
 package org.vander.android.vinylotech
 
-import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,11 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.vander.android.vinylotech.designsystem.AndroidAppTheme
 import org.vander.android.vinylotech.designsystem.VinylInk
 import org.vander.android.vinylotech.designsystem.VotDimens
@@ -42,6 +36,7 @@ import org.vander.android.vinylotech.designsystem.component.VinylSnackbarHost
 import org.vander.android.vinylotech.designsystem.component.VinylSnackbarHostState
 import org.vander.android.vinylotech.designsystem.component.rememberVinylSnackbarHostState
 import org.vander.android.vinylotech.designsystem.modifier.drawGrainOverlay
+import org.vander.android.vinylotech.feature.connection.rememberSpotifyAuthorization
 import org.vander.android.vinylotech.feature.player.MiniPlayer
 import org.vander.android.vinylotech.feature.player.SpotifyPlayerViewModel
 import org.vander.android.vinylotech.navigation.AppNavHost
@@ -51,13 +46,13 @@ import org.vander.android.vinylotech.navigation.NavItem
 import org.vander.android.vinylotech.navigation.ScreenChrome
 import org.vander.android.vinylotech.navigation.navigateToTab
 import org.vander.android.vinylotech.navigation.screenChrome
-import org.vander.android.vinylotech.util.LifecycleObserverComponent
 import org.vander.android.vinylotech.util.rememberSpotifySessionManager
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.KermitLoggerImpl
 import org.vander.core.logger.Logger
 import org.vander.core.logger.NoOpLogger
 import org.vander.fake.spotify.FakePlayerViewModel
+import org.vander.spotifyclient.domain.auth.SpotifyAuthConfig
 
 /**
  * The app's composition root: owns the session, the NavController and the snackbar, and
@@ -65,7 +60,7 @@ import org.vander.fake.spotify.FakePlayerViewModel
  * Spotify-flavoured stops here, which is what lets [MainShell] be previewed.
  */
 @Composable
-fun AppRoot() {
+fun AppRoot(sessionViewModel: SpotifySessionViewModel = hiltViewModel()) {
     val tag = "APP_ROOT"
     val logger: Logger = remember { KermitLoggerImpl(tag) }
 
@@ -73,58 +68,19 @@ fun AppRoot() {
     val backEntry by navController.currentBackStackEntryAsState()
     val chrome = backEntry?.destination.screenChrome()
 
-    val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val sessionManager = rememberSpotifySessionManager()
-    val launcher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.StartActivityForResult(),
-            onResult = { result ->
-                activity?.let {
-                    sessionManager.handleAuthResult(it, result, lifecycleOwner.lifecycleScope)
-                }
-            },
+    val config =
+        SpotifyAuthConfig(
+            BuildConfig.CLIENT_ID,
+            "org-vander-androidapp://callback",
         )
 
-    val onContinueWithSpotify: () -> Unit = {
-        activity?.let {
-            lifecycleOwner.lifecycleScope.launch {
-                sessionManager.requestAuthorization(
-                    launcher,
-                    it,
-                    it,
-                    lifecycleOwner.lifecycleScope,
-                    Dispatchers.Main,
-                    null,
-                )
-            }
-        }
-    }
-
+    val authorize = rememberSpotifyAuthorization(config, onOutcome = sessionViewModel::onSessionOutcome)
     val snack = rememberVinylSnackbarHostState()
     val sessionState by sessionManager.sessionState.collectAsStateWithLifecycle()
 
-    val failureTitle = stringResource(R.string.snack_auth_failed_title)
-    val failureMessage = stringResource(R.string.snack_auth_failed_message)
-    val retryLabel = stringResource(R.string.snack_retry)
-
-    LaunchedEffect(sessionState) {
-        val failure = sessionState as? SessionState.Failed ?: return@LaunchedEffect
-        logger.e("auth", "authorization failed", failure.exception)
-        snack.show(
-            VinylSnackbarData(
-                title = failureTitle,
-                message = failureMessage,
-                tone = VinylSnackTone.Error,
-                actionLabel = retryLabel,
-                onAction = onContinueWithSpotify as (() -> Unit)?,
-            ),
-        )
-    }
-
-    LifecycleObserverComponent(
-        onStopCallback = { lifecycleOwner.lifecycleScope.launch { sessionManager.shutDown() } },
-    )
+    AuthFailureSnackbarEffect(sessionState, snack, onRetry = authorize)
 
     MainShell(
         chrome = chrome,
@@ -147,7 +103,7 @@ fun AppRoot() {
         AppNavHost(
             navController = navController,
             contentPadding = padding,
-            onContinueWithSpotify = onContinueWithSpotify,
+            onContinueWithSpotify = authorize,
             logger = logger,
         )
     }
@@ -236,5 +192,29 @@ private fun PreviewMainShell() {
                     .padding(padding),
             )
         }
+    }
+}
+
+@Composable
+private fun AuthFailureSnackbarEffect(
+    sessionState: SessionState,
+    snack: VinylSnackbarHostState,
+    onRetry: () -> Unit,
+) {
+    val title = stringResource(R.string.snack_auth_failed_title)
+    val message = stringResource(R.string.snack_auth_failed_message)
+    val retryLabel = stringResource(R.string.snack_retry)
+
+    LaunchedEffect(sessionState) {
+        if (sessionState !is SessionState.Failed) return@LaunchedEffect
+        snack.show(
+            VinylSnackbarData(
+                message = message,
+                title = title,
+                tone = VinylSnackTone.Error,
+                actionLabel = retryLabel,
+                onAction = onRetry,
+            ),
+        )
     }
 }

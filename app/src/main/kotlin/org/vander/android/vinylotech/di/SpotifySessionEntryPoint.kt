@@ -3,7 +3,7 @@ package org.vander.android.vinylotech.di
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.spotifyclient.domain.session.SessionManager
+import org.vander.core.domain.session.SessionManager
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)

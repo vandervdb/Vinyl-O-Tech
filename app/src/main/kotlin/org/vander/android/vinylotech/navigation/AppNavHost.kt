@@ -13,6 +13,7 @@ import org.vander.android.vinylotech.feature.home.HomeRoute
 import org.vander.android.vinylotech.feature.home.homeNavGraph
 import org.vander.android.vinylotech.feature.library.libraryNavGraph
 import org.vander.core.logger.Logger
+import kotlin.reflect.KClass
 
 /**
  * Holds the graph. The destinations themselves live in the `NavGraphBuilder` extensions
@@ -33,11 +34,12 @@ fun AppNavHost(
     navController: NavHostController,
     contentPadding: PaddingValues,
     onContinueWithSpotify: () -> Unit,
+    startDestination: KClass<*> = ConnectionRoute::class,
     logger: Logger,
 ) {
     NavHost(
         navController = navController,
-        startDestination = ConnectionRoute::class,
+        startDestination = startDestination,
         modifier = Modifier.padding(contentPadding),
     ) {
         connectionNavGraph(

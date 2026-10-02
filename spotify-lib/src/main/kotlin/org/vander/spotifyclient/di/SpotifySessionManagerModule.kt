@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import org.vander.core.domain.session.SessionManager
 import org.vander.spotifyclient.data.session.SpotifySessionManager
-import org.vander.spotifyclient.domain.session.SessionManager
 import javax.inject.Singleton
 
 @Module

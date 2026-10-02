@@ -5,7 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import dagger.hilt.android.EntryPointAccessors
 import org.vander.android.vinylotech.di.SpotifySessionEntryPoint
-import org.vander.spotifyclient.domain.session.SessionManager
+import org.vander.core.domain.session.SessionManager
 
 @Composable
 fun rememberSpotifySessionManager(): SessionManager {

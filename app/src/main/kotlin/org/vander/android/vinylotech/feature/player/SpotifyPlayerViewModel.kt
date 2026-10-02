@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerController
+import org.vander.core.domain.session.SessionManager
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
 import org.vander.core.ui.state.PlayerUiState
 import org.vander.core.ui.state.UIQueueState
-import org.vander.spotifyclient.domain.session.SessionManager
 import javax.inject.Inject
 
 /**

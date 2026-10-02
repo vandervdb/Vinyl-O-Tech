@@ -54,11 +54,16 @@ internal class SpotifyAuthRepository
 
         override suspend fun getTokens(): Result<SessionTokens?> =
             when (val result = secureTokenStorage.get()) {
-                is StoredTokensResult.Found ->
+                is StoredTokensResult.Found -> {
                     Result.success(
                         SessionTokens(result.tokens.accessToken, result.tokens.refreshToken, result.tokens.expiresAt),
                     )
-                StoredTokensResult.Empty -> Result.success(null)
+                }
+
+                StoredTokensResult.Empty -> {
+                    Result.success(null)
+                }
+
                 is StoredTokensResult.ReadFailed -> {
                     logger.e(TAG, "Could not read the stored session", result.cause)
                     Result.failure(result.cause)

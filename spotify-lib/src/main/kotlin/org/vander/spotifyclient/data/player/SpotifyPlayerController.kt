@@ -17,13 +17,13 @@ import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerController
 import org.vander.core.domain.player.PlayerStateRepository
 import org.vander.core.domain.queue.QueueRepository
+import org.vander.core.domain.session.SessionManager
 import org.vander.core.domain.state.PlaybackState
 import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
 import org.vander.spotifyclient.di.ApplicationScope
 import org.vander.spotifyclient.domain.player.PlayerClient
-import org.vander.spotifyclient.domain.session.SessionManager
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -70,21 +70,42 @@ class SpotifyPlayerController
 
         override suspend fun dispatch(command: PlayerCommand): Result<Unit> =
             when (command) {
-                PlayerCommand.TogglePlayPause ->
+                PlayerCommand.TogglePlayPause -> {
                     if (playerClient.isPlaying()) {
                         playerClient.pause()
                     } else {
                         playerClient
                             .resume()
                     }
+                }
 
-                PlayerCommand.Pause -> playerClient.pause()
-                PlayerCommand.Resume -> playerClient.resume()
-                PlayerCommand.SkipNext -> playerClient.skipNext()
-                PlayerCommand.SkipPrevious -> playerClient.skipPrevious()
-                is PlayerCommand.SeekTo -> playerClient.seekTo(command.positionMs)
-                is PlayerCommand.Play -> playerClient.play(command.uri)
-                PlayerCommand.ToggleSave -> toggleSave()
+                PlayerCommand.Pause -> {
+                    playerClient.pause()
+                }
+
+                PlayerCommand.Resume -> {
+                    playerClient.resume()
+                }
+
+                PlayerCommand.SkipNext -> {
+                    playerClient.skipNext()
+                }
+
+                PlayerCommand.SkipPrevious -> {
+                    playerClient.skipPrevious()
+                }
+
+                is PlayerCommand.SeekTo -> {
+                    playerClient.seekTo(command.positionMs)
+                }
+
+                is PlayerCommand.Play -> {
+                    playerClient.play(command.uri)
+                }
+
+                PlayerCommand.ToggleSave -> {
+                    toggleSave()
+                }
             }.onFailure { logger.e(TAG, "dispatch($command) failed", it) }
 
         /**

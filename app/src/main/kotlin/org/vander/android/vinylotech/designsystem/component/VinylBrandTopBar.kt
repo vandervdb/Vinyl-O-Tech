@@ -30,7 +30,7 @@ import org.vander.android.vinylotech.designsystem.VinylTextEmphasis
 import org.vander.android.vinylotech.designsystem.VotDimens
 
 // Maquette écran 02 : `padding: 14px 20px 10px`, marque 22 px bordée 2 px, point 5 px, écart 9 px.
-private val BAR_PADDING_TOP = 14.dp
+private val BAR_PADDING_TOP = 10.dp
 
 private val BAR_PADDING_BOTTOM = 10.dp
 
