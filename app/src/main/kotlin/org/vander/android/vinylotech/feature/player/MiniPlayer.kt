@@ -28,11 +28,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,6 +62,7 @@ import org.vander.core.logger.Logger
 import org.vander.core.ui.domain.UIQueueItem
 import org.vander.core.ui.presentation.viewmodel.PlayerViewModel
 import org.vander.core.ui.state.PlayerUiState
+import kotlin.time.Duration.Companion.milliseconds
 
 // Spotify's own "restart vs. go to previous track" cutoff for skipPrevious() — not
 // documented by the SDK, approximated from observed behavior. Tune if it misfires.
@@ -156,14 +160,15 @@ private fun MiniPlayerContent(
     // Keeps a programmatic page change (the player moved on) from being read as a user swipe
     var suppressSwipeCallback by remember { mutableStateOf(false) }
 
-    LaunchedEffect(currentTrackId) {
+    LaunchedEffect(currentTrackId, currentTrackIndex) {
         if (currentTrackIndex >= 0 && currentTrackIndex != pagerState.currentPage) {
             suppressSwipeCallback = true
             pagerState.animateScrollToPage(currentTrackIndex)
-            delay(300)
+            delay(300.milliseconds)
             suppressSwipeCallback = false
         }
     }
+
     LaunchedEffect(pagerState.currentPage) {
         // currentTrackIndex == -1 means the player snapshot hasn't caught up with a freshly
         // rebuilt queue yet — the real current track isn't identified in the queue,
@@ -192,6 +197,13 @@ private fun MiniPlayerContent(
         }
     }
 
+    val positionMs =
+        rememberPlaybackPositionMs(
+            positionMs = trackParams.positionMS,
+            durationMs = trackParams.durationMS,
+            isPaused = trackParams.isPaused,
+        )
+
     Surface(
         shape = MaterialTheme.shapes.large,
         color = VinylSurfaceCard,
@@ -211,16 +223,15 @@ private fun MiniPlayerContent(
             ) {
                 TracksQueue(pagerState, trackParams.tracksQueue)
 
-                val progress =
-                    run {
-                        val dur = trackParams.durationMS
-                        val pos = trackParams.positionMS
-                        if (dur > 0L) (pos.toFloat() / dur.toFloat()).coerceIn(0f, 1f) else 0f
-                    }
                 var barWidthPx by remember { mutableFloatStateOf(0F) }
 
                 LinearProgressIndicator(
-                    progress = { progress },
+                    progress = {
+                        run {
+                            val dur = trackParams.durationMS
+                            if (dur > 0L) (positionMs.value.toFloat() / dur.toFloat()).coerceIn(0f, 1f) else 0f
+                        }
+                    },
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -372,3 +383,21 @@ fun MiniPlayerWithPainter(
 fun MiniPlayerPreview() {
     PreviewMiniPlayerWithLocalCover()
 }
+
+@Composable
+private fun rememberPlaybackPositionMs(
+    positionMs: Long,
+    durationMs: Long,
+    isPaused: Boolean,
+): State<Long> =
+    produceState(initialValue = positionMs, positionMs, durationMs, isPaused) {
+        value = positionMs
+        if (isPaused || durationMs <= 0L) return@produceState
+
+        val anchorFrameMs = withFrameMillis { it }
+        while (value < durationMs) {
+            withFrameMillis { frameMs ->
+                value = (positionMs + frameMs - anchorFrameMs).coerceAtMost(durationMs)
+            }
+        }
+    }
