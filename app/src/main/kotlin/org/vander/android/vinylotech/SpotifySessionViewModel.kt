@@ -8,6 +8,7 @@ import org.vander.core.domain.auth.AuthorizationOutcome
 import org.vander.core.domain.session.SessionManager
 import org.vander.core.logger.Logger
 import org.vander.core.ui.presentation.viewmodel.ConnectionViewModel
+import org.vander.spotifyclient.domain.auth.SpotifyAuthConfig
 import javax.inject.Inject
 
 @HiltViewModel
@@ -15,6 +16,7 @@ class SpotifySessionViewModel
     @Inject
     constructor(
         private val sessionManager: SessionManager,
+        val config: SpotifyAuthConfig,
         private val logger: Logger,
     ) : ViewModel(),
         ConnectionViewModel {

@@ -36,11 +36,6 @@ android {
 
         testInstrumentationRunner = "com.google.dagger.hilt.android.testing.HiltTestRunner"
 
-        val spotifyClientSecret = gradle.extra["spotifyClientSecret"] as String
-        val spotifyClientId = gradle.extra["spotifyClientId"] as String
-        buildConfigField("String", "CLIENT_SECRET", "\"$spotifyClientSecret\"")
-        buildConfigField("String", "CLIENT_ID", "\"$spotifyClientId\"")
-
         manifestPlaceholders["redirectSchemeName"] = "org-vander-androidapp"
         manifestPlaceholders["redirectHostName"] = "callback"
     }

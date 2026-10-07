@@ -23,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -52,7 +51,6 @@ import org.vander.core.logger.KermitLoggerImpl
 import org.vander.core.logger.Logger
 import org.vander.core.logger.NoOpLogger
 import org.vander.fake.spotify.FakePlayerViewModel
-import org.vander.spotifyclient.domain.auth.SpotifyAuthConfig
 
 /**
  * The app's composition root: owns the session, the NavController and the snackbar, and
@@ -68,17 +66,13 @@ fun AppRoot(sessionViewModel: SpotifySessionViewModel = hiltViewModel()) {
     val backEntry by navController.currentBackStackEntryAsState()
     val chrome = backEntry?.destination.screenChrome()
 
-    val lifecycleOwner = LocalLifecycleOwner.current
     val sessionManager = rememberSpotifySessionManager()
-    val config =
-        SpotifyAuthConfig(
-            BuildConfig.CLIENT_ID,
-            "org-vander-androidapp://callback",
-        )
-
-    val authorize = rememberSpotifyAuthorization(config, onOutcome = sessionViewModel::onSessionOutcome)
-    val snack = rememberVinylSnackbarHostState()
     val sessionState by sessionManager.sessionState.collectAsStateWithLifecycle()
+
+    val authorize =
+        rememberSpotifyAuthorization(sessionViewModel.config, onOutcome = sessionViewModel::onSessionOutcome)
+
+    val snack = rememberVinylSnackbarHostState()
 
     AuthFailureSnackbarEffect(sessionState, snack, onRetry = authorize)
 
