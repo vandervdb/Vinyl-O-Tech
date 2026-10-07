@@ -49,15 +49,13 @@ internal class SpotifySessionManager
 
         override suspend fun resumeSession() {
             val tokens = authRepository.getTokens().getOrNull()
-            tokens?.isAccessTokenExpired(System.currentTimeMillis())?.let {
-                if (!it) {
-                    logger.d(TAG, "Access token stored, Connecting to remote...")
-                    _sessionState.update { SessionState.ConnectingRemote }
-                    connectRemote(context, CoroutineScope(Dispatchers.Main), Dispatchers.IO)
-                } else {
-                    _sessionState.update { SessionState.AuthorizationRequired }
-                    logger.d(TAG, "No fresh access token stored")
-                }
+            if (tokens == null) {
+                logger.d(TAG, "No access token stored")
+                _sessionState.update { SessionState.AuthorizationRequired }
+                return
+            } else {
+                _sessionState.update { SessionState.ConnectingRemote }
+                connectRemote(context, scope, dispatcher)
             }
         }
 
