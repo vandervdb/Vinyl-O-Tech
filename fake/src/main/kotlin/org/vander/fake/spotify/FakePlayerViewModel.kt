@@ -75,18 +75,38 @@ internal fun reduce(
     command: PlayerCommand,
 ): PlayerUiState =
     when (command) {
-        PlayerCommand.TogglePlayPause -> state.withPaused(!state.player.base.isPaused)
-        PlayerCommand.Pause -> state.withPaused(true)
-        PlayerCommand.Resume -> state.withPaused(false)
-        PlayerCommand.SkipNext -> state.movedBy(1)
-        PlayerCommand.SkipPrevious -> state.movedBy(-1)
+        PlayerCommand.TogglePlayPause -> {
+            state.withPaused(!state.player.base.isPaused)
+        }
+
+        PlayerCommand.Pause -> {
+            state.withPaused(true)
+        }
+
+        PlayerCommand.Resume -> {
+            state.withPaused(false)
+        }
+
+        PlayerCommand.SkipNext -> {
+            state.movedBy(1)
+        }
+
+        PlayerCommand.SkipPrevious -> {
+            state.movedBy(-1)
+        }
+
         is PlayerCommand.SeekTo -> {
             val base = state.player.base
             state.withBase(base.copy(positionMs = command.positionMs.coerceIn(0, base.durationMs)))
         }
-        is PlayerCommand.Play -> state.withPaused(false).copy(context = PlaybackContext(uri = command.uri))
-        PlayerCommand.ToggleSave ->
+
+        is PlayerCommand.Play -> {
+            state.withPaused(false).copy(context = PlaybackContext(uri = command.uri))
+        }
+
+        PlayerCommand.ToggleSave -> {
             state.copy(player = state.player.copy(isTrackSaved = state.player.isTrackSaved != true))
+        }
     }
 
 private fun PlayerUiState.withBase(base: PlayerStateData) = copy(player = player.copy(base = base))
