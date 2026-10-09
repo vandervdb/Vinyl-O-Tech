@@ -56,6 +56,7 @@ import org.vander.android.vinylotech.designsystem.VinylTextPrimary
 import org.vander.android.vinylotech.designsystem.VotDimens
 import org.vander.android.vinylotech.designsystem.component.MarqueeTextInfinite
 import org.vander.android.vinylotech.designsystem.component.VinylMiniTurntable
+import org.vander.core.domain.data.PlaybackContext
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.Logger
@@ -96,10 +97,12 @@ private val CONTROL_PAUSE_NUDGE = 0.dp
 data class TrackParams(
     val tracksQueue: List<UIQueueItem>,
     val trackId: String = "",
+    val trackName: String = "",
     val isSaved: Boolean = false,
     val isPaused: Boolean,
     val positionMS: Long,
     val durationMS: Long,
+    val context: PlaybackContext = PlaybackContext.None,
 )
 
 @Composable
@@ -136,10 +139,12 @@ private fun PlayerUiState.toTrackParams() =
     TrackParams(
         tracksQueue = queue.items,
         trackId = player.base.trackId,
+        trackName = player.base.trackName,
         isSaved = player.isTrackSaved == true,
         isPaused = player.base.isPaused,
         positionMS = player.base.positionMs,
         durationMS = player.base.durationMs,
+        context = context,
     )
 
 @Composable
@@ -156,6 +161,19 @@ private fun MiniPlayerContent(
     val pagerState = rememberPagerState(pageCount = { trackParams.tracksQueue.size })
     val currentTrackId = trackParams.trackId
     val currentTrackIndex = trackParams.tracksQueue.indexOfFirst { it.trackId == currentTrackId }
+
+    val queueHead = trackParams.tracksQueue.firstOrNull()
+    val pagerItem = trackParams.tracksQueue.getOrNull(pagerState.currentPage)
+    LaunchedEffect(queueHead, pagerItem, trackParams.trackId, trackParams.trackName, trackParams.context) {
+        logger.d(
+            "MiniPlayer",
+            "Track queue size=${trackParams.tracksQueue.size} |" +
+                "queue[0]=${queueHead?.trackName} (${queueHead?.trackId}) | " +
+                "pager[${pagerState.currentPage}]=${pagerItem?.trackName} (${pagerItem?.trackId}) | " +
+                "player=${trackParams.trackName} (${trackParams.trackId}) | " +
+                "context=${trackParams.context.title} ${trackParams.context.playlistId} (${trackParams.context.uri})",
+        )
+    }
 
     // Keeps a programmatic page change (the player moved on) from being read as a user swipe
     var suppressSwipeCallback by remember { mutableStateOf(false) }
