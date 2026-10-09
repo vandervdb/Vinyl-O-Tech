@@ -17,10 +17,10 @@ import org.vander.core.domain.data.SpotifyUri
 import org.vander.core.domain.data.Track
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.state.PlayerStateData
-import org.vander.core.domain.state.SavedRemotelyChangedState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.test.FakeLogger
 import org.vander.spotifyclient.data.player.QueueSynchronizer
+import org.vander.spotifyclient.data.player.SavedFlagTracker
 import org.vander.spotifyclient.data.player.SpotifyPlayerController
 import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
@@ -112,18 +112,7 @@ class SpotifyPlayerControllerTest {
             assertEquals(listOf("resume"), f.client.commands)
         }
 
-    // --- dispatch: ToggleSave, now owned here (review candidate 3)
-
-    @Test
-    fun `ToggleSave with no track loaded fails and touches nothing`() =
-        runTest {
-            val f = Fixture(backgroundScope)
-
-            val result = f.controller.dispatch(PlayerCommand.ToggleSave)
-
-            assertTrue(result.isFailure)
-            assertTrue(f.library.saved.isEmpty() && f.library.removed.isEmpty())
-        }
+    // --- dispatch: ToggleSave, delegated to SavedFlagTracker
 
     @Test
     fun `ToggleSave persists an unsaved track and publishes the new flag`() =
@@ -133,39 +122,12 @@ class SpotifyPlayerControllerTest {
             runCurrent()
 
             val result = f.controller.dispatch(PlayerCommand.ToggleSave)
+            // The tracker publishes the flag; the controller republishes it on its next turn.
+            runCurrent()
 
             assertTrue(result.isSuccess)
             assertEquals(listOf(TRACK_ID), f.library.saved)
             assertEquals(true, f.controller.state.value.player.isTrackSaved)
-        }
-
-    @Test
-    fun `ToggleSave removes a saved track`() =
-        runTest {
-            val f = Fixture(backgroundScope).started()
-            f.library.savedIds += TRACK_ID
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-
-            f.controller.dispatch(PlayerCommand.ToggleSave)
-
-            assertEquals(listOf(TRACK_ID), f.library.removed)
-            assertEquals(false, f.controller.state.value.player.isTrackSaved)
-        }
-
-    @Test
-    fun `a failed ToggleSave leaves the published flag as it was`() =
-        runTest {
-            val f = Fixture(backgroundScope).started()
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-            val before = f.controller.state.value.player.isTrackSaved
-            f.library.failWith = IOException("offline")
-
-            val result = f.controller.dispatch(PlayerCommand.ToggleSave)
-
-            assertTrue(result.isFailure)
-            assertEquals(before, f.controller.state.value.player.isTrackSaved)
         }
 
     // --- start
@@ -240,22 +202,6 @@ class SpotifyPlayerControllerTest {
         }
 
     @Test
-    fun `the saved flag is looked up once per track, not once per tick`() =
-        runTest {
-            // The previous implementation queried the Web API on every position update.
-            val f = Fixture(backgroundScope).started()
-
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID, positionMs = 1_000))
-            runCurrent()
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID, positionMs = 2_000))
-            runCurrent()
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID, positionMs = 3_000))
-            runCurrent()
-
-            assertEquals(listOf(TRACK_ID), f.library.lookups)
-        }
-
-    @Test
     fun `the saved flag lands in the published state`() =
         runTest {
             val f = Fixture(backgroundScope).started()
@@ -281,20 +227,6 @@ class SpotifyPlayerControllerTest {
 
             // Unknown, not the previous track's `true`.
             assertNull(f.controller.state.value.player.isTrackSaved)
-        }
-
-    @Test
-    fun `a save from another device triggers a new lookup`() =
-        runTest {
-            val f = Fixture(backgroundScope).started()
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-            f.library.savedIds += TRACK_ID
-
-            f.stateRepository.emitSavedRemotely(SavedRemotelyChangedState(isSaved = true, trackId = TRACK_ID))
-            runCurrent()
-
-            assertEquals(true, f.controller.state.value.player.isTrackSaved)
         }
 
     @Test
@@ -340,8 +272,8 @@ class SpotifyPlayerControllerTest {
             SpotifyPlayerController(
                 sessionManager = session,
                 queueSynchronizer = QueueSynchronizer(queueRepository, stateRepository, FakeLogger()),
+                savedFlagTracker = SavedFlagTracker(library, stateRepository, FakeLogger()),
                 playerStateRepository = stateRepository,
-                libraryRepository = library,
                 playerClient = client,
                 scope = scope,
                 logger = FakeLogger(),
