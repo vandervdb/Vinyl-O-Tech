@@ -1,7 +1,6 @@
 package org.vander.spotifyclient.domain.usecase
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,6 +20,7 @@ import org.vander.core.domain.state.PlayerStateData
 import org.vander.core.domain.state.SavedRemotelyChangedState
 import org.vander.core.domain.state.SessionState
 import org.vander.core.logger.test.FakeLogger
+import org.vander.spotifyclient.data.player.QueueSynchronizer
 import org.vander.spotifyclient.data.player.SpotifyPlayerController
 import org.vander.spotifyclient.data.repository.FakePlayerStateRepository
 import org.vander.spotifyclient.data.repository.FakeSpotifyPlayerClient
@@ -28,8 +28,6 @@ import org.vander.spotifyclient.domain.player.session.FakeSessionManager
 import org.vander.spotifyclient.domain.repository.FakeLibraryRepository
 import org.vander.spotifyclient.domain.repository.FakeQueueRepository
 import java.io.IOException
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * The controller is given the test's `backgroundScope`: its collectors run on the test
@@ -300,7 +298,7 @@ class SpotifyPlayerControllerTest {
         }
 
     @Test
-    fun `the queue is published with the current track first`() =
+    fun `the synchronized queue is published into the state`() =
         runTest {
             val f = Fixture(backgroundScope).started()
             f.queueRepository.nextQueue = queue(current = TRACK_ID, next = listOf("n1", "n2"))
@@ -316,54 +314,6 @@ class SpotifyPlayerControllerTest {
         }
 
     @Test
-    fun `a hole in the queue does not crash the collector`() =
-        runTest {
-            // Regression: `artists[0]` threw on Track.empty(), the stand-in for a null slot,
-            // and the exception killed the collector for the rest of the session.
-            val f = Fixture(backgroundScope).started()
-            f.queueRepository.nextQueue =
-                CurrentlyPlaying(
-                    currentlyPlaying = track(TRACK_ID),
-                    queue = Queue(listOf(track("n1"), Track.empty())),
-                )
-            f.session.emit(SessionState.Ready)
-            runCurrent()
-
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-
-            val queue = f.controller.state.value.queue
-            assertEquals(listOf(TRACK_ID, "n1", ""), queue.map { it.id })
-            assertEquals("", queue.last().artistName)
-        }
-
-    @Test
-    fun `a queue that never catches up is refetched a bounded number of times, not in a loop`() =
-        runTest {
-            // The Web API lags behind the App Remote after a skip. Refetching on every
-            // mismatch re-emitted the queue, which triggered another mismatch, and so on.
-            val f = Fixture(backgroundScope).started()
-            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
-            f.session.emit(SessionState.Ready)
-            runCurrent()
-
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID, positionMs = 2_000))
-            advanceTimeBy(10.seconds)
-            runCurrent()
-
-            // One fetch on Ready, then one per retry delay — and no more.
-            assertEquals(1 + 3, f.queueRepository.refreshCount)
-            // The playing track is not in the stale queue: only it can be shown.
-            assertEquals(
-                listOf(TRACK_ID),
-                f.controller.state.value.queue
-                    .map { it.id },
-            )
-        }
-
-    @Test
     fun `the playback context is republished into the state`() =
         runTest {
             val f = Fixture(backgroundScope).started()
@@ -373,49 +323,6 @@ class SpotifyPlayerControllerTest {
             runCurrent()
 
             assertEquals(PLAYLIST_ID, f.controller.state.value.context.playlistId)
-        }
-
-    @Test
-    fun `a failed refetch does not kill the queue collector`() =
-        runTest {
-            val f = Fixture(backgroundScope).started()
-            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
-            f.session.emit(SessionState.Ready)
-            runCurrent()
-
-            f.queueRepository.nextQueue = null
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            advanceTimeBy(500.milliseconds)
-            runCurrent()
-
-            f.queueRepository.nextQueue = queue(current = "other", next = listOf("n2"))
-            f.stateRepository.emitState(snapshot(trackId = "other"))
-            advanceTimeBy(500.milliseconds)
-            runCurrent()
-
-            // Ready + failed refetch + refetch for the new track: the collector survived.
-            assertEquals(3, f.queueRepository.refreshCount)
-        }
-
-    @Test
-    fun `a lagging queue still shows the playing track first`() =
-        runTest {
-            // The Web API still reports the previous track: the head must follow the App Remote,
-            // like the cover does, or the title and the cover disagree.
-            val f = Fixture(backgroundScope).started()
-            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
-            f.session.emit(SessionState.Ready)
-            runCurrent()
-
-            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
-            runCurrent()
-
-            assertEquals(
-                TRACK_ID,
-                f.controller.state.value.queue
-                    .first()
-                    .id,
-            )
         }
 
     // --- fixtures
@@ -432,7 +339,7 @@ class SpotifyPlayerControllerTest {
         val controller =
             SpotifyPlayerController(
                 sessionManager = session,
-                queueRepository = queueRepository,
+                queueSynchronizer = QueueSynchronizer(queueRepository, stateRepository, FakeLogger()),
                 playerStateRepository = stateRepository,
                 libraryRepository = library,
                 playerClient = client,
