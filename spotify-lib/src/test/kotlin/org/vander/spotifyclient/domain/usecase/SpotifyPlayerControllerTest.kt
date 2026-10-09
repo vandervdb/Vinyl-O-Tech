@@ -1,6 +1,7 @@
 package org.vander.spotifyclient.domain.usecase
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -27,6 +28,8 @@ import org.vander.spotifyclient.domain.player.session.FakeSessionManager
 import org.vander.spotifyclient.domain.repository.FakeLibraryRepository
 import org.vander.spotifyclient.domain.repository.FakeQueueRepository
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The controller is given the test's `backgroundScope`: its collectors run on the test
@@ -316,7 +319,7 @@ class SpotifyPlayerControllerTest {
         }
 
     @Test
-    fun `a queue out of step with the player is refetched once, not in a loop`() =
+    fun `a queue that never catches up is refetched a bounded number of times, not in a loop`() =
         runTest {
             // The Web API lags behind the App Remote after a skip. Refetching on every
             // mismatch re-emitted the queue, which triggered another mismatch, and so on.
@@ -328,13 +331,16 @@ class SpotifyPlayerControllerTest {
             f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
             runCurrent()
             f.stateRepository.emitState(snapshot(trackId = TRACK_ID, positionMs = 2_000))
+            advanceTimeBy(10.seconds)
             runCurrent()
 
-            // One fetch on Ready, one refetch for the mismatch — and no more.
-            assertEquals(2, f.queueRepository.refreshCount)
-            assertTrue(
+            // One fetch on Ready, then one per retry delay — and no more.
+            assertEquals(1 + 3, f.queueRepository.refreshCount)
+            // The playing track is not in the stale queue: only it can be shown.
+            assertEquals(
+                listOf(TRACK_ID),
                 f.controller.state.value.queue
-                    .isEmpty(),
+                    .map { it.id },
             )
         }
 
@@ -360,14 +366,37 @@ class SpotifyPlayerControllerTest {
 
             f.queueRepository.nextQueue = null
             f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
+            advanceTimeBy(500.milliseconds)
             runCurrent()
 
             f.queueRepository.nextQueue = queue(current = "other", next = listOf("n2"))
             f.stateRepository.emitState(snapshot(trackId = "other"))
+            advanceTimeBy(500.milliseconds)
             runCurrent()
 
             // Ready + failed refetch + refetch for the new track: the collector survived.
             assertEquals(3, f.queueRepository.refreshCount)
+        }
+
+    @Test
+    fun `a lagging queue still shows the playing track first`() =
+        runTest {
+            // The Web API still reports the previous track: the head must follow the App Remote,
+            // like the cover does, or the title and the cover disagree.
+            val f = Fixture(backgroundScope).started()
+            f.queueRepository.nextQueue = queue(current = "stale", next = listOf("n1"))
+            f.session.emit(SessionState.Ready)
+            runCurrent()
+
+            f.stateRepository.emitState(snapshot(trackId = TRACK_ID))
+            runCurrent()
+
+            assertEquals(
+                TRACK_ID,
+                f.controller.state.value.queue
+                    .first()
+                    .id,
+            )
         }
 
     // --- fixtures

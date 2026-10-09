@@ -1,17 +1,19 @@
 package org.vander.spotifyclient.data.player
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.vander.core.domain.data.CurrentlyPlaying
 import org.vander.core.domain.data.QueuedTrack
+import org.vander.core.domain.data.Track
 import org.vander.core.domain.library.LibraryRepository
 import org.vander.core.domain.player.PlayerCommand
 import org.vander.core.domain.player.PlayerController
@@ -26,6 +28,8 @@ import org.vander.spotifyclient.di.ApplicationScope
 import org.vander.spotifyclient.domain.player.PlayerClient
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [org.vander.core.domain.player.PlayerController] over the App Remote and the Web API.
@@ -38,8 +42,9 @@ import javax.inject.Inject
  *
  * Two rules keep the Web API calls bounded:
  * - the saved flag is looked up when the track changes, not on every tick;
- * - a queue that disagrees with the playing track is refetched once per track, since the Web
- *   API lags behind the App Remote after a skip and each refetch emits a new value.
+ * - a lagging queue is refetched on a track change, at most [QUEUE_RETRY_DELAYS] times, never
+ *   on a queue emission: the Web API lags behind the App Remote after a skip, and a refetch
+ *   triggered by the queue it updates would loop.
  */
 class SpotifyPlayerController
     @Inject
@@ -65,6 +70,7 @@ class SpotifyPlayerController
             scope.launch { observeSavedFlag() }
             scope.launch { observeSavedElsewhere() }
             scope.launch { observeQueue() }
+            scope.launch { observeCurrentQueueLag() }
             scope.launch { observeContext() }
         }
 
@@ -178,24 +184,52 @@ class SpotifyPlayerController
         }
 
         private suspend fun observeQueue() {
-            var refetchedFor: String? = null
             combine(queueRepository.currentQueue, playerStateRepository.playerStateData, ::Pair)
                 .collect { (queue, snapshot) ->
                     if (queue == null || snapshot.trackId.isEmpty()) return@collect
 
                     if (queue.currentlyPlaying?.id == snapshot.trackId) {
-                        _state.update { it.copy(queue = queueOf(snapshot, queue)) }
+                        _state.update { it.copy(queue = queueOf(snapshot, queue.queue.tracks)) }
                         return@collect
                     }
 
-                    if (refetchedFor == snapshot.trackId) return@collect
-                    refetchedFor = snapshot.trackId
-                    logger.d(TAG, "Queue out of step with ${snapshot.trackId}, refetching once")
-                    queueRepository
-                        .refresh()
-                        .onFailure { logger.e(TAG, "Queue refetch failed", it) }
+                    // Until the Web API catches up, keep the queue's head on the track that is
+                    // actually playing: a stale head shows a title that no longer matches the cover.
+                    val upcoming = queue.queue.tracks
+                    val playingIndex = upcoming.indexOfFirst { it.id == snapshot.trackId }
+                    val stillUpcoming = if (playingIndex >= 0) upcoming.drop(playingIndex + 1) else emptyList()
+                    _state.update { it.copy(queue = queueOf(snapshot, stillUpcoming)) }
                 }
         }
+
+        private suspend fun observeCurrentQueueLag() {
+            playerStateRepository.playerStateData
+                .map { it.trackId }
+                .filter { it.isNotEmpty() }
+                .distinctUntilChanged()
+                .collectLatest { trackId ->
+                    for (wait in QUEUE_RETRY_DELAYS) {
+                        if (isQueueInStepWith(trackId)) return@collectLatest
+                        delay(wait)
+                        logger.d(
+                            TAG,
+                            "Queue lagging behind $trackId " +
+                                "(api=${queueRepository.currentQueue.value?.currentlyPlaying?.id}), refetching",
+                        )
+                        queueRepository
+                            .refresh()
+                            .onFailure { logger.e(TAG, "Queue refetch failed", it) }
+                    }
+                    if (!isQueueInStepWith(trackId)) {
+                        logger.w(TAG, "Queue still lagging behind $trackId, giving up until the next track")
+                    }
+                }
+        }
+
+        private fun isQueueInStepWith(trackId: String): Boolean =
+            queueRepository.currentQueue.value
+                ?.currentlyPlaying
+                ?.id == trackId
 
         private suspend fun observeContext() {
             playerStateRepository.playbackContext.collect { context ->
@@ -210,10 +244,10 @@ class SpotifyPlayerController
          */
         private fun queueOf(
             snapshot: PlayerStateData,
-            queue: CurrentlyPlaying,
+            upcoming: List<Track>,
         ): List<QueuedTrack> =
             listOf(QueuedTrack(snapshot.trackId, snapshot.trackName, snapshot.artistName)) +
-                queue.queue.tracks.map { track ->
+                upcoming.map { track ->
                     QueuedTrack(
                         id = track.id,
                         name = track.name,
@@ -227,5 +261,9 @@ class SpotifyPlayerController
 
         private companion object {
             const val TAG = "SpotifyPlayerController"
+
+            // The Web API answers with the previous track for a few hundred milliseconds after
+            // a skip: an immediate refetch almost always comes back stale.
+            val QUEUE_RETRY_DELAYS = listOf(500.milliseconds, 1.seconds, 2.seconds)
         }
     }
