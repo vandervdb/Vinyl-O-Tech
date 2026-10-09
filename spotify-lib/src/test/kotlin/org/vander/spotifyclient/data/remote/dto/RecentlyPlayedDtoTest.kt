@@ -60,6 +60,33 @@ class RecentlyPlayedDtoTest {
         assertNull(play.context)
     }
 
+    @Test
+    fun `a relinked track parses its linked_from object`() {
+        // The reference payload sends `{}`, which hid that linked_from nests an object
+        // (external_urls): a flat map of strings failed the whole page on a relinked track.
+        val linkedFrom =
+            """
+            "linked_from": {
+              "external_urls": { "spotify": "https://open.spotify.com/track/original" },
+              "href": "string",
+              "id": "original",
+              "type": "track",
+              "uri": "spotify:track:original"
+            },
+            """.trimIndent()
+        val body = REFERENCE_PAYLOAD.replace(""""linked_from": {},""", linkedFrom)
+
+        val track =
+            json
+                .decodeFromString<RecentlyPlayedResponseDto>(body)
+                .items
+                .single()
+                .track
+
+        assertEquals("original", track.linkedFrom?.id)
+        assertEquals("https://open.spotify.com/track/original", track.linkedFrom?.externalUrls?.spotify)
+    }
+
     /** Lifts the `track` object out of the reference payload, to reuse it in a shorter case. */
     private fun trackOf(payload: String): String {
         val start = payload.indexOf("\"track\":") + "\"track\":".length
