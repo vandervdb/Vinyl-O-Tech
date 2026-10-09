@@ -130,7 +130,13 @@ class SpotifyPlayerController
 
         private suspend fun observeSession() {
             sessionManager.sessionState.collect { session ->
-                if (session !is SessionState.Ready) return@collect
+                if (session !is SessionState.Ready) {
+                    // The subscriptions belong to the connection that just went away: without
+                    // this, the next Ready finds the repository still "listening" and skips
+                    // subscribing to the new connection.
+                    playerStateRepository.stopListening()
+                    return@collect
+                }
                 logger.d(TAG, "Session ready")
                 queueRepository
                     .refresh()

@@ -30,8 +30,8 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * A client for interacting with the Spotify player.
  *
- * This class provides methods for controlling playback, subscribing to player state updates,
- * and managing the connection to the Spotify app.
+ * This class provides methods for controlling playback and subscribing to player state updates.
+ * It never opens or closes the App Remote connection: that belongs to the session manager.
  *
  * @property appRemoteProvider An [AppRemoteProvider] instance used to access the Spotify App Remote.
  * @property logger A [Logger] instance for logging debug messages.
@@ -182,6 +182,5 @@ class SpotifyPlayerClient
             // leaving the first running.
             stateSubscription?.cancel()
             stateSubscription = null
-            appRemoteProvider.disconnect()
         }
     }

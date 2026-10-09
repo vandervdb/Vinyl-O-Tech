@@ -21,8 +21,9 @@ import javax.inject.Inject
  * `false` so it behaves as a one-shot event rather than a level. Any other cause of a
  * duplicate push would produce a false positive.
  *
- * `isListening` makes [startListening] idempotent. Note that [stopListening] only clears that
- * flag — it does not unsubscribe from the player, from either channel.
+ * `isListening` makes [startListening] idempotent. [stopListening] closes both channels and
+ * clears it: the subscriptions die with the App Remote connection, so a reconnection has to
+ * stop then start again to be heard.
  */
 internal class SpotifyPlayerStateRepository
     @Inject
@@ -69,6 +70,9 @@ internal class SpotifyPlayerStateRepository
         }
 
         override suspend fun stopListening() {
+            if (!isListening) return
             isListening = false
+            playerClient.unsubscribeFromPlayerState()
+            playerClient.unsubscribeFromPlayerContext()
         }
     }

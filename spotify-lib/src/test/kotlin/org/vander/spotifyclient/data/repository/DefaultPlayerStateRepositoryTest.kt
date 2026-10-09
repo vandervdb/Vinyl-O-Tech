@@ -108,6 +108,27 @@ class DefaultPlayerStateRepositoryTest {
         }
 
     @Test
+    fun `stopListening unsubscribes, so a later startListening subscribes again`() =
+        runTest {
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
+            val first = PlayerStateData.empty().copy(trackId = "t1")
+            val ignored = PlayerStateData.empty().copy(trackId = "t2")
+            val second = PlayerStateData.empty().copy(trackId = "t3")
+
+            repo.startListening()
+            fakeClient.emit(first)
+            repo.stopListening()
+            fakeClient.emit(ignored)
+
+            assertEquals("t1", repo.playerStateData.value.trackId)
+
+            repo.startListening()
+            fakeClient.emit(second)
+
+            assertEquals("t3", repo.playerStateData.value.trackId)
+        }
+
+    @Test
     fun `playbackContext starts at None`() =
         runTest {
             assertEquals(PlaybackContext.None, SpotifyPlayerStateRepository(fakeClient, logger).playbackContext.value)

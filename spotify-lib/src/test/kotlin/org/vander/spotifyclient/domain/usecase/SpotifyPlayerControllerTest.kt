@@ -209,6 +209,25 @@ class SpotifyPlayerControllerTest {
             assertEquals(1, f.stateRepository.startListeningCount)
         }
 
+    @Test
+    fun `a session leaving Ready stops listening, so the next Ready subscribes again`() =
+        runTest {
+            // The App Remote subscriptions die with the connection: after the app comes back
+            // to the foreground, the new connection has to be subscribed to from scratch.
+            val f = Fixture(backgroundScope).started()
+            f.session.emit(SessionState.Ready)
+            runCurrent()
+            val stopsBefore = f.stateRepository.stopListeningCount
+
+            f.session.emit(SessionState.Idle)
+            runCurrent()
+            f.session.emit(SessionState.Ready)
+            runCurrent()
+
+            assertEquals(stopsBefore + 1, f.stateRepository.stopListeningCount)
+            assertEquals(2, f.stateRepository.startListeningCount)
+        }
+
     // --- published state
 
     @Test
