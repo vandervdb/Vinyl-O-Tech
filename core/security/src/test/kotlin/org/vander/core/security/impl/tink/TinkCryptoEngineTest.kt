@@ -7,6 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.vander.core.logger.test.FakeLogger
 import java.security.GeneralSecurityException
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFailsWith
@@ -20,7 +21,7 @@ class TinkCryptoEngineTest {
     fun setUp() {
         AeadConfig.register()
         val masterKeyAead = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM")).aead()
-        engine = TinkCryptoEngine(TinkKeysetHandleProvider(FakeKeysetRepository(), masterKeyAead))
+        engine = TinkCryptoEngine(TinkKeysetHandleProvider(FakeKeysetRepository(), masterKeyAead, FakeLogger()))
     }
 
     @Test

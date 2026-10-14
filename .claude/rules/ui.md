@@ -45,6 +45,10 @@ system: it builds a Spotify CDN URL, so it fails test 1, but `MiniPlayer` and
 
 **Naming**: `<Feature>Screen` for the top-level stateful composable of a
 feature, `<Feature>NavGraph.kt` for its `NavGraphBuilder` extension.
+ViewModels follow the port/adapter naming of repositories: `<Feature>ViewModel`
+is the contract (in `core:ui`, or next to the feature when nothing else
+implements it), `Spotify<Feature>ViewModel` the real `@HiltViewModel` in `app`,
+`Fake<Feature>ViewModel` the preview double in `fake`. No `Impl` suffix.
 
 **Previews** live next to their subject in the feature or design-system
 directory — `feature/player/PreviewMiniPlayerWithLocalCover.kt`,

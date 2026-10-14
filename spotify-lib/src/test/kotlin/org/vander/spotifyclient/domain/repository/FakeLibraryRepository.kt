@@ -1,5 +1,7 @@
 package org.vander.spotifyclient.domain.repository
 
+import org.vander.core.domain.library.LibraryRepository
+
 /**
  * In-memory library. [savedIds] is what `isTrackSaved` answers from; [failWith], when set, makes
  * every call fail with it. Every call is recorded, so a test can count the lookups.

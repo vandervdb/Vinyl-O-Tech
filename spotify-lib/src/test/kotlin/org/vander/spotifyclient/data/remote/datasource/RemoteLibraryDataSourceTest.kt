@@ -9,6 +9,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -112,7 +113,7 @@ class RemoteLibraryDataSourceTest {
         runTest {
             // Ktor's `expectSuccess` is false by default, so a refusal never throws and the
             // try/catch has nothing to catch — the status has to be inspected. Without it,
-            // PlayerViewModelImpl.saveTrack flips the local heart on `onSuccess` and the UI
+            // SpotifyPlayerViewModel.saveTrack flips the local heart on `onSuccess` and the UI
             // claims the track was saved when Spotify refused.
             val engine =
                 MockEngine {
@@ -165,6 +166,38 @@ class RemoteLibraryDataSourceTest {
             assertTrue(dataSource(engine).saveTrack(TRACK_ID).isSuccess)
         }
 
+    // --- cancellation
+
+    @Test
+    fun `a cancelled fetchIsTrackSaved rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).fetchIsTrackSaved(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
+    @Test
+    fun `a cancelled saveTrack rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).saveTrack(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
+    @Test
+    fun `a cancelled removeTrack rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).removeTrack(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
     private fun jsonEngine(body: String) =
         MockEngine {
             respond(
@@ -177,7 +210,7 @@ class RemoteLibraryDataSourceTest {
     private fun dataSource(
         engine: MockEngine,
         logger: FakeLogger = FakeLogger(),
-    ) = RemoteLibraryDataSource(
+    ) = SpotifyRemoteLibraryDataSource(
         httpClient = HttpClient(engine) { defaultRequest { url(BASE_URL) } },
         logger = logger,
     )
@@ -187,6 +220,6 @@ class RemoteLibraryDataSourceTest {
 
         const val TRACK_ID = "4cOdK2wGLETKBW3PvgPWqT"
 
-        const val TAG = "RemoteLibraryDataSource"
+        const val TAG = "SpotifyRemoteLibraryDataSource"
     }
 }

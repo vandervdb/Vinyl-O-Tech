@@ -188,7 +188,7 @@ d'onglet. Il faut viser l'entrée du sous-graphe :
 
 ```kotlin
 val parentEntry = remember(backStackEntry) { navController.getBackStackEntry<MainGraph>() }
-val playerViewModel = hiltViewModel<PlayerViewModelImpl>(parentEntry)
+val playerViewModel = hiltViewModel<SpotifyPlayerViewModel>(parentEntry)
 ```
 
 Le corollaire vaut pour l'authentification : `ActivityResultLauncher` et `Activity` ne

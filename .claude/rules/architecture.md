@@ -65,7 +65,7 @@ Known debt — assume it, don't be surprised by it, don't silently fix it:
 | **ViewModel** | `@HiltViewModel`, exposes state as `StateFlow` (see `kotlin.md`), no Compose imports, no `Context` unless via `@ApplicationContext` for a genuine platform need |
 | **Composable (View)** | Reads `ViewModel` state, delegates actions back via method calls — no business logic, no direct repository/data-source access |
 
-**Naming**: `<Feature>ViewModel` / `<Feature>Screen` for the top-level stateful composable.
+**Naming**: `<Feature>ViewModel` for the contract, `Spotify<Feature>ViewModel` for its `@HiltViewModel` implementation, `Fake<Feature>ViewModel` for the preview double (see `ui.md`, *Naming*) / `<Feature>Screen` for the top-level stateful composable.
 
 **Forbidden in new MVVM code:**
 - Business logic or direct data-source/repository calls in a Composable

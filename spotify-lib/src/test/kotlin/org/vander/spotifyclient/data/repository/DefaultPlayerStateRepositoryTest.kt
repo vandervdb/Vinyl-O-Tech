@@ -22,7 +22,7 @@ class DefaultPlayerStateRepositoryTest {
     @Test
     fun `startListening propage les etats du player`() =
         runTest {
-            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
 
             val expected =
                 PlayerStateData(
@@ -62,7 +62,7 @@ class DefaultPlayerStateRepositoryTest {
     @Test
     fun `reception du meme etat emet un SavedRemotelyChangedState true puis reset`() =
         runTest {
-            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
 
             val state =
                 PlayerStateData(
@@ -108,15 +108,36 @@ class DefaultPlayerStateRepositoryTest {
         }
 
     @Test
+    fun `stopListening unsubscribes, so a later startListening subscribes again`() =
+        runTest {
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
+            val first = PlayerStateData.empty().copy(trackId = "t1")
+            val ignored = PlayerStateData.empty().copy(trackId = "t2")
+            val second = PlayerStateData.empty().copy(trackId = "t3")
+
+            repo.startListening()
+            fakeClient.emit(first)
+            repo.stopListening()
+            fakeClient.emit(ignored)
+
+            assertEquals("t1", repo.playerStateData.value.trackId)
+
+            repo.startListening()
+            fakeClient.emit(second)
+
+            assertEquals("t3", repo.playerStateData.value.trackId)
+        }
+
+    @Test
     fun `playbackContext starts at None`() =
         runTest {
-            assertEquals(PlaybackContext.None, DefaultPlayerStateRepository(fakeClient, logger).playbackContext.value)
+            assertEquals(PlaybackContext.None, SpotifyPlayerStateRepository(fakeClient, logger).playbackContext.value)
         }
 
     @Test
     fun `startListening republishes the player context`() =
         runTest {
-            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
             val context = PlaybackContext(uri = SpotifyUri.playlist("37i9dQZF1DXcBWIGoYBM5M"), title = "Sillons")
 
             repo.playbackContext.test {
@@ -136,7 +157,7 @@ class DefaultPlayerStateRepositoryTest {
         runTest {
             // The point of keeping them apart: a context push moves playbackContext and
             // leaves playerStateData alone, which is how the SDK behaves.
-            val repo = DefaultPlayerStateRepository(fakeClient, logger)
+            val repo = SpotifyPlayerStateRepository(fakeClient, logger)
             repo.startListening()
             runCurrent()
 
@@ -152,6 +173,6 @@ class DefaultPlayerStateRepositoryTest {
             // emitContext goes to whoever subscribed; nobody has yet.
             fakeClient.emitContext(PlaybackContext(uri = SpotifyUri.playlist("p1")))
 
-            assertEquals(PlaybackContext.None, DefaultPlayerStateRepository(fakeClient, logger).playbackContext.value)
+            assertEquals(PlaybackContext.None, SpotifyPlayerStateRepository(fakeClient, logger).playbackContext.value)
         }
 }

@@ -20,3 +20,12 @@ naming:
     # detekt ([a-z][a-zA-Z0-9]*) rejette.
     # Cette exemption remplace les 25 @Suppress("FunctionNaming") du repo.
     ignoreAnnotated: ['Composable']
+
+complexity:
+  LongParameterList:
+    # Un constructeur @Inject n'est appelé que par Hilt : sa longueur ne pèse sur
+    # aucun appelant. Elle mesure le nombre de dépendances, à surveiller en revue
+    # (une classe qui en accumule fait trop de choses), pas à plafonner ici.
+    # Un objet regroupant les paramètres ne réglerait rien : Hilt devrait le
+    # construire, et son propre @Inject constructor retomberait sous la règle.
+    ignoreAnnotated: ['Inject']

@@ -59,6 +59,7 @@ import org.vander.android.vinylotech.designsystem.VinylTextEmphasis
 import org.vander.android.vinylotech.designsystem.VinylTextPrimary
 import org.vander.android.vinylotech.designsystem.VinylTextSecondary
 import org.vander.android.vinylotech.designsystem.VotDimens
+import kotlin.time.Duration.Companion.milliseconds
 
 /*
  * Snackbar HAUTE — descend sous la status bar, jamais par le bas.
@@ -90,12 +91,21 @@ private data class ToneColors(
 
 private fun colorsFor(tone: VinylSnackTone) =
     when (tone) {
-        VinylSnackTone.Error ->
+        VinylSnackTone.Error -> {
             ToneColors(VinylFeedbackError, VinylFeedbackErrorText, VinylFeedbackError.copy(alpha = 0.40f))
-        VinylSnackTone.Success ->
+        }
+
+        VinylSnackTone.Success -> {
             ToneColors(VinylFeedbackSuccess, VinylFeedbackSuccessText, VinylFeedbackSuccess.copy(alpha = 0.34f))
-        VinylSnackTone.Info -> ToneColors(VinylPurple, VinylFeedbackNeutralText, VinylPurple.copy(alpha = 0.42f))
-        VinylSnackTone.Offline -> ToneColors(Color.Transparent, VinylFeedbackNeutralText, VinylOutlineStrong)
+        }
+
+        VinylSnackTone.Info -> {
+            ToneColors(VinylPurple, VinylFeedbackNeutralText, VinylPurple.copy(alpha = 0.42f))
+        }
+
+        VinylSnackTone.Offline -> {
+            ToneColors(Color.Transparent, VinylFeedbackNeutralText, VinylOutlineStrong)
+        }
     }
 
 /**
@@ -138,7 +148,7 @@ fun VinylSnackbarHost(
     LaunchedEffect(serial) {
         val d = state.current ?: return@LaunchedEffect
         if (d.persistent) return@LaunchedEffect
-        delay(if (d.actionLabel != null) DURATION_WITH_ACTION else DURATION_DEFAULT)
+        delay((if (d.actionLabel != null) DURATION_WITH_ACTION else DURATION_DEFAULT).milliseconds)
         if (state.serial == serial) state.dismiss()
     }
 
@@ -276,11 +286,13 @@ private fun SnackGlyph(
 ) {
     val box = Modifier.size(VotDimens.snackGlyph)
     when {
-        data.tone == VinylSnackTone.Info && data.icon == null ->
+        data.tone == VinylSnackTone.Info && data.icon == null -> {
             Box(box.clip(CircleShape).border(1.dp, tone.border, CircleShape)) {
                 VinylDisc(modifier = Modifier.size(VotDimens.snackGlyph))
             }
-        else ->
+        }
+
+        else -> {
             Box(
                 modifier =
                     box
@@ -298,6 +310,7 @@ private fun SnackGlyph(
                     Icon(it, contentDescription = null, tint = tone.onAccent, modifier = Modifier.size(14.dp))
                 }
             }
+        }
     }
 }
 

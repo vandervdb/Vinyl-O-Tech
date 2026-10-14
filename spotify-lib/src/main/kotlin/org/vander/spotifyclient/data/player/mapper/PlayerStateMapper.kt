@@ -37,7 +37,6 @@ fun PlayerState.toPlayerStateData(logger: Logger? = null): PlayerStateData {
         trackId =
             track
                 ?.uri
-                ?.toString()
                 ?.extractSpotifyTrackIdOrNull()
                 ?: "",
         isPaused = isPaused,
