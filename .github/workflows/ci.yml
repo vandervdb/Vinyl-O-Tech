@@ -31,12 +31,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       # settings.gradle.kts reads CLIENT_ID / CLIENT_SECRET from local.properties and
-      # spotify-lib fails at configuration time without them. CI never talks to Spotify,
-      # so placeholders are enough when the repository secrets are not set.
+      # spotify-lib fails at configuration time without them. They come from the repository
+      # secrets; GitHub withholds secrets from pull requests opened from a fork, so the
+      # placeholders keep those builds configurable (CI never talks to Spotify).
       - name: Write local.properties
         env:
-          CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
           {
             echo "sdk.dir=$ANDROID_HOME"
