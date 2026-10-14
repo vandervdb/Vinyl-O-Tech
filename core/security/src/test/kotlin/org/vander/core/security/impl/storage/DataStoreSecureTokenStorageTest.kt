@@ -43,7 +43,8 @@ class DataStoreSecureTokenStorageTest {
     fun setUp() {
         AeadConfig.register()
         val masterKeyAead = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM")).aead()
-        val cryptoEngine = TinkCryptoEngine(TinkKeysetHandleProvider(FakeKeysetRepository(), masterKeyAead))
+        val cryptoEngine =
+            TinkCryptoEngine(TinkKeysetHandleProvider(FakeKeysetRepository(), masterKeyAead, FakeLogger()))
 
         dataStore =
             PreferenceDataStoreFactory.create(

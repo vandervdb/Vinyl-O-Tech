@@ -8,11 +8,14 @@ import com.google.crypto.tink.TinkProtoKeysetFormat
 import com.google.crypto.tink.aead.AeadConfig
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.vander.core.logger.Logger
 import org.vander.core.security.api.KeysetRepository
 import org.vander.core.security.di.MasterKeyAead
+import java.security.GeneralSecurityException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "TinkKeysetHandleProvider"
 private const val DATA_KEYSET_TEMPLATE = "AES256_GCM"
 private val KEYSET_ASSOCIATED_DATA = "core-security-keyset".toByteArray()
 
@@ -44,6 +47,7 @@ class TinkKeysetHandleProvider
     constructor(
         private val keysetRepository: KeysetRepository,
         @param:MasterKeyAead private val masterKeyAead: Aead,
+        private val logger: Logger,
     ) {
         /**
          * Guards [loadOrGenerate] so the read-then-generate-then-write sequence runs once.
@@ -74,11 +78,19 @@ class TinkKeysetHandleProvider
         private suspend fun loadOrGenerate(): KeysetHandle {
             val storedKeyset = keysetRepository.read()
             if (storedKeyset != null) {
-                return TinkProtoKeysetFormat.parseEncryptedKeyset(
-                    storedKeyset,
-                    masterKeyAead,
-                    KEYSET_ASSOCIATED_DATA,
-                )
+                try {
+                    return TinkProtoKeysetFormat.parseEncryptedKeyset(
+                        storedKeyset,
+                        masterKeyAead,
+                        KEYSET_ASSOCIATED_DATA,
+                    )
+                } catch (e: GeneralSecurityException) {
+                    // The master key lives in the Keystore, which no backup carries: a keyset
+                    // restored onto a new install, or one whose key was invalidated, can never be
+                    // read again. Keeping it would fail every call for good, so it is replaced;
+                    // what it encrypted was already lost with the key.
+                    logger.e(TAG, "Stored keyset could not be decrypted, generating a new one", e)
+                }
             }
 
             val handle = KeysetHandle.generateNew(KeyTemplates.get(DATA_KEYSET_TEMPLATE))
