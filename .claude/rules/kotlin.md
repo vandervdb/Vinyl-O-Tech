@@ -73,6 +73,7 @@ Two custom root Gradle tasks enforce this — they DO fail the build:
 ## Error handling & logging [Enforced]
 
 - Wrap external parsing/deserialization and remote calls in `runCatching`/`try-catch`, return `kotlin.Result<T>` or a domain sealed type — never let an exception escape a repository/data-source boundary silently
+- **`runCatching` is for non-`suspend` code only.** It catches every `Throwable`, including the `CancellationException` that carries a coroutine's cancellation — wrapping it in a `Result` lets the caller keep running in a dead scope. In a `suspend` function, use `try`/`catch` and rethrow `CancellationException` before the generic `catch` (see `SpotifyUserRepository.fetchCurrentUser`, `SpotifyRemoteAuthDataSource.requestToken`). `runCatching` stays fine for synchronous parsing (`SpotifyRemoteAuthDataSource.describeError`) and in tests that assert on the thrown exception
 - **Logging goes through `core-logger`'s `Logger` interface (`org.vander.core.logger.Logger`, backed by Kermit via `KermitLoggerImpl`, injected via Hilt's `LoggerModule`) — never `android.util.Log` directly** in `spotify-lib`, `app`, or any `core/*` module that already depends on `core-logger`. A module without a `core-logger` dependency and a genuine reason not to add one is the only place `android.util.Log` is acceptable
 - Every error path logs before returning or surfacing a failure — never fail silently
 
