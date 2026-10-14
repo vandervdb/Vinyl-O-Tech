@@ -1,18 +1,10 @@
 package org.vander.spotifyclient.domain.player.session
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.vander.core.domain.session.SessionManager
 import org.vander.core.domain.state.SessionState
-import org.vander.spotifyclient.domain.auth.AuthConfigK
-import org.vander.spotifyclient.domain.session.SessionManager
 
 class FakeSessionManager : SessionManager {
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Idle)
@@ -23,27 +15,11 @@ class FakeSessionManager : SessionManager {
         _sessionState.value = state
     }
 
-    override fun requestAuthorization(launchAuth: ActivityResultLauncher<Intent>) {
+    override suspend fun resumeSession() {
         TODO("Not yet implemented")
     }
 
-    override suspend fun requestAuthorization(
-        launchAuth: ActivityResultLauncher<Intent>,
-        activity: Activity,
-        context: Context,
-        coroutineScope: CoroutineScope,
-        dispatcher: CoroutineDispatcher,
-        config: AuthConfigK?,
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override fun handleAuthResult(
-        context: Context,
-        result: ActivityResult,
-        coroutineScope: CoroutineScope,
-        dispatcher: CoroutineDispatcher,
-    ) {
+    override suspend fun completeAuthorization(authorizationCode: String) {
         TODO("Not yet implemented")
     }
 
@@ -52,13 +28,6 @@ class FakeSessionManager : SessionManager {
     }
 
     override suspend fun signOut() {
-        TODO("Not yet implemented")
-    }
-
-    override fun launchAuthorizationFlow(
-        activity: Activity,
-        config: AuthConfigK?,
-    ) {
         TODO("Not yet implemented")
     }
 }
