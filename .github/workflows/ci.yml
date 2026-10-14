@@ -54,8 +54,9 @@ jobs:
       - name: Android Lint
         run: ./gradlew lint
 
+      # --continue: report every failing module, not just the first one Gradle hits.
       - name: Unit tests
-        run: ./gradlew test
+        run: ./gradlew test --continue
 
       - name: Assemble debug
         run: ./gradlew assembleDebug
