@@ -17,25 +17,14 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB/domain/appremote/AppRemoteProvider.kt",
             "$SPOTIFY_LIB/domain/appremote/RemoteConnector.kt",
-            "$SPOTIFY_LIB/domain/auth/AuthClient.kt",
-            "$SPOTIFY_LIB/domain/session/SessionManager.kt",
         )
 
     val spotifyLibDomainWrongDirection = emptySet<String>()
 
-    val appDependsOnSpotifyLibInternals =
-        setOf(
-            "$APP/di/SpotifySessionEntryPoint.kt",
-            "$APP/feature/connection/SpotifyConnectionViewModel.kt",
-            "$APP/feature/player/SpotifyPlayerViewModel.kt",
-            "$APP/util/RememberSessionManager.kt",
-        )
+    val appDependsOnSpotifyLibInternals = emptySet<String>()
 
     // Declaration-level rules: entries are fully qualified names, not paths.
-    val contractsToMoveToCoreDomain =
-        setOf(
-            "$SPOTIFY_LIB_PACKAGE.domain.session.SessionManager",
-        )
+    val contractsToMoveToCoreDomain = emptySet<String>()
 
     // A core/domain contract that only spotify-lib uses: it is not a port and belongs in spotify-lib, internal.
     val coreDomainContractsUsedOnlyBySpotifyLib =
@@ -49,7 +38,6 @@ internal object ArchitectureDebt {
         setOf(
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.AppRemoteProvider",
             "$SPOTIFY_LIB_PACKAGE.domain.appremote.RemoteConnector",
-            "$SPOTIFY_LIB_PACKAGE.domain.auth.AuthClient",
             "$SPOTIFY_LIB_PACKAGE.domain.player.PlayerClient",
         )
 
@@ -64,16 +52,11 @@ internal object ArchitectureDebt {
     val adaptersNotNamedAfterSpotify = emptySet<String>()
 
     // Declaration-level rule: entries are class names, not paths.
-    val viewModelsDependingOnSpotifyLib =
-        setOf(
-            "SpotifyConnectionViewModel",
-            "SpotifyPlayerViewModel",
-        )
+    val viewModelsDependingOnSpotifyLib = emptySet<String>()
 
     val androidUtilLog =
         setOf(
             "$APP/feature/library/PlaylistGrid.kt",
-            "$APP/util/LifecycleObserverComponent.kt",
         )
 }
 

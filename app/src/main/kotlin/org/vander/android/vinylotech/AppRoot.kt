@@ -70,7 +70,10 @@ fun AppRoot(sessionViewModel: SpotifySessionViewModel = hiltViewModel()) {
     val sessionState by sessionManager.sessionState.collectAsStateWithLifecycle()
 
     val authorize =
-        rememberSpotifyAuthorization(sessionViewModel.config, onOutcome = sessionViewModel::onSessionOutcome)
+        rememberSpotifyAuthorization(
+            sessionViewModel.authorizationContract,
+            onOutcome = sessionViewModel::onSessionOutcome,
+        )
 
     val snack = rememberVinylSnackbarHostState()
 
