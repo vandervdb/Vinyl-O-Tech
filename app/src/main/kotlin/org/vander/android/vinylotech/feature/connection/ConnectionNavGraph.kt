@@ -24,7 +24,7 @@ fun NavGraphBuilder.connectionNavGraph(
     onSessionReady: () -> Unit,
 ) {
     composable<ConnectionRoute> {
-        val vm: ConnectionViewModelImpl = hiltViewModel()
+        val vm: SpotifyConnectionViewModel = hiltViewModel()
         val state by vm.sessionState.collectAsStateWithLifecycle()
 
         val connecting = state is SessionState.Authorizing || state is SessionState.ConnectingRemote

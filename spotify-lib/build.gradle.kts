@@ -43,9 +43,6 @@ android {
         val spotifyClientId = gradle.extra["spotifyClientId"] as String
         buildConfigField("String", "CLIENT_SECRET", "\"$spotifyClientSecret\"")
         buildConfigField("String", "CLIENT_ID", "\"$spotifyClientId\"")
-
-        manifestPlaceholders["redirectSchemeName"] = "org-vander-androidapp"
-        manifestPlaceholders["redirectHostName"] = "callback"
     }
 
     buildTypes {
@@ -136,6 +133,7 @@ dependencies {
     implementation(libs.androidx.browser)
 
     // --- Ktor
+    implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)

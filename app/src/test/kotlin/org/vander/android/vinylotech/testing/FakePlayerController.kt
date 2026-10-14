@@ -4,8 +4,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.vander.core.domain.player.PlayerCommand
+import org.vander.core.domain.player.PlayerController
 import org.vander.core.domain.state.PlaybackState
-import org.vander.spotifyclient.domain.player.PlayerController
 
 /** [PlayerController] whose state the test sets, and which records what it is asked. */
 class FakePlayerController : PlayerController {

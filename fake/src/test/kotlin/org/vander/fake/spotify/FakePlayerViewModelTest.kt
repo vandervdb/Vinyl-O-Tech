@@ -17,7 +17,12 @@ class FakePlayerViewModelTest {
         val state = FakePlayerViewModel().state.value
 
         assertTrue(state.queue.items.size > 1)
-        assertEquals(state.queue.items.first().trackId, state.player.base.trackId)
+        assertEquals(
+            state.queue.items
+                .first()
+                .trackId,
+            state.player.base.trackId,
+        )
     }
 
     @Test

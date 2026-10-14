@@ -1,7 +1,7 @@
 package org.vander.spotifyclient.data.repository
 
-import org.vander.spotifyclient.domain.datasource.IRemoteLibraryDataSource
-import org.vander.spotifyclient.domain.repository.LibraryRepository
+import org.vander.core.domain.library.LibraryRepository
+import org.vander.spotifyclient.data.remote.datasource.RemoteLibraryDataSource
 import javax.inject.Inject
 
 /**
@@ -10,10 +10,10 @@ import javax.inject.Inject
  * Kept as a separate class even though it adds nothing today: it is the seam where a cache
  * or an optimistic update would go, and it keeps the use cases from depending on a data source.
  */
-class SpotifyLibraryRepository
+internal class SpotifyLibraryRepository
     @Inject
     constructor(
-        private val api: IRemoteLibraryDataSource,
+        private val api: RemoteLibraryDataSource,
     ) : LibraryRepository {
         override suspend fun isTrackSaved(trackId: String): Result<Boolean> = api.fetchIsTrackSaved(trackId)
 

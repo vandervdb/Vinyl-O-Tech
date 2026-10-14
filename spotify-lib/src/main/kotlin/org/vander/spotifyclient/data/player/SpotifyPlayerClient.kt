@@ -30,8 +30,8 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * A client for interacting with the Spotify player.
  *
- * This class provides methods for controlling playback, subscribing to player state updates,
- * and managing the connection to the Spotify app.
+ * This class provides methods for controlling playback and subscribing to player state updates.
+ * It never opens or closes the App Remote connection: that belongs to the session manager.
  *
  * @property appRemoteProvider An [AppRemoteProvider] instance used to access the Spotify App Remote.
  * @property logger A [Logger] instance for logging debug messages.
@@ -121,11 +121,20 @@ class SpotifyPlayerClient
                 withTimeoutOrNull(COMMAND_TIMEOUT_MS.milliseconds) {
                     suspendCancellableCoroutine { continuation ->
                         val pending = api.call()
-                        pending.setResultCallback { if (continuation.isActive) continuation.resume(Result.success(Unit)) }
+                        pending.setResultCallback {
+                            if (continuation.isActive) {
+                                continuation.resume(
+                                    Result.success(Unit),
+                                )
+                            }
+                        }
                         pending.setErrorCallback { if (continuation.isActive) continuation.resume(Result.failure(it)) }
                         continuation.invokeOnCancellation { pending.cancel() }
                     }
-                } ?: Result.failure(TimeoutException("$name: no answer from the App Remote within ${COMMAND_TIMEOUT_MS}ms"))
+                }
+                    ?: Result.failure(
+                        TimeoutException("$name: no answer from the App Remote within ${COMMAND_TIMEOUT_MS}ms"),
+                    )
 
             outcome
                 .onSuccess { logger.d(TAG, "$name: accepted") }
@@ -173,6 +182,5 @@ class SpotifyPlayerClient
             // leaving the first running.
             stateSubscription?.cancel()
             stateSubscription = null
-            appRemoteProvider.disconnect()
         }
     }

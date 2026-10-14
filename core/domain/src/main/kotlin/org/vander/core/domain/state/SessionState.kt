@@ -12,6 +12,8 @@ package org.vander.core.domain.state
 sealed class SessionState {
     object Idle : SessionState()
 
+    object AuthorizationRequired : SessionState()
+
     object Authorizing : SessionState()
 
     object ConnectingRemote : SessionState()

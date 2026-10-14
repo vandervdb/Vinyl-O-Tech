@@ -70,8 +70,7 @@ fun <T> VinylFilterChipRow(
                                     VotShapes.small,
                                 )
                             },
-                        )
-                        .semantics { this.selected = isSelected }
+                        ).semantics { this.selected = isSelected }
                         .clickable(role = Role.Tab) { onSelect(option) }
                         // The border eats one pixel of padding, so both states keep the same size.
                         .padding(

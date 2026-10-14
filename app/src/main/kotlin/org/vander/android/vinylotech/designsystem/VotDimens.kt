@@ -37,8 +37,8 @@ object VotDimens {
     // Composants
     val markSize = 68.dp // diamètre du cercle de la marque, écrans 01 / 02
     val markSizeSmall = 30.dp
-    val heroHeight = 384.dp
-    val dockHeight = 64.dp
+    val heroHeight = 335.dp
+    val dockHeight = 654.dp
     val dockMargin = 14.dp
     val dockIcon = 13.dp // maquette : pastilles 13x13 dans la dock
     val dockElevation = 12.dp // maquette : 0 12px 40px rgba(0,0,0,0.5)

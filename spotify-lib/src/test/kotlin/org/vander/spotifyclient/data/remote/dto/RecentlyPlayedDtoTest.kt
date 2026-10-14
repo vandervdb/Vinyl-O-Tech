@@ -31,7 +31,11 @@ class RecentlyPlayedDtoTest {
         val play = json.decodeFromString<RecentlyPlayedResponseDto>(REFERENCE_PAYLOAD).items.single()
 
         assertEquals("2up3OPMp9Tb4dAKM2erWXQ", play.track.album.id)
-        assertEquals("market", play.track.album.restrictions?.reason)
+        assertEquals(
+            "market",
+            play.track.album.restrictions
+                ?.reason,
+        )
         assertEquals("string", play.context?.uri)
     }
 
@@ -48,11 +52,39 @@ class RecentlyPlayedDtoTest {
 
     @Test
     fun `a track played on its own has no context`() {
-        val body = """{"items":[{"track":""" + trackOf(REFERENCE_PAYLOAD) + ""","played_at":"2026-09-18T07:03:41.769Z"}]}"""
+        val body =
+            """{"items":[{"track":""" + trackOf(REFERENCE_PAYLOAD) + ""","played_at":"2026-09-18T07:03:41.769Z"}]}"""
 
         val play = json.decodeFromString<RecentlyPlayedResponseDto>(body).items.single()
 
         assertNull(play.context)
+    }
+
+    @Test
+    fun `a relinked track parses its linked_from object`() {
+        // The reference payload sends `{}`, which hid that linked_from nests an object
+        // (external_urls): a flat map of strings failed the whole page on a relinked track.
+        val linkedFrom =
+            """
+            "linked_from": {
+              "external_urls": { "spotify": "https://open.spotify.com/track/original" },
+              "href": "string",
+              "id": "original",
+              "type": "track",
+              "uri": "spotify:track:original"
+            },
+            """.trimIndent()
+        val body = REFERENCE_PAYLOAD.replace(""""linked_from": {},""", linkedFrom)
+
+        val track =
+            json
+                .decodeFromString<RecentlyPlayedResponseDto>(body)
+                .items
+                .single()
+                .track
+
+        assertEquals("original", track.linkedFrom?.id)
+        assertEquals("https://open.spotify.com/track/original", track.linkedFrom?.externalUrls?.spotify)
     }
 
     /** Lifts the `track` object out of the reference payload, to reuse it in a shorter case. */

@@ -10,6 +10,13 @@ import org.vander.core.logger.Logger
 import org.vander.core.logger.NoOpLogger
 
 /**
+ * Shared so its serializer cache survives across responses. `@PublishedApi` because the
+ * public inline functions below are inlined at call sites and must reach it from there.
+ */
+@PublishedApi
+internal val spotifyJson = Json { ignoreUnknownKeys = true }
+
+/**
  * Reads a Spotify response into [T], turning the API's error envelope into a failed [Result].
  *
  * The body is parsed twice on purpose: the API answers 200 with an `error` object in some
@@ -26,18 +33,17 @@ suspend inline fun <reified T> HttpResponse.parseSpotifyResult(
     logger: Logger,
 ): Result<T> {
     val rawBody = this.bodyAsText()
-    val json = Json { ignoreUnknownKeys = true }
 
     return try {
-        val root = json.parseToJsonElement(rawBody).jsonObject
+        val root = spotifyJson.parseToJsonElement(rawBody).jsonObject
 
         if ("error" in root) {
-            val errorDto = json.decodeFromString<ErrorResponseDto>(rawBody)
+            val errorDto = spotifyJson.decodeFromString<ErrorResponseDto>(rawBody)
             logger.e(tag, "Spotify error ${errorDto.error.status} : ${errorDto.error.message}")
             Result.failure(Exception("Spotify error ${errorDto.error.status}: ${errorDto.error.message}"))
         } else {
             logger.d(tag, "Spotify response: $rawBody")
-            val result = json.decodeFromString<T>(rawBody)
+            val result = spotifyJson.decodeFromString<T>(rawBody)
             Result.success(result)
         }
     } catch (e: Exception) {

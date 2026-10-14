@@ -149,9 +149,9 @@ class HttpResponseParserTest {
         runTest {
             val logger = FakeLogger()
 
-            respondWith("""{"id":"1","name":"x"}""").parseSpotifyResult<Payload>("RemoteUserDataSource", logger)
+            respondWith("""{"id":"1","name":"x"}""").parseSpotifyResult<Payload>("SpotifyRemoteUserDataSource", logger)
 
-            assertEquals("RemoteUserDataSource", logger.last()?.tag)
+            assertEquals("SpotifyRemoteUserDataSource", logger.last()?.tag)
         }
 
     // --- 204 short-circuit

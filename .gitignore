@@ -31,3 +31,6 @@ out-tsc/
 
 # Serena MCP workspace (local tooling state)
 .serena/
+
+# AI agent artifacts (local, absolute paths)
+.artifacts/

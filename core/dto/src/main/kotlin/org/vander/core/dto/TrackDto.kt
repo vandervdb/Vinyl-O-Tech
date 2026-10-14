@@ -26,7 +26,7 @@ data class TrackDto(
     val href: String,
     val id: String,
     @SerialName("is_playable") val isPlayable: Boolean = true,
-    @SerialName("linked_from") val linkedFrom: Map<String, String> = emptyMap(),
+    @SerialName("linked_from") val linkedFrom: LinkedTrackDto? = null,
     val restrictions: RestrictionsDto? = null,
     val name: String,
     val popularity: Int,

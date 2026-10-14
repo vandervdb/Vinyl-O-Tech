@@ -4,16 +4,16 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.spotifyclient.data.remote.datasource.RemoteRecentlyPlayedDatasource
-import org.vander.spotifyclient.domain.datasource.IRemoteRecentlyPlayedDataSource
+import org.vander.spotifyclient.data.remote.datasource.RemoteRecentlyPlayedDataSource
+import org.vander.spotifyclient.data.remote.datasource.SpotifyRemoteRecentlyPlayedDataSource
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RemoteRecentlyPlayedModule {
+internal abstract class RemoteRecentlyPlayedModule {
     @Binds
     @Singleton
     abstract fun bindRemoteRecentlyPlayedDataSource(
-        impl: RemoteRecentlyPlayedDatasource,
-    ): IRemoteRecentlyPlayedDataSource
+        impl: SpotifyRemoteRecentlyPlayedDataSource,
+    ): RemoteRecentlyPlayedDataSource
 }

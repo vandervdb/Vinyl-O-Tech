@@ -42,5 +42,10 @@ class FakePlayerStateRepository : PlayerStateRepository {
         startListeningCount++
     }
 
-    override suspend fun stopListening() = Unit
+    var stopListeningCount: Int = 0
+        private set
+
+    override suspend fun stopListening() {
+        stopListeningCount++
+    }
 }

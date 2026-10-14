@@ -34,7 +34,7 @@ interface PlayerClient {
      * Subscribes to the player and invokes [function] on every state push.
      *
      * Note that [function] can be invoked with a state **equal** to the previous one;
-     * `DefaultPlayerStateRepository` relies on that to infer a library change made elsewhere.
+     * `SpotifyPlayerStateRepository` relies on that to infer a library change made elsewhere.
      * Does nothing if the App Remote is not connected.
      */
     suspend fun subscribeToPlayerState(function: (PlayerStateData) -> Unit)

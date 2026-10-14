@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import org.vander.spotifyclient.data.repository.SpotifyPlaylistRepositoryImpl
-import org.vander.spotifyclient.domain.repository.SpotifyPlaylistRepository
+import org.vander.core.domain.playlist.PlaylistRepository
+import org.vander.spotifyclient.data.repository.SpotifyPlaylistRepository
 import javax.inject.Singleton
 
 @Module
@@ -13,5 +13,5 @@ import javax.inject.Singleton
 internal abstract class SpotifyPlaylistModule {
     @Binds
     @Singleton
-    abstract fun bindSpotifyPlaylistRepository(impl: SpotifyPlaylistRepositoryImpl): SpotifyPlaylistRepository
+    abstract fun bindSpotifyPlaylistRepository(impl: SpotifyPlaylistRepository): PlaylistRepository
 }

@@ -151,7 +151,11 @@ fun VinylHeroFeature(
                         imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         contentDescription =
                             stringResource(
-                                if (isSaved) R.string.content_desc_remove_from_library else R.string.content_desc_save_to_library,
+                                if (isSaved) {
+                                    R.string.content_desc_remove_from_library
+                                } else {
+                                    R.string.content_desc_save_to_library
+                                },
                             ),
                         tint = if (isSaved) VinylPurpleSoft else VinylTextPrimary,
                         modifier = Modifier.size(HEART_ICON),

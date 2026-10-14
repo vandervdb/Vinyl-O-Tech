@@ -118,7 +118,7 @@ Compose est compilé par `org.jetbrains.kotlin.plugin.compose`, pas par
 `composeOptions`. Les raisons des pins (`compose-bom`, `hilt`) sont commentées dans
 `gradle/libs.versions.toml` — les lire avant d'y toucher.
 
-**Git hooks (Lefthook)** : `lefthook.yml`. Pre-commit Spotless + ktlintFormat ;
+**Git hooks (Lefthook)** : `lefthook.yml`. Pre-commit Spotless (ktlint, version du catalogue) ;
 pre-push lint, tests, gates du catalogue, `assembleDebug`. Lancer `lefthook install`
 une fois.
 
@@ -128,6 +128,8 @@ une fois.
 
 - `docs/architecture/navigation-and-screen-chrome.md` — navigation à deux registres
   (push / modale), `ScreenChrome`, portée des ViewModels, relevés de la maquette
+- `docs/architecture/contracts-cleanup.md` — placement des contrats (ports / adapters),
+  convention de nommage, tests Konsist et cliquet de dette, étapes restantes du chantier
 
 ---
 

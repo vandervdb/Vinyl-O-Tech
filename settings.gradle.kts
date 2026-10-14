@@ -39,6 +39,7 @@ include(":core:logger")
 include(":core:security")
 include(":core:ui")
 include(":fake")
+include(":konsist")
 
 // Identifiants Spotify, lus depuis local.properties (jamais commité).
 run {

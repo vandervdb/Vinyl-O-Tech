@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import kotlinx.coroutines.flow.StateFlow
 import org.vander.android.vinylotech.R
 import org.vander.core.domain.data.PlaylistCollection
+import org.vander.core.domain.data.RecentPlay
 
 /**
  * What the Accueil screen draws.
@@ -21,6 +22,7 @@ data class HomeUiState(
     val playingPlaylistId: String? = null,
     val resume: ResumeListening? = null,
     val selectedFilter: HomeFilter = HomeFilter.All,
+    val recentlyPlayed: List<RecentPlay> = emptyList(),
 )
 
 /**

@@ -28,7 +28,7 @@ A feature is not complete until all criteria are explicitly verified.
 ## Tooling in this repo [Enforced — verified in `gradle/libs.versions.toml`]
 
 - **Assertions/runner**: JUnit4 (`junit4 = "4.13.2"`)
-- **Mocking**: MockK (`mockk` 1.13.10 for JVM, `mockk-android` 1.14.6 for instrumented) — not Mockito. See `spotify-lib/src/test/kotlin/.../FakePlayerStateRepository.kt` and `FakeSpotifySessionManager.kt` for existing fake-object style used alongside MockK
+- **Mocking**: MockK (`mockk` 1.13.10 for JVM, `mockk-android` 1.14.6 for instrumented) — not Mockito. See `spotify-lib/src/test/kotlin/.../FakePlayerStateRepository.kt` and `FakeSessionManager.kt` for existing fake-object style used alongside MockK
 - **Flow**: Turbine (`app.cash.turbine`, 1.0.0) for `StateFlow`/`Flow` assertions
 - **Coroutines**: `kotlinx-coroutines-test` (`runTest`)
 - **Compose UI tests**: `androidx.compose.ui:ui-test-junit4` + `createComposeRule()`, MockK-android for instrumented mocks
