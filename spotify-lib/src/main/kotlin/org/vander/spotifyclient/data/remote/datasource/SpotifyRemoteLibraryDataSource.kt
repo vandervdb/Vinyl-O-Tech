@@ -11,6 +11,7 @@ import org.vander.core.logger.Logger
 import org.vander.spotifyclient.utils.spotifyJson
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The `me/tracks` endpoints: read the saved flag, save, remove.
@@ -42,6 +43,9 @@ internal class SpotifyRemoteLibraryDataSource
                         .decodeFromString<List<Boolean>>(response.bodyAsText())
                         .firstOrNull() == true
                 Result.success(isSaved)
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 logger.e(TAG, "Error checking if track is saved", e)
                 Result.failure(e)
@@ -52,6 +56,9 @@ internal class SpotifyRemoteLibraryDataSource
                 httpClient
                     .put("me/tracks") { url { parameters.append("ids", trackId) } }
                     .orFailure()
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }.onFailure { logger.e(TAG, "Error saving track $trackId", it) }
@@ -61,6 +68,9 @@ internal class SpotifyRemoteLibraryDataSource
                 httpClient
                     .delete("me/tracks") { url { parameters.append("ids", trackId) } }
                     .orFailure()
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }.onFailure { logger.e(TAG, "Error removing track $trackId", it) }

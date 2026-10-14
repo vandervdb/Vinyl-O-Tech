@@ -8,6 +8,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -67,6 +68,17 @@ class RemoteQueueAndUserDataSourceTest {
             assertTrue(SpotifyRemoteQueueDataSource(clientOf(engine)).fetchUserQueue().isFailure)
         }
 
+    @Test
+    fun `a cancelled queue call rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+            val dataSource = SpotifyRemoteQueueDataSource(clientOf(engine))
+
+            val thrown = runCatching { dataSource.fetchUserQueue() }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
     // --- User
 
     @Test
@@ -109,6 +121,18 @@ class RemoteQueueAndUserDataSourceTest {
             val engine = jsonEngine("""{"error":{"status":403,"message":"forbidden"}}""")
 
             assertTrue(SpotifyRemoteUserDataSource(clientOf(engine)).fetchUser().isFailure)
+        }
+
+    @Test
+    fun `a cancelled user call rethrows instead of reporting a failure`() =
+        runTest {
+            // Wrapping the cancellation in a Result would let the caller carry on in a scope
+            // that is already dead.
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { SpotifyRemoteUserDataSource(clientOf(engine)).fetchUser() }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
         }
 
     private fun jsonEngine(body: String) =

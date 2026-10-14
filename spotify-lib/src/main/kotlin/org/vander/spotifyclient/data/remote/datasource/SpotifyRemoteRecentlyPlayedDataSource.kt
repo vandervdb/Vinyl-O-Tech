@@ -6,6 +6,7 @@ import org.vander.core.dto.RecentlyPlayedResponseDto
 import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class SpotifyRemoteRecentlyPlayedDataSource
     @Inject
@@ -14,12 +15,15 @@ internal class SpotifyRemoteRecentlyPlayedDataSource
     ) : RemoteRecentlyPlayedDataSource {
         override suspend fun fetchRecentlyPlayed(): Result<RecentlyPlayedResponseDto> =
             try {
-                return httpClient.get("me/player/recently-played").parseSpotifyResult<RecentlyPlayedResponseDto>(TAG)
+                httpClient.get("me/player/recently-played").parseSpotifyResult<RecentlyPlayedResponseDto>(TAG)
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
-                return Result.failure(e)
+                Result.failure(e)
             }
 
         private companion object {
-            const val TAG = "SpotifyRemotePlaylistDataSource"
+            const val TAG = "SpotifyRemoteRecentlyPlayedDataSource"
         }
     }

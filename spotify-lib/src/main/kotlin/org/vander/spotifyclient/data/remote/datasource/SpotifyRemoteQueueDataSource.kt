@@ -6,6 +6,7 @@ import org.vander.core.dto.CurrentlyPlayingWithQueueDto
 import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * `GET me/player/queue`. Parsing and error mapping are delegated to `parseSpotifyResult`.
@@ -22,6 +23,9 @@ internal class SpotifyRemoteQueueDataSource
         override suspend fun fetchUserQueue(): Result<CurrentlyPlayingWithQueueDto> =
             try {
                 httpClient.get("me/player/queue").parseSpotifyResult<CurrentlyPlayingWithQueueDto>(TAG)
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }

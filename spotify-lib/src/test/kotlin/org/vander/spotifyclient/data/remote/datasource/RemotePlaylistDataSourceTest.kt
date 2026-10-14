@@ -10,6 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -96,6 +97,17 @@ class RemotePlaylistDataSourceTest {
             val result = SpotifyRemotePlaylistDataSource(clientOf(engine)).fetchUserPlaylists()
 
             assertTrue(result.isFailure)
+        }
+
+    @Test
+    fun `a cancelled call rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+            val dataSource = SpotifyRemotePlaylistDataSource(clientOf(engine))
+
+            val thrown = runCatching { dataSource.fetchUserPlaylists() }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
         }
 
     private fun jsonEngine(body: String) =

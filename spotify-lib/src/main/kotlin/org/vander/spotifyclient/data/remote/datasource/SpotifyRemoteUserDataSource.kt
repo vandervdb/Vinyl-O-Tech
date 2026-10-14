@@ -6,6 +6,7 @@ import org.vander.core.dto.UserDto
 import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * `GET me`. Parsing and error mapping are delegated to `parseSpotifyResult`.
@@ -22,6 +23,9 @@ internal class SpotifyRemoteUserDataSource
         override suspend fun fetchUser(): Result<UserDto> =
             try {
                 httpClient.get("me").parseSpotifyResult<UserDto>(TAG)
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }

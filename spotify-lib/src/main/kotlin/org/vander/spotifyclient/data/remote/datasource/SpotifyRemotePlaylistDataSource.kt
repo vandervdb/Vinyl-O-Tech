@@ -6,6 +6,7 @@ import org.vander.core.dto.SpotifyPlaylistsResponseDto
 import org.vander.spotifyclient.utils.parseSpotifyResult
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * `GET me/playlists`. Parsing and error mapping are delegated to `parseSpotifyResult`.
@@ -22,6 +23,9 @@ internal class SpotifyRemotePlaylistDataSource
         override suspend fun fetchUserPlaylists(): Result<SpotifyPlaylistsResponseDto> =
             try {
                 httpClient.get("me/playlists").parseSpotifyResult<SpotifyPlaylistsResponseDto>(TAG)
+            } catch (e: CancellationException) {
+                // Cancellation is a signal, not a failure: a Result would hide it from the caller.
+                throw e
             } catch (e: Exception) {
                 Result.failure(e)
             }

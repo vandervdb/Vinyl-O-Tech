@@ -9,6 +9,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -163,6 +164,38 @@ class RemoteLibraryDataSourceTest {
             val engine = MockEngine { respond("", HttpStatusCode.NoContent) }
 
             assertTrue(dataSource(engine).saveTrack(TRACK_ID).isSuccess)
+        }
+
+    // --- cancellation
+
+    @Test
+    fun `a cancelled fetchIsTrackSaved rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).fetchIsTrackSaved(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
+    @Test
+    fun `a cancelled saveTrack rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).saveTrack(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
+        }
+
+    @Test
+    fun `a cancelled removeTrack rethrows instead of reporting a failure`() =
+        runTest {
+            val engine = MockEngine { throw CancellationException("cancelled") }
+
+            val thrown = runCatching { dataSource(engine).removeTrack(TRACK_ID) }.exceptionOrNull()
+
+            assertTrue("expected a CancellationException, got $thrown", thrown is CancellationException)
         }
 
     private fun jsonEngine(body: String) =
