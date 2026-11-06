@@ -19,8 +19,7 @@ fun NavGraphBuilder.libraryNavGraph(
 ) {
     composable<SpotifyRoute> { entry ->
         // Scoped to MainGraph, like the MiniPlayer's in AppRoot: both resolve the same
-        // instance. Scoped to this destination, it was a second SpotifyPlayerViewModel, cleared on
-        // every tab change.
+        // instance, which survives tab changes.
         val graphEntry = remember(entry) { navController.getBackStackEntry<MainGraph>() }
         val playerViewModel = hiltViewModel<SpotifyPlayerViewModel>(graphEntry)
         val playlistViewModel = hiltViewModel<SpotifyPlaylistViewModel>()

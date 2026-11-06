@@ -6,9 +6,8 @@ import org.vander.core.domain.data.QueuedTrack
 /**
  * Everything the player publishes, in one value.
  *
- * Replaces the three flows a consumer used to collect separately — player state, queue,
- * context — so a screen reads one consistent snapshot instead of combining streams that
- * move at different moments.
+ * Player state, queue and context travel together, so a screen reads one consistent snapshot
+ * instead of combining streams that move at different moments.
  *
  * @property player the App Remote snapshot and the saved flag.
  * @property queue the current track first, then what comes next; empty until the Web API

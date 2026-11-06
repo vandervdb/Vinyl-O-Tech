@@ -11,8 +11,8 @@ import javax.inject.Singleton
 /**
  * Binds [PlayerController] to [PlayerUseCase], as a singleton.
  *
- * The scope is the point of this module. Unscoped, each ViewModel received its own instance,
- * and only the one whose collectors had been started published anything.
+ * The scope is the point of this module: unscoped, each ViewModel would receive its own
+ * instance, and only the one whose collectors had been started would publish anything.
  */
 @Module
 @InstallIn(SingletonComponent::class)

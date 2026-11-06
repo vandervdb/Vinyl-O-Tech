@@ -7,9 +7,8 @@ import org.vander.core.domain.state.SessionState
 /**
  * Everything a player screen draws, in one value.
  *
- * A screen used to collect four flows and assemble them itself, reading values that could
- * belong to different moments. One snapshot removes that, and makes the contract implementable
- * by a fake in a few lines.
+ * One snapshot, so a screen never reads values that belong to different moments, and a fake
+ * can implement the contract in a few lines.
  *
  * @property session connection lifecycle with the App Remote.
  * @property player current track, playback position and saved flag.

@@ -12,9 +12,8 @@ import org.vander.core.ui.state.PlayerUiState
  * same surface without `app` depending on `fake` at runtime — dependency inversion applied to
  * the presentation layer.
  *
- * Two members, where there used to be eleven: one state to draw, one entry point for what the
- * user does. A new action is a new [PlayerCommand], not a new method on every implementation —
- * which is what left the fake with empty bodies and previews that never reacted.
+ * Two members: one state to draw, one entry point for what the user does. A new action is a
+ * new [PlayerCommand], not a new method on every implementation.
  */
 interface PlayerViewModel {
     val state: StateFlow<PlayerUiState>

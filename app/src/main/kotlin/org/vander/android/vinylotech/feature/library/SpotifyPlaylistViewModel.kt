@@ -11,9 +11,7 @@ import org.vander.core.ui.presentation.viewmodel.PlaylistViewModel
 import javax.inject.Inject
 
 /**
- * Exposes the use case's flow directly. [refresh] used to launch a new, never-ending collector
- * on each call — ten refreshes, ten collectors writing the same value — through `android.util.Log`
- * rather than the injected logger.
+ * Exposes the use case's flow directly.
  */
 @HiltViewModel
 open class SpotifyPlaylistViewModel

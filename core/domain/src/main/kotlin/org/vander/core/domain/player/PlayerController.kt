@@ -6,13 +6,12 @@ import org.vander.core.domain.state.PlaybackState
 /**
  * The player, seen from a ViewModel: one state to read, one entry point to act.
  *
- * Deliberately narrow. What it replaces exposed six collaborators, five flows and a method per
- * action, so every consumer had to know which flow was fed by what and in which order to call
- * things. Behind these three members sit the App Remote subscriptions, the Web API queue and
- * the saved-track lookups; none of that leaks through.
+ * Deliberately narrow, so no consumer has to know which flow is fed by what or in which order
+ * to call things. Behind these three members sit the App Remote subscriptions, the Web API
+ * queue and the saved-track lookups; none of that leaks through.
  *
  * Bound as a singleton: every screen reads the same state. A second instance would compile and
- * run, and silently publish nothing — which is exactly what happened before it was scoped.
+ * run, and silently publish nothing.
  */
 interface PlayerController {
     /** Starts at [PlaybackState]'s defaults; filled once a session is ready and [start] ran. */

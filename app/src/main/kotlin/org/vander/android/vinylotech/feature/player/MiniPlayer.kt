@@ -275,8 +275,6 @@ private fun MiniPlayerContent(
                 )
             }
 
-            // Les deux contrôles forment leur propre groupe : l'espacement de la carte les
-            // écartait autant que le disque et le texte, alors qu'ils vont ensemble.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(CONTROL_GAP),

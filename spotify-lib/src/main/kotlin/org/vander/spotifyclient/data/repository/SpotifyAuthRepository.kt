@@ -12,10 +12,9 @@ import javax.inject.Inject
 
 /**
  * Exchanges an authorization code against the accounts service, and keeps the resulting
- * tokens in [SecureTokenStorage] — encrypted, unlike the plain `DataStoreManager` this
- * repository used to write to.
+ * tokens, encrypted, in [SecureTokenStorage].
  *
- * Reads and writes now go through the same store: a session written here is the one read back.
+ * Reads and writes go through the same store: a session written here is the one read back.
  */
 internal class SpotifyAuthRepository
     @Inject

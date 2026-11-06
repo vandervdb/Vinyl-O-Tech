@@ -38,15 +38,12 @@ private val DockShape = RoundedCornerShape(percent = 50)
 /**
  * The floating dock of screens 02 · 03 · 04 · 10, not a Material navigation bar.
  *
- * It holds no state. The selected tab used to live in a `remember`ed index, which moved the
- * highlight without navigating anywhere — the Spotify tab could not be reached — and disagreed
- * with the back stack as soon as anything else navigated. The caller now derives [selected]
- * from the back stack and navigates in [onSelect], so the dock can only show where the app is.
+ * It holds no state: the caller derives [selected] from the back stack and navigates in
+ * [onSelect], so the dock can only show where the app is.
  *
- * `ShortNavigationBar` was dropped rather than restyled: the design overrides its
- * surface, its shape, its height and its item layout, so nothing of Material's would
- * have survived except the name. What is left — labelling only the selected item — is
- * the part Material cannot express at all.
+ * Not a restyled `ShortNavigationBar`: the design overrides its surface, its shape, its
+ * height and its item layout, so nothing of Material's would remain except the name.
+ * Labelling only the selected item is the part Material cannot express at all.
  *
  * Values read from the design file, dock of screen 02 Accueil:
  * container `#16121E`, `1px solid rgba(255,255,255,0.07)`, `border-radius: 999px`,

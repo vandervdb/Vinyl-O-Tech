@@ -80,7 +80,6 @@ class SpotifyPlayerControllerTest {
     @Test
     fun `a refusal from the player comes back as a failure`() =
         runTest {
-            // What used to end in Logcat: a free account asked to play.
             val f = Fixture(backgroundScope)
             val refusal = IllegalStateException("Premium required")
             f.client.nextResult = Result.failure(refusal)
@@ -157,7 +156,6 @@ class SpotifyPlayerControllerTest {
     @Test
     fun `start is idempotent`() =
         runTest {
-            // Two calls used to launch the collectors twice. Any screen may now call start().
             val f = Fixture(backgroundScope)
             f.controller.start()
             f.controller.start()

@@ -3,13 +3,10 @@ package org.vander.core.domain.data
 /**
  * A Spotify resource URI, `spotify:<kind>:<id>`.
  *
- * Exists to stop a bare id and a full URI from sharing the same type. Before it, every layer
- * had to remember on its own whether the `String` it held was already prefixed — the App
- * Remote takes a full URI, the Web API takes a bare id, and the two met in the middle with
- * nothing but a parameter name to tell them apart.
+ * Exists to stop a bare id and a full URI from sharing the same type: the App Remote takes a
+ * full URI, the Web API takes a bare id, and a `String` cannot tell them apart.
  *
- * It also collapses `play` and `playPlaylist` into a single command: those were two methods
- * only because the type could not say what was being played.
+ * It also lets a single command play any kind of resource, since the type says what is played.
  *
  * Built through the named factories, never through the constructor: [track] and [playlist]
  * are what make a track id impossible to pass where a playlist is expected.

@@ -8,12 +8,10 @@ import androidx.compose.ui.graphics.Color
 
 /*
  * Équivalents Compose des drawables View-system que painterResource refuse
- * (layer-list, shape, selector). Les XML correspondants ont été retirés du kit :
- * ces fonctions sont la version canonique.
+ * (layer-list, shape, selector) : ces fonctions sont la version canonique.
  *
- * GrainOverlay() du kit a été écarté : il étire la texture (ContentScale.FillBounds)
- * au lieu de la tuiler et n'applique pas BlendMode.Overlay. Utiliser
- * Modifier.drawGrainOverlay() (ui/util/ModifierDrawGrainOverlay.kt) à la place.
+ * Pour le grain, utiliser Modifier.drawGrainOverlay() (ui/util/ModifierDrawGrainOverlay.kt) :
+ * il tuile la texture et applique BlendMode.Overlay.
  */
 
 /** Dégradé héros de l'accueil — remplace bg_hero_gradient.xml. 155° ≈ diagonale descendante. */

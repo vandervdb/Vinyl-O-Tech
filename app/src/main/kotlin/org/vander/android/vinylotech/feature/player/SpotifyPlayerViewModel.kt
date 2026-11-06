@@ -24,8 +24,8 @@ import javax.inject.Inject
  * consume, and holds no player logic of its own.
  *
  * Its only work is shaping: the session and the controller's state become one [PlayerUiState],
- * and the queue becomes `UIQueueItem`s here, on the app side, since `spotify-lib` no longer
- * depends on `core:ui`.
+ * and the queue becomes `UIQueueItem`s here, on the app side, since `spotify-lib` does not
+ * depend on `core:ui`.
  *
  * It does not shut the session down when cleared: the controller is a singleton other screens
  * read, and the session's teardown belongs to `AppRoot`, on the Activity's `onStop`.

@@ -4,8 +4,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Toutes les mesures des maquettes, côté Compose — pas de dimensionResource(),
- * pas de .dp magique dans les écrans. res/values/dimens.xml a été retiré du kit :
- * mélanger les deux sources était pire que du .dp homogène.
+ * pas de .dp magique dans les écrans, et une seule source de mesures.
  */
 object VotDimens {
     // Échelle d'espacement

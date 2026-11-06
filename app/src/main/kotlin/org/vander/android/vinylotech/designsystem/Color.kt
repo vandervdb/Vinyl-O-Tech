@@ -17,9 +17,8 @@ val SpotifyGreen = Color(0xFF1ED760)
 // starter-template Purple/Pink tones above.
 //
 // Each name mirrors its `vot_*` counterpart in res/values/colors.xml so the
-// Compose palette and the XML theme cannot drift apart unnoticed — the two were
-// already crossed (VinylTextSecondary held vot_text_muted's value) before the
-// design's colors.xml was merged in.
+// Compose palette and the XML theme cannot drift apart unnoticed
+// (`./gradlew checkColorPalette`).
 val VinylInk = Color(0xFF0C0A10) // vot_bg
 val VinylPurple = Color(0xFF7C5CFF) // vot_accent
 val VinylTextPrimary = Color(0xFFF2EFF7) // vot_text_primary
