@@ -40,7 +40,7 @@ import org.vander.core.domain.state.SessionState
 
 /**
  * Screen 01 "Connexion Spotify" from the Vinyl O'Tech design — the app's start
- * destination ([org.vander.android.vinylotech.navigation.ConnectionRoute]).
+ * destination ([org.vander.android.vinylotech.feature.connection.ConnectionRoute]).
  *
  * Takes an intent lambda, not the SessionManagerB: the manager needs the
  * activity result launcher and the Activity, both of which live in AppRoot. A

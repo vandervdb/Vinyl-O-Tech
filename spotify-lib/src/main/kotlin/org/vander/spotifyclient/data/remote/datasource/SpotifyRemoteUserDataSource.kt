@@ -11,9 +11,9 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * `GET me`. Parsing and error mapping are delegated to `parseSpotifyResult`.
  *
- * Authentication belongs to the client, not here: `auth_api_v1_client` installs
- * `AuthHeaderPlugin`, which reads the token once per request and therefore picks up a
- * refresh on its own.
+ * Authentication belongs to the client, not here: `auth_api_v1_client` installs Ktor's `Auth`
+ * plugin with a bearer provider, which sends the token from `TokenProvider` and refreshes it
+ * on a 401.
  */
 internal class SpotifyRemoteUserDataSource
     @Inject

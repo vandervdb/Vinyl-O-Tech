@@ -1,8 +1,7 @@
 package org.vander.spotifyclient.domain.auth
 
 /**
- * Authorization parameters a host can override; when it passes `null`, the library falls
- * back to its own client id, redirect URI and scope list.
+ * Authorization parameters: client id, redirect URI and scope list.
  *
  * [equals] and [hashCode] are hand-written because [scopes] is an `Array`, whose generated
  * implementations compare identity rather than content — two configs with identical scopes

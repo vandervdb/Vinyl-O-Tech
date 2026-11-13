@@ -30,7 +30,7 @@ internal interface AuthRepository {
     suspend fun storeTokenResponse(tokenResponse: TokenResponse): Result<Unit>
 
     /**
-     * @return a success holding an empty string when no session is stored — absence is not a
+     * @return a success holding `null` when no session is stored — absence is not a
      *   failure. A failure means the store could not be read or its content could not be
      *   decrypted, and the error is logged either way.
      */

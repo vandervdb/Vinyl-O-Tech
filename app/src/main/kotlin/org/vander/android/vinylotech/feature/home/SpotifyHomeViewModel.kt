@@ -20,9 +20,8 @@ import javax.inject.Inject
 /**
  * The Accueil screen's ViewModel: the user's playlists, and which one is playing.
  *
- * The playing playlist is read from the singleton [PlayerController]. Before the controller was
- * scoped, this ViewModel held a second, never-started instance whose state stayed empty — which
- * is why the grid was given `null` until now.
+ * The playing playlist is read from the singleton [PlayerController], the one instance whose
+ * collectors are started and which therefore publishes the playback context.
  */
 @HiltViewModel
 class SpotifyHomeViewModel

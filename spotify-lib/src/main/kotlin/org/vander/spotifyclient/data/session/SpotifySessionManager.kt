@@ -21,13 +21,13 @@ import javax.inject.Inject
  * Runs the session as a state machine over [SessionState]: `Idle` -> `Authorizing` ->
  * `ConnectingRemote` -> `Ready`, with `Failed` reachable from any step.
  *
- * The flow is split across three calls because the authorization leaves the app: the UI
- * registers its launcher through [requestAuthorization], fires it with
- * [launchAuthorizationFlow], and feeds the Activity result back through [handleAuthResult],
- * which then exchanges the code for a token and connects the App Remote.
+ * [resumeSession] starts from the stored tokens: with none it moves to `AuthorizationRequired`,
+ * otherwise it connects the App Remote. The authorization itself leaves the app and is driven
+ * by the UI; [completeAuthorization] receives the resulting code, exchanges it for a token,
+ * stores it, then connects the App Remote.
  *
- * The caller supplies the [CoroutineScope]: this manager is `@Singleton`-scoped and outlives
- * any screen, so it must not own the scope the work runs in.
+ * The manager owns its own [CoroutineScope], on the main dispatcher: it is `@Singleton`-scoped
+ * and outlives any screen.
  */
 internal class SpotifySessionManager
     @Inject

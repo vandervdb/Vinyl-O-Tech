@@ -19,8 +19,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * `me/tracks/contains` answers with a JSON array aligned on the requested ids, so the single
  * id sent here is read back as the first element.
  *
- * Authentication belongs to the client: `auth_api_v1_client` installs `AuthHeaderPlugin`,
- * which reads the token once per request.
+ * Authentication belongs to the client: `auth_api_v1_client` installs Ktor's `Auth` plugin with
+ * a bearer provider, which sends the token from `TokenProvider` and refreshes it on a 401.
  *
  * The two writes answer with an empty body, so there is nothing to parse and nothing that
  * would fail on its own — [orFailure] is what turns a refusal into a failed [Result]. Ktor's

@@ -3,12 +3,10 @@ package org.vander.core.security.api
 /**
  * Encrypted storage for the Spotify OAuth tokens.
  *
- * No consumer yet: tokens are currently stored unencrypted by `spotify-lib`'s
- * `DataStoreManager`, which does not implement this interface.
+ * `spotify-lib`'s `SpotifyAuthRepository` stores the session tokens through it.
  *
  * [get] never throws — every outcome is a [StoredTokensResult] branch. Writes return a
- * [Result] instead, because a failed write must not look like a successful one; that is the
- * same choice `spotify-lib`'s `IDataStoreManager` already made for DataStore writes.
+ * [Result] instead, because a failed write must not look like a successful one.
  *
  * Expiry is not checked here: the caller compares [StoredTokens.expiresAt] itself.
  */
